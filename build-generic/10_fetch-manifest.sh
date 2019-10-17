@@ -20,11 +20,12 @@ function fetchFromGoogleCI {
     FILE="$1"
 
     # The actual file content does not have a public link, only a Artifact viewer link is available. Retrieve raw file via some simple web scrapping
+    # Actual file link is stored in JS object. Extract JSON literal from JS source via sed, then extract property via jq
     curl "https://ci.android.com/builds/submitted/${BUILD_NUMBER}/${BUILD_TARGET}/latest/view/${FILE}" -L \
-        | grep '${FILE}?' \
-        | sed -n "s/^.*artifactUrl\"\s*:\s*\"\s*\([^\"]*\)\".*$/\1/p" \
+        | grep "artifacts/${FILE}" \
+        | sed -n "s/^[^{]*\([^}]*\}\).*$/\1/p" \
+        | jq -r '."artifactUrl"' \
         > "${IMAGE_DIR}/${FILE}.link"
-    echo -ne "$(cat "${IMAGE_DIR}/${FILE}.link")" > "${IMAGE_DIR}/${FILE}.link" # Reverse escaping of special characters (e.g. '\u0026' to &)
     curl "$(cat "${IMAGE_DIR}/${FILE}.link")" -L > "${IMAGE_DIR}/${FILE}" # Fetch actual ${FILE}
 }
 
