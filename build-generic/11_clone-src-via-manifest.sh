@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Argument sanity check
-if [ "$#" -ne 1 ]; then
+if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <BUILD_NUMBER> <BUILD_TARGET>"
 	echo "BUILD_NUMBER: Googlei internal incremental build number that identifies each build, see https://android.googlesource.com/platform/build/+/master/Changes.md#BUILD_NUMBER"
 	echo "BUILD_TARGET: Build target as choosen in lunch (consist of <TARGET_PRODUCT>-<TARGET_BUILD_VARIANT>"
@@ -22,11 +22,17 @@ SRC_DIR="${RB_AOSP_BASE}/aosp/src"
 mkdir -p "${SRC_DIR}"
 cd "${SRC_DIR}"
 
-# Init repo for the desired version
+# Init src repo for the current master (create .repo folder structure, registers manifest git)
 repo init -u "https://android.googlesource.com/platform/manifest"
-repo sync -j $(nproc)
 
-# Checkout proper manifest version
+# Copy custom and manifest
 BUILD_ENV="GoogleCI"
 IMAGE_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
-# TODO: Perform checkout via jq
+LOCAL_MANIFESTS_DIR="${SRC_DIR}/.repo/local_manifests"
+CUSTOM_MANIFEST="manifest_${BUILD_NUMBER}.xml"
+mkdir -p "${LOCAL_MANIFESTS_DIR}"
+cp "${IMAGE_DIR}/${CUSTOM_MANIFEST}" "${LOCAL_MANIFESTS_DIR}/"
+
+# Inform repo about custom manifest and sync it
+repo init -m "${CUSTOM_MANIFEST}"
+repo sync -j $(nproc)
