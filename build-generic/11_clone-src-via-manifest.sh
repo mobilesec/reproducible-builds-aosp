@@ -16,22 +16,19 @@ if [ -z "${RB_AOSP_BASE+x}" ]; then
 	mkdir -p "${RB_AOSP_BASE}"
 fi
 
-# Start with the usual repo init/sync (implicitly checks out master)
-# Follow steps from https://source.android.com/setup/build/downloading#initializing-a-repo-client
-SRC_DIR="${RB_AOSP_BASE}/aosp/src"
+# See https://source.android.com/setup/build/downloading#initializing-a-repo-client for the general concept
+# Init src repo for the current master (create .repo folder structure, registers manifest git)
+SRC_DIR="${RB_AOSP_BASE}/src"
 mkdir -p "${SRC_DIR}"
 cd "${SRC_DIR}"
-
-# Init src repo for the current master (create .repo folder structure, registers manifest git)
 repo init -u "https://android.googlesource.com/platform/manifest"
 
 # Copy custom and manifest
 BUILD_ENV="GoogleCI"
 IMAGE_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
-LOCAL_MANIFESTS_DIR="${SRC_DIR}/.repo/local_manifests"
+MANIFESTS_DIR="${SRC_DIR}/.repo/manifests"
 CUSTOM_MANIFEST="manifest_${BUILD_NUMBER}.xml"
-mkdir -p "${LOCAL_MANIFESTS_DIR}"
-cp "${IMAGE_DIR}/${CUSTOM_MANIFEST}" "${LOCAL_MANIFESTS_DIR}/"
+cp "${IMAGE_DIR}/${CUSTOM_MANIFEST}" "${MANIFESTS_DIR}/"
 
 # Inform repo about custom manifest and sync it
 repo init -m "${CUSTOM_MANIFEST}"
