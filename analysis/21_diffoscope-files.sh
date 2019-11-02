@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 # Argument sanity check
 if [ "$#" -ne 3 ]; then
     echo "Usage: $0 <IN_DIR_1> <IN_DIR_2> <OUT_DIR>"
@@ -89,9 +90,5 @@ FILES=($(comm -12 \
 ))
 
 for FILE in "${FILES[@]}"; do
-    echo "$FILE"
-
-    diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
-
-    echo -ne "\n"
+    diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff" &
 done
