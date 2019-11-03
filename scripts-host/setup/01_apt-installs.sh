@@ -15,4 +15,4 @@ sudo apt install rsync libfontconfig1
 sudo apt install python
 
 # Required for reproducible build scripts
-sudo apt install curl jq bindfs diffoscope
+sudo apt install curl jq bindfs
