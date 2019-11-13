@@ -16,3 +16,9 @@ apt-get --assume-yes install python
 
 # Required for reproducible build scripts
 apt-get --assume-yes install curl jq bindfs
+
+# Install temporarily to pull in all runtime dependencies
+apt-get --assume-yes install diffoscope
+apt-get --assume-yes remove diffoscope
+# Required to install more current version of diffoscope
+apt-get --assume-yes install python3-pip

@@ -16,3 +16,9 @@ sudo apt install python
 
 # Required for reproducible build scripts
 sudo apt install curl jq bindfs
+
+# Install temporarily to pull in all runtime dependencies
+sudo apt install diffoscope
+sudo apt remove diffoscope
+# Required to install more current version of diffoscope
+sudo apt install python3-pip
