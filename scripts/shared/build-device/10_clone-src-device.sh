@@ -2,8 +2,8 @@
 
 # Argument sanity check
 if [ "$#" -ne 1 ]; then
-	echo "Usage: $0 <aosp-ref>"
-	echo "aosp-ref: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
+	echo "Usage: $0 <AOSP_REF>"
+	echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
 	exit 1
 fi
 AOSP_REF="$1"
