@@ -3,9 +3,9 @@ set -ex
 
 # Argument sanity check
 if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <AOSP_REF> <BUILD-TARGET> <DEVICE_CODENAME>"
+    echo "Usage: $0 <AOSP_REF> <BUILD_TARGET> <DEVICE_CODENAME>"
 	echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
-	echo "BUILD-TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
+	echo "BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
 	echo "DEVICE_CODENAME: Simply the codename for the target device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode"
     exit 1
 fi
