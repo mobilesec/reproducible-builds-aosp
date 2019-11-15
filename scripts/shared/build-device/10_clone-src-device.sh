@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 # Argument sanity check
 if [ "$#" -ne 1 ]; then

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 # Reproducible base directory
 if [ -z "${RB_AOSP_BASE+x}" ]; then

@@ -1,6 +1,6 @@
 #!/bin/bash
+set -ex
 
-set -x
 # Argument sanity check
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <BUILD_NUMBER> <BUILD_TARGET>"

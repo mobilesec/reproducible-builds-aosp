@@ -1,6 +1,6 @@
 #!/bin/bash
+set -ex
 
-set -x
 # Argument sanity check
 if [ "$#" -ne 3 ]; then
     echo "Usage: $0 <IN_DIR_1> <IN_DIR_2> <OUT_DIR>"
@@ -65,7 +65,12 @@ function diffoscopeFile {
         DIFF_IN_2="${IN_2}"
     fi
 
-    diffoscope --no-default-limits --output-empty --progress --text "${DIFF_OUT}.txt" --html-dir "${DIFF_OUT}.html-dir" "${DIFF_IN_1}" "${DIFF_IN_2}"
+    diffoscope --output-empty --progress \
+            --exclude-directory-metadata=recursive --exclude 'com.android.runtime.release.apex' \
+            --text "${DIFF_OUT}.txt" \
+            --html-dir "${DIFF_OUT}.html-dir" \
+            "${DIFF_IN_1}" \
+            "${DIFF_IN_2}"
 
     # Detect sparse images and convert them to raw images that can be readily mounted
     file "${IN_1}" | grep 'Android sparse image'

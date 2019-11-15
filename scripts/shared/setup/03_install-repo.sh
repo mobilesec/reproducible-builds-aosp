@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 # Essentially just follow the instructions from https://source.android.com/setup/build/downloading
 mkdir "${HOME}/bin"

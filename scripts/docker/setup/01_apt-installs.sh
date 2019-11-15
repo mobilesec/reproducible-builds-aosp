@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 apt-get update
 
@@ -15,7 +16,7 @@ apt-get --assume-yes install rsync libfontconfig1
 apt-get --assume-yes install python
 
 # Required for reproducible build scripts
-apt-get --assume-yes install curl jq bindfs
+apt-get --assume-yes install curl jq bindfs wget
 
 # Install temporarily to pull in all runtime dependencies
 apt-get --assume-yes install diffoscope
