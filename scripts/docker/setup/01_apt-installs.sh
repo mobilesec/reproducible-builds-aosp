@@ -8,7 +8,7 @@ apt-get --assume-yes install gnupg flex bison gperf build-essential zip curl zli
 #   'git-core' -> 'git'
 #   'lib32ncurses5-dev' -> 'libncurses5-dev',
 #   'lib32z-dev' -> 'lib32z1-dev'
-apt-get --assume-yes install git libncurses5-dev lib32z1-dev
+apt-get --assume-yes install git libncurses5 libncurses5-dev lib32z1-dev
 # Additional dependencies uncovered during build
 apt-get --assume-yes install rsync libfontconfig1
 # python2.7 required for repo, not installed in Ubuntu 18.04
