@@ -50,12 +50,15 @@ fetchArtifactList
 # Iterate all artifacts and download them
 ARTIFACTS=($(cat "${IMAGE_DIR}/artifacts_list"))
 for ARTIFACT in "${ARTIFACTS[@]}"; do
-	echo ${ARTIFACT}
-	if [[ "$ARTIFACT" == *"/"* ]]; then
-		DIR="${ARTIFACT%%/*}"
-		mkdir -p "${IMAGE_DIR}/${DIR}"
-	fi
+	# Only fetch files that can be meaningfully compared to local build
+	if [[ "${ARTIFACT}" == "android-info.txt" ]] || [[ "${ARTIFACT}" == "installed-files"* ]] || [[ "${ARTIFACT}" == *".img" ]]; then
+		if [[ "${ARTIFACT}" == *"/"* ]]; then
+			DIR="${ARTIFACT%%/*}"
+			mkdir -p "${IMAGE_DIR}/${DIR}"
+		fi
 
-	fetchFromAndroidCI ${ARTIFACT}
+		echo "${ARTIFACT}"
+		fetchFromAndroidCI ${ARTIFACT}
+	fi
 done
 
