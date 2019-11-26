@@ -4,7 +4,7 @@ set -ex
 # Argument sanity check
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <BUILD_NUMBER> <BUILD_TARGET>"
-	echo "BUILD_NUMBER: Googlei internal incremental build number that identifies each build, see https://android.googlesource.com/platform/build/+/master/Changes.md#BUILD_NUMBER"
+	echo "BUILD_NUMBER: GoogleCI internal incremental build number that identifies each build, see https://android.googlesource.com/platform/build/+/master/Changes.md#BUILD_NUMBER"
 	echo "BUILD_TARGET: Build target as choosen in lunch (consist of <TARGET_PRODUCT>-<TARGET_BUILD_VARIANT>"
     exit 1
 fi

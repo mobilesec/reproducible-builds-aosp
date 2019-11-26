@@ -2,16 +2,14 @@
 set -ex
 
 # Argument sanity check
-if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <AOSP_REF> <BUILD_TARGET> <DEVICE_CODENAME>"
-	echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <BUILD_NUMBER> <BUILD_TARGET>"
+	echo "BUILD_NUMBER: GoogleCI internal incremental build number that identifies each build, see https://android.googlesource.com/platform/build/+/master/Changes.md#BUILD_NUMBER"
 	echo "BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
-	echo "DEVICE_CODENAME: Simply the codename for the target device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode"
     exit 1
 fi
-AOSP_REF="$1"
+BUILD_NUMBER="$1"
 BUILD_TARGET="$2"
-DEVICE_CODENAME="$3"
 # Reproducible base directory
 if [ -z "${RB_AOSP_BASE+x}" ]; then
 	# Use default location
@@ -31,8 +29,8 @@ m -j $(nproc)
 # Copy relevant build output from BUILD_DIR to TARGET_DIR for further analysis
 BUILD_DIR="${SRC_DIR}/out"
 BUILD_ENV="$(lsb_release -si)$(lsb_release -sr)"
-TARGET_DIR="${RB_AOSP_BASE}/build/${AOSP_REF}/${BUILD_TARGET}/${BUILD_ENV}"
+TARGET_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
 mkdir -p "${TARGET_DIR}"
-cp "${BUILD_DIR}/target/product/${DEVICE_CODENAME}"/*.img "${TARGET_DIR}"
-cp "${BUILD_DIR}/target/product/${DEVICE_CODENAME}/android-info.txt" "${TARGET_DIR}"
-
+cp "${BUILD_DIR}/target/product/generic"/*.img "${TARGET_DIR}"
+cp "${BUILD_DIR}/target/product/generic"/installed-files* "${TARGET_DIR}"
+cp "${BUILD_DIR}/target/product/generic/android-info.txt" "${TARGET_DIR}"
