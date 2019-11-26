@@ -2,7 +2,7 @@
 set -ex
 
 # Argument sanity check
-if [ "$#" -ne 3 ]; then
+if [[ "$#" -ne 3 ]]; then
 	echo "Usage: $0 <AOSP_REF> <DEVICE_CODENAME>"
 	echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
 	echo "BUILD_ID: version of AOSP, corresponds to a tag, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
@@ -13,7 +13,7 @@ AOSP_REF="$1"
 BUILD_ID="$2"
 DEVICE_CODENAME="$3"
 # Reproducible base directory
-if [ -z "${RB_AOSP_BASE+x}" ]; then
+if [[ -z "${RB_AOSP_BASE+x}" ]]; then
 	# Use default location
 	RB_AOSP_BASE="${HOME}/aosp"
 	mkdir -p "${RB_AOSP_BASE}"

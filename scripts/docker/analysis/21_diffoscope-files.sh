@@ -2,7 +2,7 @@
 set -ex
 
 # Argument sanity check
-if [ "$#" -ne 3 ]; then
+if [[ "$#" -ne 3 ]]; then
     echo "Usage: $0 <IN_DIR_1> <IN_DIR_2> <OUT_DIR>"
 	echo "IN_DIR_1, IN_DIR_2: Directory with files that should be compared (Only files in both dirs will be compared)"
 	echo "OUT_DIR: Output directory diffoscope output"
@@ -12,7 +12,7 @@ IN_DIR_1="$1"
 IN_DIR_2="$2"
 OUT_DIR="$3"
 # Reproducible base directory
-if [ -z "${RB_AOSP_BASE+x}" ]; then
+if [[ -z "${RB_AOSP_BASE+x}" ]]; then
     # Use default location
     RB_AOSP_BASE="${HOME}/aosp"
 	mkdir -p "${RB_AOSP_BASE}"
@@ -46,14 +46,14 @@ function diffoscopeFile {
 
     # Detect sparse images and convert them to raw images that can be readily mounted
     file "${IN_1}" | grep 'Android sparse image'
-    if [ "$?" -eq 0 ]; then
+    if [[ "$?" -eq 0 ]]; then
         mountSparseImage "${IN_1}"
         DIFF_IN_1="${IN_1}.raw_mount"
     else
         DIFF_IN_1="${IN_1}"
     fi
     file "${IN_2}" | grep 'Android sparse image'
-    if [ "$?" -eq 0 ]; then
+    if [[ "$?" -eq 0 ]]; then
         mountSparseImage "${IN_2}"
         DIFF_IN_2="${IN_2}.raw_mount"
     else
@@ -70,11 +70,11 @@ function diffoscopeFile {
 
     # Detect sparse images and convert them to raw images that can be readily mounted
     file "${IN_1}" | grep 'Android sparse image'
-    if [ "$?" -eq 0 ]; then
+    if [[ "$?" -eq 0 ]]; then
         unmountSparseImage "${IN_1}"
     fi
     file "${IN_2}" | grep 'Android sparse image'
-    if [ "$?" -eq 0 ]; then
+    if [[ "$?" -eq 0 ]]; then
         unmountSparseImage "${IN_2}"
     fi
 }

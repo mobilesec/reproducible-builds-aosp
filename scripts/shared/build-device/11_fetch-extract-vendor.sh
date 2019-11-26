@@ -2,7 +2,7 @@
 set -ex
 
 # Argument sanity check
-if [ "$#" -ne 2 ]; then
+if [[ "$#" -ne 2 ]]; then
     echo "Usage: $0 <BUILD_ID> <DEVICE_CODENAME>"
     echo "BUILD_ID: version of AOSP, corresponds to a tag, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
     echo "DEVICE_CODENAME: Internal code name for device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode for details."
@@ -11,7 +11,7 @@ fi
 BUILD_ID="$1"
 DEVICE_CODENAME="$2"
 # Reproducible base directory
-if [ -z "${RB_AOSP_BASE+x}" ]; then
+if [[ -z "${RB_AOSP_BASE+x}" ]]; then
 	# Use default location
 	RB_AOSP_BASE="${HOME}/aosp"
 	mkdir -p "${RB_AOSP_BASE}"

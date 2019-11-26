@@ -2,7 +2,7 @@
 set -ex
 
 # Reproducible base directory
-if [ -z "${RB_AOSP_BASE+x}" ]; then
+if [[ -z "${RB_AOSP_BASE+x}" ]]; then
     # Use default location
     RB_AOSP_BASE="${HOME}/aosp"
 	mkdir -p "${RB_AOSP_BASE}"

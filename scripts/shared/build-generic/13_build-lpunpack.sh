@@ -2,14 +2,14 @@
 set -ex
 
 # Argument sanity check
-if [ "$#" -ne 1 ]; then
+if [[ "$#" -ne 1 ]]; then
     echo "Usage: $0 <BUILD_TARGET>"
 	echo "BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
     exit 1
 fi
 BUILD_TARGET="$1"
 # Reproducible base directory
-if [ -z "${RB_AOSP_BASE+x}" ]; then
+if [[ -z "${RB_AOSP_BASE+x}" ]]; then
 	# Use default location
 	RB_AOSP_BASE="${HOME}/aosp"
 	mkdir -p "${RB_AOSP_BASE}"
