@@ -7,8 +7,7 @@ if [ "$#" -ne 1 ]; then
 	echo "BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
     exit 1
 fi
-BUILD_NUMBER="$1"
-BUILD_TARGET="$2"
+BUILD_TARGET="$1"
 # Reproducible base directory
 if [ -z "${RB_AOSP_BASE+x}" ]; then
 	# Use default location
