@@ -49,18 +49,30 @@ function diffoscopeFile {
     IN_2="$2"
     DIFF_OUT="$3"
 
-    # Detect sparse images and convert them to raw images that can be readily mounted
+    # Detect sparse images
+    IN_1_SPARSE_IMG=false
+    IN_2_SPARSE_IMG=false
+    set +e # Disable early exit
     file "${IN_1}" | grep 'Android sparse image'
     if [[ "$?" -eq 0 ]]; then
-        mountSparseImage "${IN_1}"
-        DIFF_IN_1="${IN_1}.raw_bind"
-    else
-        DIFF_IN_1="${IN_1}"
+        IN_1_SPARSE_IMG=true
     fi
     file "${IN_2}" | grep 'Android sparse image'
     if [[ "$?" -eq 0 ]]; then
+        IN_2_SPARSE_IMG=true
+    fi
+    set -e # Re-enable early exit
+
+    # Convert them to raw images that can be readily mounted
+    if [[ "${IN_1_SPARSE_IMG}" = true ]]; then
+        mountSparseImage "${IN_1}"
+        DIFF_IN_1="${IN_1}.raw_mount"
+    else
+        DIFF_IN_1="${IN_1}"
+    fi
+    if [[ "${IN_2_SPARSE_IMG}" = true ]]; then
         mountSparseImage "${IN_2}"
-        DIFF_IN_2="${IN_2}.raw_bind"
+        DIFF_IN_2="${IN_2}.raw_mount"
     else
         DIFF_IN_2="${IN_2}"
     fi
@@ -72,13 +84,12 @@ function diffoscopeFile {
             "${DIFF_IN_1}" \
             "${DIFF_IN_2}"
 
-    # Detect sparse images and convert them to raw images that can be readily mounted
-    file "${IN_1}" | grep 'Android sparse image'
-    if [[ "$?" -eq 0 ]]; then
+    
+    # Unmount sparse images if applicable
+    if [[ "${IN_1_SPARSE_IMG}" = true ]]; then
         unmountSparseImage "${IN_1}"
     fi
-    file "${IN_2}" | grep 'Android sparse image'
-    if [[ "$?" -eq 0 ]]; then
+    if [[ "${IN_2_SPARSE_IMG}" = true ]]; then
         unmountSparseImage "${IN_2}"
     fi
 }
