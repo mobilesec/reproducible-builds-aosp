@@ -107,7 +107,7 @@ function diffoscopeFile {
     fi
 
     set +e # Disable early exit
-    diffoscope --output-empty --progress \
+    sudo "$(which diffoscope)" --output-empty --progress \
             --exclude-directory-metadata=recursive --exclude 'com.android.runtime.release.apex' \
             --text "${DIFF_OUT}.txt" \
             --html-dir "${DIFF_OUT}.html-dir" \
