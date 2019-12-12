@@ -26,30 +26,6 @@ function decompressSparseImage {
     "${SIMG_2_IMG_BIN}" "${IMG_SPARSE}" "${IMG_RAW}"
 }
 
-function mountExtImage {
-    IMG_EXT="$1"
-    IMG_MOUNT="${IMG_EXT}_mount"
-    IMG_BIND="$2"
-
-    # To avoid accidental changes + unsupported feature flag, mount ro
-    mkdir -p "${IMG_MOUNT}"
-    sudo mount -o ro "${IMG_EXT}" "${IMG_MOUNT}"
-    # Mounted image is owned by root and ext2/3/4 does not permit overwrite of uid/gid -> bind via bindfs
-    mkdir -p "${IMG_BIND}"
-    sudo bindfs -u "${USER}" -g "${USER}" "--create-for-user=${USER}" "--create-for-group=${USER}" "${IMG_MOUNT}" "${IMG_BIND}"
-}
-
-function unmountExtImage {
-    IMG_EXT="$1"
-    IMG_MOUNT="${IMG_EXT}_mount"
-    IMG_BIND="$2"
-
-    sudo fusermount -u "${IMG_BIND}"
-    rmdir "${IMG_BIND}"
-    sudo umount "${IMG_MOUNT}"
-    rmdir "${IMG_MOUNT}"
-}
-
 function diffoscopeFile {
     # Original input paramts
     IN_1="$1"
@@ -81,29 +57,35 @@ function diffoscopeFile {
         DIFF_IN_2="${DIFF_IN_2}.raw"
     fi
 
-    # Detect ext2/3/4 images. Usually these can be handled by diffoscope just fine, however...
-    # Starting with Android 10 all ext4 images use some special dedup/compression feature which results in
-    # `EXT4-fs (loop3): couldn't mount RDWR because of unsupported optional features (4000)`
-    # when attempting a standard rw mount. Thus mount these images ro before calling diffoscope with the mount point
+    # Detect ext4 images with EXT4_FEATURE_RO_COMPAT_SHARED_BLOCKS (`shared_blocks` or `FEATURE_R14` if not explicitly named).
+    # Current kernels (as or writing 5.4 upstream) don't support this yet, thus mount.ext4 with defaults (including rw) fails
+    # Thus we set the 'read-only' feature on these, allowing mount.ext4 with defaults (now ro) to suceed.
     set +e # Disable early exit
+    # Check if ext4 image (file tends to show ext2)
     file "${DIFF_IN_1}" | grep -P '(ext2)|(ext3)|(ext4)'
     if [[ "$?" -eq 0 ]]; then
-        IN_1_EXT_IMG=true
+        # Check for 'shared_blocks'
+        "${TUNE2FS_BIN}" -l "${DIFF_IN_1}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
+        if [[ "$?" -eq 0 ]]; then
+            IN_1_EXT_IMG_SHARED_BLOCKS=true
+        fi
     fi
     file "${DIFF_IN_2}" | grep -P '(ext2)|(ext3)|(ext4)'
     if [[ "$?" -eq 0 ]]; then
-        IN_2_EXT_IMG=true
+        # Check for 'shared_blocks'
+        "${TUNE2FS_BIN}" -l "${DIFF_IN_2}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
+        if [[ "$?" -eq 0 ]]; then
+            IN_2_EXT_IMG_SHARED_BLOCKS=true
+        fi
     fi
     set -e # Re-enable early exit
 
-    # Convert them to raw images that can be readily mounted
-    if [[ "${IN_1_EXT_IMG}" = true ]]; then
-        mountExtImage "${DIFF_IN_1}" "${DIFF_IN_1}_bind"
-        DIFF_IN_1="${DIFF_IN_1}_bind"
+    # As stated, set the ext4 'read-only' flag, see https://www.mankier.com/8/tune2fs#-O
+    if [[ "${IN_1_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
+        "${TUNE2FS_BIN}" -O "read-only" "${DIFF_IN_1}"
     fi
-    if [[ "${IN_2_EXT_IMG}" = true ]]; then
-        mountExtImage "${DIFF_IN_2}" "${DIFF_IN_2}_bind"
-        DIFF_IN_2="${DIFF_IN_2}_bind"
+    if [[ "${IN_2_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
+        "${TUNE2FS_BIN}" -O "read-only" "${DIFF_IN_2}"
     fi
 
     set +e # Disable early exit
@@ -114,23 +96,15 @@ function diffoscopeFile {
             "${DIFF_IN_1}" "${DIFF_IN_2}"
     set -e # Re-enable early exit
 
-    # Unmount ext images if applicable
-    if [[ "${IN_1_EXT_IMG}" = true ]]; then
-        if [[ "${IN_1_SPARSE_IMG}" = true ]]; then
-            unmountExtImage "${IN_1}.raw" "${DIFF_IN_1}"
-        else
-            unmountExtImage "${IN_1}" "${DIFF_IN_1}"
-        fi
+    # Clear `read-only` flag
+    if [[ "${IN_1_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
+        "${TUNE2FS_BIN}" -O "^read-only" "${DIFF_IN_1}"
     fi
-    if [[ "${IN_2_EXT_IMG}" = true ]]; then
-        if [[ "${IN_2_SPARSE_IMG}" = true ]]; then
-            unmountExtImage "${IN_2}.raw" "${DIFF_IN_2}"
-        else
-            unmountExtImage "${IN_2}" "${DIFF_IN_2}"
-        fi
+    if [[ "${IN_2_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
+        "${TUNE2FS_BIN}" -O "^read-only" "${DIFF_IN_2}"
     fi
 
-    # Delete sparse images if applicable
+    # Delete raw image (if original was sparse)
     if [[ "${IN_1_SPARSE_IMG}" = true ]]; then
         rm "${IN_1}.raw"
     fi
@@ -142,6 +116,7 @@ function diffoscopeFile {
 # Misc variables + ensure ${OUT_DIR} exists
 DEPS_DIR="${RB_AOSP_BASE}/deps"
 SIMG_2_IMG_BIN="${DEPS_DIR}/android-simg2img/simg2img"
+TUNE2FS_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin/tune2fs"
 mkdir -p "${OUT_DIR}"
 
 # Create list of files in common for both directories
