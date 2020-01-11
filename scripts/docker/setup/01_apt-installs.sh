@@ -23,3 +23,6 @@ apt-get --assume-yes install diffoscope
 apt-get --assume-yes remove diffoscope
 # Required to install more current version of diffoscope
 apt-get --assume-yes install python3-pip
+
+# Required to use shared '21_diffoscope-files' script, even though we are root in the docker container
+apt-get --assume-yes install sudo
