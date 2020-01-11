@@ -92,6 +92,7 @@ function diffoscopeFile {
     sudo "$(which diffoscope)" --output-empty --progress \
             --exclude-directory-metadata=recursive --exclude 'com.android.runtime.release.apex' \
             --text "${DIFF_OUT}.txt" \
+            --json "${DIFF_OUT}.json" \
             --html-dir "${DIFF_OUT}.html-dir" \
             "${DIFF_IN_1}" "${DIFF_IN_2}"
     set -e # Re-enable early exit
@@ -120,7 +121,7 @@ TUNE2FS_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin/tune2fs"
 mkdir -p "${OUT_DIR}"
 
 # apktool quirk workaround, see https://github.com/iBotPeaches/Apktool/issues/2048
-mkdir -p  "${HOME}/.local/share/apktool/framework"
+sudo mkdir -p  "/root/.local/share/apktool/framework"
 
 # Create list of files in common for both directories
 FILES=($(comm -12 \
