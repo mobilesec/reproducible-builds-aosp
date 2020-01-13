@@ -9,14 +9,14 @@ RB_AOSP_BASE="/root/aosp"
 
 compose_cmds() {
 cat <<EOF | tr '\n' '; '
-source "./scripts/docker/setup-runtime/01_set-runtime-path.sh"
+source "./scripts/shared/setup-runtime/01_set-runtime-path.sh"
 bash "./scripts/shared/build-generic/10_fetch-ci-artifacts.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
 bash "./scripts/shared/build-generic/11_clone-src-via-manifest.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
 bash "./scripts/shared/build-generic/12_build-generic.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
 bash "./scripts/shared/build-generic/13_build-lpunpack.sh" "${BUILD_TARGET}"
 bash "./scripts/shared/build-generic/14_lpunpack-super-imgs.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
 bash "./scripts/shared/analysis/20_install-simg2img.sh"
-bash "./scripts/docker/analysis/21_diffoscope-files.sh" \
+bash "./scripts/shared/analysis/21_diffoscope-files.sh" \
     "${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
     "${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/\$(lsb_release -si)\$(lsb_release -sr)" \
     "${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
