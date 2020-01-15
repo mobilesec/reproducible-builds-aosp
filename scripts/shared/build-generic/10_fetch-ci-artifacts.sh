@@ -51,7 +51,7 @@ fetchArtifactList
 ARTIFACTS=($(cat "${IMAGE_DIR}/artifacts_list"))
 for ARTIFACT in "${ARTIFACTS[@]}"; do
 	# Only fetch files that can be meaningfully compared to local build
-	if [[ "${ARTIFACT}" == "android-info.txt" ]] || [[ "${ARTIFACT}" == "installed-files"* ]] || [[ "${ARTIFACT}" == *".img" ]]; then
+	if [[ "${ARTIFACT}" == "manifest_"*".xml" ]] || [[ "${ARTIFACT}" == "android-info.txt" ]] || [[ "${ARTIFACT}" == "installed-files"* ]] || [[ "${ARTIFACT}" == *".img" ]]; then
 		if [[ "${ARTIFACT}" == *"/"* ]]; then
 			DIR="${ARTIFACT%%/*}"
 			mkdir -p "${IMAGE_DIR}/${DIR}"

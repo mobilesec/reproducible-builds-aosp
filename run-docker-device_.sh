@@ -7,6 +7,7 @@ GOOGLE_BUILD_TARGET="${DEVICE_CODENAME}-user"
 GOOGLE_BUILD_ENV="Google"
 RB_AOSP_BASE="/root/aosp"
 RB_BUILD_TARGET="aosp_${DEVICE_CODENAME}-user"
+RB_BUILD_ENV="docker"
 
 compose_cmds() {
 cat <<EOF | tr '\n' '; '

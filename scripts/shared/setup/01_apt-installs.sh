@@ -6,7 +6,7 @@ set -ex
 # environments, like a Docker container running Debian.
 set +e # Disable early exit
 command -v sudo
-if [ "$?" -ne 0 ]; then
+if [[ "$?" -ne 0 ]]; then
     apt-get update
 
     apt-get --assume-yes install sudo
