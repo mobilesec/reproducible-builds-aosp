@@ -130,7 +130,8 @@ FILES=($(comm -12 \
 ))
 
 for FILE in "${FILES[@]}"; do
-    if [[ "${FILE}" != *"super.img" ]]; then # Ignore super.img, we decompressed it previously 
-        diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff" &
+    if [[ "${FILE}" != *"super.img" && "${FILE}" != *".link" ]]; then # Ignore super.img, we decompressed it previously
+        diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
     fi
 done
+

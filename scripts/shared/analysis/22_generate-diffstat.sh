@@ -7,7 +7,7 @@ if [[ "$#" -ne 1 ]]; then
 	echo "DIFF_DIR: Output directory diffoscope output"
     exit 1
 fi
-DIFF_DIR="$3"
+DIFF_DIR="$1"
 # Reproducible base directory
 if [[ -z "${RB_AOSP_BASE+x}" ]]; then
     # Use default location
@@ -18,7 +18,7 @@ fi
 # Navigate to diff dir
 cd "${DIFF_DIR}"
 
-for DIFF_JSON in *".json"; do
+for DIFF_JSON in *.json; do
     echo "${DIFF_JSON}"
 
     # jq filters have a strong write-once smell if you never worked with them before. Thus a small breakdown
@@ -47,17 +47,19 @@ for DIFF_JSON in *".json"; do
     #   * The last property for each 3 tuple is the unified diff, which we simply retrieve via getpath
     # * Finally we join alle values with newlines, resultung in a clean set of diffs (i.e. patch without metadata like author, etc.)
     jq -r '
-    . as $in
-    | reduce (
-        leaf_paths | select((. | last) == "unified_diff" and (. | last | type) == "string")
-    ) as $path ({}; .
-        + { ($path | .[($path | length - 1)] = "source1" | map(tostring) | join(".")) : ( "---  + ( [ $in | getpath(
-                $path[0:range(0; ($path | length) + 1)] | select((. | last) | type == "number") | . += ["source1"]
-            ) ] | join("__") ) + "" ) }
-        + { ($path | .[($path | length - 1)] = "source2" | map(tostring) | join(".")) : ( "+++ " + ( [ $in | getpath(
-                $path[0:range(0; ($path | length) + 1)] | select((. | last) | type == "number") | . += ["source2"]
-            ) ] | join("__") ) + "" ) }
-        + { ($path | map(tostring) | join(".")): $in | getpath($path) }
-    ) | join("\n")
-    ' <(cat "${DIFF_JSON}") > "${DIFF_JSON}.diffstat"
+. as $in
+| reduce (
+leaf_paths | select((. | last) == "unified_diff" and (. | last | type) == "string")
+  ) as $path ({}; .
+  + { ($path | .[($path | length - 1)] = "source1" | map(tostring) | join(".")) : ( "--- " + ( [ $in | getpath(
+    $path[0:range(0; ($path | length) + 1)] | select((. | last) | type == "number") | . += ["source1"]
+  ) ] | join("__") ) ) }
+  + { ($path | .[($path | length - 1)] = "source2" | map(tostring) | join(".")) : ( "+++ " + ( [ $in | getpath(
+    $path[0:range(0; ($path | length) + 1)] | select((. | last) | type == "number") | . += ["source2"]
+    ) ] | join("__") ) ) }
+  + { ($path | map(tostring) | join(".")): $in | getpath($path) }
+) | join("\n")
+' <(cat "${DIFF_JSON}") | \
+	diffstat > "${DIFF_JSON}.diffstat"
 done
+
