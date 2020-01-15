@@ -6,6 +6,7 @@ RUN apt-get update \
     && sh "./scripts/shared/setup/02_pip-installs.sh" \
     && sh "./scripts/shared/setup/03_install-repo.sh" \
     && sh "./scripts/shared/setup/04_config-git.sh" \
+    && sh "./scripts/shared/setup/05_config_profile.sh" \
     && rm -rf "/var/lib/apt/lists/*"
 
 CMD bash

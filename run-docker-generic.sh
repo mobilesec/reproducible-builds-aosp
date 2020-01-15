@@ -8,7 +8,6 @@ RB_AOSP_BASE="/root/aosp"
 
 compose_cmds() {
 cat <<EOF | tr '\n' '; '
-source "./scripts/shared/setup-runtime/01_set-runtime-path.sh"
 bash "./scripts/shared/build-generic/10_fetch-ci-artifacts.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
 bash "./scripts/shared/build-generic/11_clone-src-via-manifest.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
 bash "./scripts/shared/build-generic/12_build-generic.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"

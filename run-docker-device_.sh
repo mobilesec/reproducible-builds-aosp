@@ -10,7 +10,6 @@ RB_BUILD_TARGET="aosp_${DEVICE_CODENAME}-user"
 
 compose_cmds() {
 cat <<EOF | tr '\n' '; '
-source "./scripts/shared/setup-runtime/01_set-runtime-path.sh"
 bash "./scripts/shared/build-device/10_clone-src-device.sh" "${AOSP_REF}"
 bash "./scripts/shared/build-device/13_fetch-extract-factory-images.sh" "${AOSP_REF}" "${BUILD_ID}" "${DEVICE_CODENAME}"
 bash "./scripts/shared/analysis/20_install-simg2img.sh"

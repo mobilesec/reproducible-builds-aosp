@@ -10,7 +10,6 @@ RB_BUILD_TARGET="aosp_${DEVICE_CODENAME}-user"
 
 compose_cmds() {
 cat <<EOF | tr '\n' '; '
-source "./scripts/shared/setup-runtime/01_set-runtime-path.sh"
 bash "./scripts/shared/build-device/10_clone-src-device.sh" "${AOSP_REF}"
 bash "./scripts/shared/build-device/11_fetch-extract-vendor.sh" "${BUILD_ID}" "${DEVICE_CODENAME}"
 bash "./scripts/shared/build-device/12_build-device.sh" "${AOSP_REF}" "${RB_BUILD_TARGET}" "${DEVICE_CODENAME}"
