@@ -1,6 +1,6 @@
 
 # Setup the .profile file to include common local bin paths during startup
-cat >> "$HOME/.test" << 'EOF'
+cat >> "$HOME/.profile" << 'EOF'
 
 # set PATH so it includes user's private bin if it exists
 if [ -d "${HOME}/bin" ] ; then
