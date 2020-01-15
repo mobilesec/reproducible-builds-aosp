@@ -27,4 +27,4 @@ docker run \
     --mount "type=bind,source=${HOME}/aosp/src/.repo/project.list,target=/root/aosp/src/.repo/project.list" \
     --mount "type=bind,source=${HOME}/aosp/src/.repo/projects,target=/root/aosp/src/.repo/projects" \
     --mount "type=bind,source=${HOME}/aosp/diff,target=/root/aosp/diff" \
-    "mpoell/rb-aosp:latest" /bin/bash -c "$(compose_cmds)"
+    "mpoell/rb-aosp:latest" /bin/bash -l -c "$(compose_cmds)"
