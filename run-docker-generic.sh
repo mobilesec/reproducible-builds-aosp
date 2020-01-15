@@ -1,7 +1,6 @@
 #!/bin/bash
 
 BUILD_NUMBER="6032886"
-BUILD_ID="QP1A.191105.003"
 DEVICE_CODENAME="crosshatch"
 BUILD_TARGET="aosp_${DEVICE_CODENAME}-user"
 GOOGLE_BUILD_ENV="Google"
@@ -17,9 +16,9 @@ bash "./scripts/shared/build-generic/13_build-lpunpack.sh" "${BUILD_TARGET}"
 bash "./scripts/shared/build-generic/14_lpunpack-super-imgs.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
 bash "./scripts/shared/analysis/20_install-simg2img.sh"
 bash "./scripts/shared/analysis/21_diffoscope-files.sh" \
-    "${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
-    "${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/\$(lsb_release -si)\$(lsb_release -sr)" \
-    "${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
+    "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
+    "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/\$(lsb_release -si)\$(lsb_release -sr)" \
+    "${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
 EOF
 }
 
