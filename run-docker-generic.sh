@@ -2,7 +2,7 @@
 
 BUILD_NUMBER="6136429"
 BUILD_TARGET="aosp_x86_64-eng"
-GOOGLE_BUILD_ENV="Google"
+GOOGLE_BUILD_ENV="GoogleCI"
 RB_AOSP_BASE="/root/aosp"
 RB_BUILD_ENV="docker"
 

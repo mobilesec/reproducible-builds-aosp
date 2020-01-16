@@ -36,6 +36,8 @@ function diffoscopeFile {
     DIFF_IN_2="${IN_2}"
     
     # Detect sparse images
+    IN_1_SPARSE_IMG=false
+    IN_2_SPARSE_IMG=false
     set +e # Disable early exit
     file "${DIFF_IN_1}" | grep 'Android sparse image'
     if [[ "$?" -eq 0 ]]; then
@@ -60,6 +62,8 @@ function diffoscopeFile {
     # Detect ext4 images with EXT4_FEATURE_RO_COMPAT_SHARED_BLOCKS (`shared_blocks` or `FEATURE_R14` if not explicitly named).
     # Current kernels (as or writing 5.4 upstream) don't support this yet, thus mount.ext4 with defaults (including rw) fails
     # Thus we set the 'read-only' feature on these, allowing mount.ext4 with defaults (now ro) to suceed.
+    IN_1_EXT_IMG_SHARED_BLOCKS=false
+    IN_2_EXT_IMG_SHARED_BLOCKS=false
     set +e # Disable early exit
     # Check if ext4 image (file tends to show ext2)
     file "${DIFF_IN_1}" | grep -P '(ext2)|(ext3)|(ext4)'
@@ -89,8 +93,8 @@ function diffoscopeFile {
     fi
 
     set +e # Disable early exit
-    sudo "$(which diffoscope)" --output-empty --progress \
-            --max-text-report-size 100000000 --max-diff-block-lines-saved 10000 \
+    sudo "$(command -v diffoscope)" --output-empty --progress \
+            --max-text-report-size 50000000 --max-diff-block-lines-saved 100 \
             --exclude-directory-metadata=recursive --exclude 'com.android.runtime.release.apex' \
             --text "${DIFF_OUT}.txt" \
             --json "${DIFF_OUT}.json" \
