@@ -94,7 +94,7 @@ function diffoscopeFile {
 
     set +e # Disable early exit
     sudo "$(command -v diffoscope)" --output-empty --progress \
-            --max-text-report-size 50000000 --max-diff-block-lines-saved 100 \
+            --max-diff-block-lines-saved 200 \
             --exclude-directory-metadata=recursive --exclude 'com.android.runtime.release.apex' \
             --text "${DIFF_OUT}.txt" \
             --json "${DIFF_OUT}.json" \

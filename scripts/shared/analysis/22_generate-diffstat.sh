@@ -30,7 +30,7 @@ for DIFF_JSON in *.json; do
     #     leading to said source by combining these with a ".". For the value we want to concat the all
     #     source property values that lie on this path. Note that such a concatination is only a real path
     #     in some instances, more often than not the last "source" value on this path is the tool invocation
-    #     on a specific file. Thus we join with "__". Finally we prepend diff markers (e.g. "--- ") to allow automatic processing.
+    #     on a specific file. Thus we join with "::". Finally we prepend diff markers (e.g. "--- ") to allow automatic processing.
     #     * For each $path we need all prefix arrays that lead to the respective "source" properties.
     #       Note that all (except the last) "source" property doesn't exist on the path directly. Rather for
     #       each intermediate step, after indexing the element in the "details" array, we need to manually append
@@ -56,7 +56,7 @@ leaf_paths | select((. | last) == "unified_diff" and (. | last | type) == "strin
   ) ] | join("__") ) ) }
   + { ($path | .[($path | length - 1)] = "source2" | map(tostring) | join(".")) : ( "+++ " + ( [ $in | getpath(
     $path[0:range(0; ($path | length) + 1)] | select((. | last) | type == "number") | . += ["source2"]
-    ) ] | join("__") ) ) }
+    ) ] | join("::") ) ) }
   + { ($path | map(tostring) | join(".")): $in | getpath($path) }
 ) | join("\n")
 ' <(cat "${DIFF_JSON}") | \
