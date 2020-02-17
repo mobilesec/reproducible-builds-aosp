@@ -23,7 +23,7 @@ function decompressSparseImage {
     IMG_RAW="$2"
 
     # Deomcpress into raw ext2/3/4 partition image
-    "${SIMG_2_IMG_BIN}" "${IMG_SPARSE}" "${IMG_RAW}"
+    simg2img "${IMG_SPARSE}" "${IMG_RAW}"
 }
 
 function diffoscopeFile {
@@ -121,7 +121,6 @@ function diffoscopeFile {
 
 # Misc variables + ensure ${OUT_DIR} exists
 DEPS_DIR="${RB_AOSP_BASE}/deps"
-SIMG_2_IMG_BIN="${DEPS_DIR}/android-simg2img/simg2img"
 TUNE2FS_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin/tune2fs"
 mkdir -p "${OUT_DIR}"
 

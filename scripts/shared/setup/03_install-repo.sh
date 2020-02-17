@@ -5,5 +5,5 @@ set -ex
 mkdir "${HOME}/bin"
 export PATH="${HOME}/bin:${PATH}" # Fix PATH immediatly, avoids requirement for new login
 
-curl "https://storage.googleapis.com/git-repo-downloads/repo" > ~/bin/repo
-chmod a+x ~/bin/repo
+curl "https://storage.googleapis.com/git-repo-downloads/repo" > "${HOME}/bin/repo"
+chmod a+x "${HOME}/bin/repo"
