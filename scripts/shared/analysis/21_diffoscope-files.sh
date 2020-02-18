@@ -123,6 +123,7 @@ function diffoscopeFile {
 DEPS_DIR="${RB_AOSP_BASE}/deps"
 TUNE2FS_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin/tune2fs"
 mkdir -p "${OUT_DIR}"
+rm -rf "${OUT_DIR}/"* # Clean up previous diff results
 
 # apktool quirk workaround, see https://github.com/iBotPeaches/Apktool/issues/2048
 sudo mkdir -p  "/root/.local/share/apktool/framework"

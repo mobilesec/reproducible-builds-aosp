@@ -22,6 +22,7 @@ fi
 SRC_DIR="${RB_AOSP_BASE}/src"
 mkdir -p "${SRC_DIR}"
 cd "${SRC_DIR}"
+rm -rf * # Clean up previously checked out files
 repo init -u "https://android.googlesource.com/platform/manifest"
 
 # Copy custom and manifest

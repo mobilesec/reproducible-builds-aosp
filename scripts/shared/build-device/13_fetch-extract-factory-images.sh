@@ -24,6 +24,7 @@ BUILD_ENV="Google"
 IMAGE_DIR="${RB_AOSP_BASE}/build/${AOSP_REF}/${DEVICE_CODENAME}-user/${BUILD_ENV}"
 mkdir -p "${IMAGE_DIR}"
 cd "${IMAGE_DIR}"
+rm -rf * # Clean up previously fetched files
 
 # Download link via primitive web scrapping
 curl "https://developers.google.com/android/images" \

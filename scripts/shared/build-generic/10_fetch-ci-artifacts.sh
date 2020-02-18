@@ -43,6 +43,7 @@ function fetchArtifactList {
 BUILD_ENV="GoogleCI"
 IMAGE_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
 mkdir -p "${IMAGE_DIR}"
+rm -rf "${IMAGE_DIR}/"* # Clean up previously fetched files
 
 # Create artifact list
 fetchArtifactList
