@@ -14,10 +14,11 @@ bash "./scripts/shared/build-generic/12_build-generic.sh" "${BUILD_NUMBER}" "${B
 bash "./scripts/shared/build-generic/13_build-lpunpack.sh" "${BUILD_TARGET}"
 bash "./scripts/shared/build-generic/14_lpunpack-super-imgs.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
 bash "./scripts/shared/analysis/20_install-simg2img.sh"
-bash "./scripts/shared/analysis/21_diffoscope-files.sh" \
+bash "./scripts/shared/analysis/20_diffoscope-files.sh" \
     "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
     "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/\$(lsb_release -si)\$(lsb_release -sr)" \
     "${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
+bash "./scripts/shared/analysis/21_generate-diffstat.sh" "${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
 EOF
 }
 
