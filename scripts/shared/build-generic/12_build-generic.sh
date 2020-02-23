@@ -26,11 +26,17 @@ source ./build/envsetup.sh
 lunch "${BUILD_TARGET}"
 m -j $(nproc)
 
-# Copy relevant build output from BUILD_DIR to TARGET_DIR for further analysis
+# Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
 BUILD_DIR="${SRC_DIR}/out"
 BUILD_ENV="$(lsb_release -si)$(lsb_release -sr)"
 TARGET_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
 mkdir -p "${TARGET_DIR}"
-cp "${BUILD_DIR}/target/product/generic"/*.img "${TARGET_DIR}"
-cp "${BUILD_DIR}/target/product/generic"/installed-files* "${TARGET_DIR}"
-cp "${BUILD_DIR}/target/product/generic/android-info.txt" "${TARGET_DIR}"
+# Generic build targets have specific names for their folders in ${BUILD_DIR}/target/product
+# Extract this name from the PRODUCT_DEVICE variable from their Makefile
+BUILD=$(echo ${BUILD_TARGET} | sed -E -e 's/-[a-z]+$//') # Remove -BUILDTYPE suffix
+MAKEFILE="${SRC_DIR}/build/make/target/product/${BUILD}.mk"
+PRODUCT_FOLDER=$(grep 'PRODUCT_DEVICE' "${MAKEFILE}" | sed -E -e 's/^[^=]+=[ ]*//') # Remove variable assignment
+# Copy relevant build output from BUILD_DIR to TARGET_DIR
+cp "${BUILD_DIR}/target/product/${PRODUCT_FOLDER}"/*.img "${TARGET_DIR}"
+cp "${BUILD_DIR}/target/product/${PRODUCT_FOLDER}"/installed-files* "${TARGET_DIR}"
+cp "${BUILD_DIR}/target/product/${PRODUCT_FOLDER}/android-info.txt" "${TARGET_DIR}"

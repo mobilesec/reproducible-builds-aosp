@@ -28,11 +28,12 @@ source ./build/envsetup.sh
 lunch "${BUILD_TARGET}"
 m -j $(nproc)
 
-# Copy relevant build output from BUILD_DIR to TARGET_DIR for further analysis
+# Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
 BUILD_DIR="${SRC_DIR}/out"
 BUILD_ENV="$(lsb_release -si)$(lsb_release -sr)"
 TARGET_DIR="${RB_AOSP_BASE}/build/${AOSP_REF}/${BUILD_TARGET}/${BUILD_ENV}"
 mkdir -p "${TARGET_DIR}"
+# Copy relevant build output from BUILD_DIR to TARGET_DIR
 cp "${BUILD_DIR}/target/product/${DEVICE_CODENAME}"/*.img "${TARGET_DIR}"
 cp "${BUILD_DIR}/target/product/${DEVICE_CODENAME}/android-info.txt" "${TARGET_DIR}"
 
