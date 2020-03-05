@@ -19,8 +19,6 @@ fi
 cd "${DIFF_DIR}"
 
 for DIFF_JSON in *.json; do
-    echo "${DIFF_JSON}"
-
     # jq filters have a strong write-once smell if you never worked with them before. Thus a small breakdown
     # of the steps involved for this one:
     # * We iterate over all paths in JSON object that lead to a unified diff that is actually present
@@ -61,5 +59,8 @@ leaf_paths | select((. | last) == "unified_diff" and (. | last | type) == "strin
 ) | join("\n")
 ' <(cat "${DIFF_JSON}") | \
 	diffstat > "${DIFF_JSON}.diffstat"
+
+  # JSON files take considerable space, get rid of them
+  rm "${DIFF_JSON}"
 done
 
