@@ -95,7 +95,7 @@ function diffoscopeFile {
     set +e # Disable early exit
     sudo "$(command -v diffoscope)" --output-empty --progress \
             --max-diff-block-lines-saved 200 \
-            --exclude-directory-metadata=recursive --exclude 'apex_payload.img' \
+            --exclude-directory-metadata=recursive --exclude 'apex_payload.img' --exclude 'CERT.RSA' --exclude 'apex_pubkey' --exclude 'update-payload-key.pub.pem' \
             --text "${DIFF_OUT}.txt" \
             --json "${DIFF_OUT}.json" \
             --html-dir "${DIFF_OUT}.html-dir" \
