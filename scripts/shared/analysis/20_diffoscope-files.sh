@@ -138,3 +138,6 @@ for FILE in "${FILES[@]}"; do
     fi
 done
 
+# Cleanup both builds after diffing process
+rm -rf "${IN_DIR_1}"
+rm -rf "${IN_DIR_1}"
