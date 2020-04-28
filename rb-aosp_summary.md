@@ -1,6 +1,6 @@
 
-Reproducible Builds for AOSP
-============================
+Simple Opinionated AOSP builds by an external Party (SOAP)
+==========================================================
 
 This project aims to build AOSP in a reproducible manner and identify differences to the reference builds provided by Google. As reference builds we intend to track a selection of the following:
 * [Factory images](https://developers.google.com/android/images) for phones by Google
