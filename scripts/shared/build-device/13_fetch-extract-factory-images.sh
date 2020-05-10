@@ -27,8 +27,8 @@ cd "${IMAGE_DIR}"
 rm -rf * # Clean up previously fetched files
 
 # Download link via primitive web scrapping
-curl "https://developers.google.com/android/images" \
-	| grep -i "${DEVICE_CODENAME}-${BUILD_ID}" \
+grep -i "${DEVICE_CODENAME}-${BUILD_ID}" \
+	<( curl "https://developers.google.com/android/images" ) \
 	| sed -n "s/^.*href=\"\s*\(\S*\)\".*$/\1/p" > link
 wget "$(cat link)"
 

@@ -23,8 +23,8 @@ mkdir -p "${DRIVER_DIR}"
 cd "${DRIVER_DIR}"
 
 # Extract download links via primitive web scrapping
-curl "https://developers.google.com/android/drivers" \
-	| grep -i "${DEVICE_CODENAME}-${BUILD_ID}" \
+grep -i "${DEVICE_CODENAME}-${BUILD_ID}" \
+	<( curl "https://developers.google.com/android/drivers" ) \
 	| sed -n "s/^.*href=\"\s*\(\S*\)\".*$/\1/p" \
 	> links
 while read LINK; do
