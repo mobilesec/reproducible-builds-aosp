@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -o errexit -o nounset -o pipefail -o xtrace
 
 # Essentially just follow the instructions from https://source.android.com/setup/build/downloading
 mkdir -p "${HOME}/bin"

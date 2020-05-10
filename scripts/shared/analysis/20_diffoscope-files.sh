@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -o errexit -o nounset -o pipefail -o xtrace
 
 # Argument sanity check
 if [[ "$#" -ne 3 ]]; then
@@ -38,7 +38,7 @@ function diffoscopeFile {
     # Detect sparse images
     IN_1_SPARSE_IMG=false
     IN_2_SPARSE_IMG=false
-    set +e # Disable early exit
+    set +o errexit # Disable early exit
     file "${DIFF_IN_1}" | grep 'Android sparse image'
     if [[ "$?" -eq 0 ]]; then
         IN_1_SPARSE_IMG=true
@@ -47,7 +47,7 @@ function diffoscopeFile {
     if [[ "$?" -eq 0 ]]; then
         IN_2_SPARSE_IMG=true
     fi
-    set -e # Re-enable early exit
+    set -o errexit # Re-enable early exit
 
     # Convert them to raw images that can be readily mounted
     if [[ "${IN_1_SPARSE_IMG}" = true ]]; then
@@ -64,7 +64,7 @@ function diffoscopeFile {
     # Thus we set the 'read-only' feature on these, allowing mount.ext4 with defaults (now ro) to suceed.
     IN_1_EXT_IMG_SHARED_BLOCKS=false
     IN_2_EXT_IMG_SHARED_BLOCKS=false
-    set +e # Disable early exit
+    set +o errexit # Disable early exit
     # Check if ext4 image (file tends to show ext2)
     file "${DIFF_IN_1}" | grep -P '(ext2)|(ext3)|(ext4)'
     if [[ "$?" -eq 0 ]]; then
@@ -82,7 +82,7 @@ function diffoscopeFile {
             IN_2_EXT_IMG_SHARED_BLOCKS=true
         fi
     fi
-    set -e # Re-enable early exit
+    set -o errexit # Re-enable early exit
 
     # As stated, set the ext4 'read-only' flag, see https://www.mankier.com/8/tune2fs#-O
     if [[ "${IN_1_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
@@ -92,13 +92,13 @@ function diffoscopeFile {
         "${TUNE2FS_BIN}" -O "read-only" "${DIFF_IN_2}"
     fi
 
-    set +e # Disable early exit
+    set +o errexit # Disable early exit
     sudo "$(command -v diffoscope)" --output-empty --progress \
             --exclude-directory-metadata=recursive --exclude 'apex_payload.img' --exclude 'CERT.RSA' --exclude 'apex_pubkey' --exclude 'update-payload-key.pub.pem' \
             --json "${DIFF_OUT}.json" \
             --html-dir "${DIFF_OUT}.html-dir" \
             "${DIFF_IN_1}" "${DIFF_IN_2}"
-    set -e # Re-enable early exit
+    set -o errexit # Re-enable early exit
 
     # Clear `read-only` flag
     if [[ "${IN_1_EXT_IMG_SHARED_BLOCKS}" = true ]]; then

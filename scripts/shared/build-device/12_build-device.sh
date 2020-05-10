@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -o errexit -o nounset -o pipefail -o xtrace
 
 # Argument sanity check
 if [[ "$#" -ne 3 ]]; then

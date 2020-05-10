@@ -1,17 +1,17 @@
 #!/bin/bash
-set -ex
+set -o errexit -o nounset -o pipefail -o xtrace
 
 # We want these scripts to work with a wide range of Debian based systems, thus all commands requiring elevated
 # privileges utilize sudo (to support Ubuntu based build system), event though it is a pointless noop in some
 # environments, like a Docker container running Debian.
-set +e # Disable early exit
+set +o errexit # Disable early exit
 command -v sudo
 if [ "$?" -ne 0 ]; then
     apt-get update
 
     apt-get --assume-yes install sudo
 fi
-set -e # Re-enable early exit
+set -o errexit # Re-enable early exit
 
 sudo apt-get update
 

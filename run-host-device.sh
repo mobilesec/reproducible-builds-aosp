@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -o errexit -o nounset -o pipefail -o xtrace
 
 # Environment sanity check
 if [[ -z "${AOSP_REF}" ]]; then

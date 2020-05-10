@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -o errexit -o nounset -o pipefail -o xtrace
 
 # Based on https://linuxize.com/post/how-to-install-jenkins-on-ubuntu-18-04/
 sudo apt update

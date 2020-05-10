@@ -1,10 +1,10 @@
 #!/bin/bash
-set -ex
+set -o errexit -o nounset -o pipefail -o xtrace
 
 # Argument sanity check
 if [[ "$#" -ne 1 ]]; then
     echo "Usage: $0 <DIFF_DIR>"
-	echo "DIFF_DIR: Output directory diffoscope output"
+    echo "DIFF_DIR: Output directory diffoscope output"
     exit 1
 fi
 DIFF_DIR="$1"
@@ -12,7 +12,7 @@ DIFF_DIR="$1"
 if [[ -z "${RB_AOSP_BASE+x}" ]]; then
     # Use default location
     RB_AOSP_BASE="${HOME}/aosp"
-	mkdir -p "${RB_AOSP_BASE}"
+    mkdir -p "${RB_AOSP_BASE}"
 fi
 
 # Navigate to diff dir
@@ -58,7 +58,7 @@ leaf_paths | select((. | last) == "unified_diff" and (. | last | type) == "strin
   + { ($path | map(tostring) | join(".")): $in | getpath($path) }
 ) | join("\n")
 ' <(cat "${DIFF_JSON}") | \
-	diffstat > "${DIFF_JSON}.diffstat"
+    diffstat > "${DIFF_JSON}.diffstat"
 
   # JSON files take considerable space, get rid of them
   rm "${DIFF_JSON}"
