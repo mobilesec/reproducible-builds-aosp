@@ -1,26 +1,9 @@
 #!/bin/bash
 set -o errexit -o nounset -o pipefail -o xtrace
 
-# Argument sanity check
-if [[ "$#" -ne 3 ]]; then
-    echo "Usage: $0 <IN_DIR_1> <IN_DIR_2> <OUT_DIR>"
-	echo "IN_DIR_1, IN_DIR_2: Directory with files that should be compared (Only files in both dirs will be compared)"
-	echo "OUT_DIR: Output directory diffoscope output"
-    exit 1
-fi
-IN_DIR_1="$1"
-IN_DIR_2="$2"
-OUT_DIR="$3"
-# Reproducible base directory
-if [[ -z "${RB_AOSP_BASE+x}" ]]; then
-    # Use default location
-    RB_AOSP_BASE="${HOME}/aosp"
-	mkdir -p "${RB_AOSP_BASE}"
-fi
-
 function decompressSparseImage {
-    IMG_SPARSE="$1"
-    IMG_RAW="$2"
+    local -r IMG_SPARSE="$1"
+    local -r IMG_RAW="$2"
 
     # Deomcpress into raw ext2/3/4 partition image
     simg2img "${IMG_SPARSE}" "${IMG_RAW}"
@@ -28,16 +11,16 @@ function decompressSparseImage {
 
 function diffoscopeFile {
     # Original input paramts
-    IN_1="$1"
-    IN_2="$2"
-    DIFF_OUT="$3"
+    local -r IN_1="$1"
+    local -r IN_2="$2"
+    local -r DIFF_OUT="$3"
     # Mutable diffoscope params
-    DIFF_IN_1="${IN_1}"
-    DIFF_IN_2="${IN_2}"
+    local DIFF_IN_1="${IN_1}"
+    local DIFF_IN_2="${IN_2}"
     
     # Detect sparse images
-    IN_1_SPARSE_IMG=false
-    IN_2_SPARSE_IMG=false
+    local IN_1_SPARSE_IMG=false
+    local IN_2_SPARSE_IMG=false
     set +o errexit # Disable early exit
     file "${DIFF_IN_1}" | grep 'Android sparse image'
     if [[ "$?" -eq 0 ]]; then
@@ -62,8 +45,8 @@ function diffoscopeFile {
     # Detect ext4 images with EXT4_FEATURE_RO_COMPAT_SHARED_BLOCKS (`shared_blocks` or `FEATURE_R14` if not explicitly named).
     # Current kernels (as or writing 5.4 upstream) don't support this yet, thus mount.ext4 with defaults (including rw) fails
     # Thus we set the 'read-only' feature on these, allowing mount.ext4 with defaults (now ro) to suceed.
-    IN_1_EXT_IMG_SHARED_BLOCKS=false
-    IN_2_EXT_IMG_SHARED_BLOCKS=false
+    local IN_1_EXT_IMG_SHARED_BLOCKS=false
+    local IN_2_EXT_IMG_SHARED_BLOCKS=false
     set +o errexit # Disable early exit
     # Check if ext4 image (file tends to show ext2)
     file "${DIFF_IN_1}" | grep -P '(ext2)|(ext3)|(ext4)'
@@ -117,27 +100,48 @@ function diffoscopeFile {
     fi
 }
 
-# Misc variables + ensure ${OUT_DIR} exists
-DEPS_DIR="${RB_AOSP_BASE}/deps"
-TUNE2FS_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin/tune2fs"
-mkdir -p "${OUT_DIR}"
-rm -rf "${OUT_DIR}/"* # Clean up previous diff results
-
-# apktool quirk workaround, see https://github.com/iBotPeaches/Apktool/issues/2048
-sudo mkdir -p  "/root/.local/share/apktool/framework"
-
-# Create list of files in common for both directories
-FILES=($(comm -12 \
-    <(cd "${IN_DIR_1}" && find -type f | sort) \
-    <(cd "${IN_DIR_2}" && find -type f | sort) \
-))
-
-for FILE in "${FILES[@]}"; do
-    if [[ "${FILE}" != *"super.img" && "${FILE}" != *".link" ]]; then # Ignore super.img, we decompressed it previously
-        diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
+main() {
+    # Argument sanity check
+    if [[ "$#" -ne 3 ]]; then
+        echo "Usage: $0 <IN_DIR_1> <IN_DIR_2> <OUT_DIR>"
+        echo "IN_DIR_1, IN_DIR_2: Directory with files that should be compared (Only files in both dirs will be compared)"
+        echo "OUT_DIR: Output directory diffoscope output"
+        exit 1
     fi
-done
+    local -r IN_DIR_1="$1"
+    local -r IN_DIR_2="$2"
+    local -r OUT_DIR="$3"
+    # Reproducible base directory
+    if [[ -z "${RB_AOSP_BASE+x}" ]]; then
+        # Use default location
+        RB_AOSP_BASE="${HOME}/aosp"
+        mkdir -p "${RB_AOSP_BASE}"
+    fi
 
-# Cleanup both builds after diffing process
-rm -rf "${IN_DIR_1}"
-rm -rf "${IN_DIR_1}"
+    # Misc variables + ensure ${OUT_DIR} exists
+    local -r DEPS_DIR="${RB_AOSP_BASE}/deps"
+    local -r TUNE2FS_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin/tune2fs"
+    mkdir -p "${OUT_DIR}"
+    rm -rf "${OUT_DIR}/"* # Clean up previous diff results
+
+    # apktool quirk workaround, see https://github.com/iBotPeaches/Apktool/issues/2048
+    sudo mkdir -p  "/root/.local/share/apktool/framework"
+
+    # Create list of files in common for both directories
+    local -ar FILES=($(comm -12 \
+        <(cd "${IN_DIR_1}" && find -type f | sort) \
+        <(cd "${IN_DIR_2}" && find -type f | sort) \
+    ))
+
+    for FILE in "${FILES[@]}"; do
+        if [[ "${FILE}" != *"super.img" && "${FILE}" != *".link" ]]; then # Ignore super.img, we decompressed it previously
+            diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
+        fi
+    done
+
+    # Cleanup both builds after diffing process
+    rm -rf "${IN_DIR_1}"
+    rm -rf "${IN_DIR_1}"
+}
+
+main "$@"
