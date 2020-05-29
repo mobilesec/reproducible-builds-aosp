@@ -16,7 +16,7 @@ fetchFromAndroidCI() {
 
 fetchArtifactList() {
     grep -P 'var[ ]+JSVariables[ =]+\{.*}[ ]*;' \
-        <( curl "https://ci.android.com/builds/submitted/${BUILD_NUMBER}/${BUILD_TARGET}/latest" -L )
+        <( curl "https://ci.android.com/builds/submitted/${BUILD_NUMBER}/${BUILD_TARGET}/latest" -L ) \
         | sed -E -e "s/^[ \t]+var[ \t]+JSVariables[ \t=]+//" -e "s/[ \t]*;[ \t]*$//" \
         | jq -r '."artifacts"[]."name"' \
         > "${IMAGE_DIR}/artifacts_list"
