@@ -27,9 +27,9 @@ main() {
 	# ./build/envsetup.sh: line 361: ZSH_VERSION: unbound variable
 	set +o nounset
 	source ./build/envsetup.sh
-	set -o nounset
 	lunch "${BUILD_TARGET}"
 	m -j $(nproc)
+	set -o nounset
 
 	# Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
 	local -r BUILD_DIR="${SRC_DIR}/out"
