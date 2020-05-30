@@ -20,9 +20,13 @@ main() {
 	local -r SRC_DIR="${RB_AOSP_BASE}/src"
 	# Build lpunpack tool that enables us to decompress dynamic partitions (i.e. super.img)
 	cd "${SRC_DIR}"
+	# Unfortunately envsetup doesn't work with nounset flag, specifically fails with:
+	# ./build/envsetup.sh: line 361: ZSH_VERSION: unbound variable
+	set +o nounset
 	source ./build/envsetup.sh
 	lunch "${BUILD_TARGET}" # Might not be needed (see sample from https://android.googlesource.com/platform/system/extras/+/1f0277a%5E%21/)
 	mm -j $(nproc) lpunpack
+	set -o nounset
 }
 
 main "$@"
