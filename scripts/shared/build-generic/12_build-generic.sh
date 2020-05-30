@@ -23,7 +23,11 @@ main() {
 	# Communicate custom build dir to soong build system.
 	#export OUT_DIR_COMMON_BASE="${BUILD_DIR}" # Deactivated on purpose (Shared build dir leeds to build artifact caching)
 	cd "${SRC_DIR}"
+	# Unfortunately envsetup doesn't work with nounset variable, specifically fails with:
+	# ./build/envsetup.sh: line 361: ZSH_VERSION: unbound variable
+	set +o nounset
 	source ./build/envsetup.sh
+	set -o nounset
 	lunch "${BUILD_TARGET}"
 	m -j $(nproc)
 
