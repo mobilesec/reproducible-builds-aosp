@@ -14,12 +14,12 @@ if [[ -z "${DEVICE_CODENAME}" ]]; then
     echo "Missing environment var <DEVICE_CODENAME>"
     exit 1
 fi
-if [[ -z "${GOOGLE_BUILD_TARGET}" ]]; then
-    echo "Missing environment var <GOOGLE_BUILD_TARGET>"
-    exit 1
-fi
 if [[ -z "${RB_BUILD_TARGET}" ]]; then
     echo "Missing environment var <RB_BUILD_TARGET>"
+    exit 1
+fi
+if [[ -z "${GOOGLE_BUILD_TARGET}" ]]; then
+    echo "Missing environment var <GOOGLE_BUILD_TARGET>"
     exit 1
 fi
 
@@ -31,7 +31,6 @@ bash "./scripts/shared/build-device/10_clone-src-device.sh" "${AOSP_REF}"
 bash "./scripts/shared/build-device/11_fetch-extract-vendor.sh" "${BUILD_ID}" "${DEVICE_CODENAME}"
 bash "./scripts/shared/build-device/12_build-device.sh" "${AOSP_REF}" "${RB_BUILD_TARGET}" "${DEVICE_CODENAME}"
 bash "./scripts/shared/build-device/13_fetch-extract-factory-images.sh" "${AOSP_REF}" "${BUILD_ID}" "${DEVICE_CODENAME}"
-bash "./scripts/shared/analysis/20_install-simg2img.sh"
 bash "./scripts/shared/analysis/20_diffoscope-files.sh" \
     "${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
     "${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/(lsb_release -si)(lsb_release -sr)" \

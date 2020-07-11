@@ -6,7 +6,7 @@ function decompressSparseImage {
     local -r IMG_RAW="$2"
 
     # Deomcpress into raw ext2/3/4 partition image
-    simg2img "${IMG_SPARSE}" "${IMG_RAW}"
+    "${AOSP_HOST_BIN}/simg2img" "${IMG_SPARSE}" "${IMG_RAW}"
 }
 
 function diffoscopeFile {
@@ -52,7 +52,7 @@ function diffoscopeFile {
     file "${DIFF_IN_1}" | grep -P '(ext2)|(ext3)|(ext4)'
     if [[ "$?" -eq 0 ]]; then
         # Check for 'shared_blocks'
-        "${TUNE2FS_BIN}" -l "${DIFF_IN_1}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
+        "${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_1}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
         if [[ "$?" -eq 0 ]]; then
             IN_1_EXT_IMG_SHARED_BLOCKS=true
         fi
@@ -60,7 +60,7 @@ function diffoscopeFile {
     file "${DIFF_IN_2}" | grep -P '(ext2)|(ext3)|(ext4)'
     if [[ "$?" -eq 0 ]]; then
         # Check for 'shared_blocks'
-        "${TUNE2FS_BIN}" -l "${DIFF_IN_2}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
+        "${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_2}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
         if [[ "$?" -eq 0 ]]; then
             IN_2_EXT_IMG_SHARED_BLOCKS=true
         fi
@@ -69,10 +69,10 @@ function diffoscopeFile {
 
     # As stated, set the ext4 'read-only' flag, see https://www.mankier.com/8/tune2fs#-O
     if [[ "${IN_1_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        "${TUNE2FS_BIN}" -O "read-only" "${DIFF_IN_1}"
+        "${TUNE2FS_BIN}/tune2fs" -O "read-only" "${DIFF_IN_1}"
     fi
     if [[ "${IN_2_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        "${TUNE2FS_BIN}" -O "read-only" "${DIFF_IN_2}"
+        "${TUNE2FS_BIN}/tune2fs" -O "read-only" "${DIFF_IN_2}"
     fi
 
     set +o errexit # Disable early exit
@@ -85,10 +85,10 @@ function diffoscopeFile {
 
     # Clear `read-only` flag
     if [[ "${IN_1_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        "${TUNE2FS_BIN}" -O "^read-only" "${DIFF_IN_1}"
+        "${TUNE2FS_BIN}/tune2fs" -O "^read-only" "${DIFF_IN_1}"
     fi
     if [[ "${IN_2_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        "${TUNE2FS_BIN}" -O "^read-only" "${DIFF_IN_2}"
+        "${TUNE2FS_BIN}/tune2fs" -O "^read-only" "${DIFF_IN_2}"
     fi
 
     # Delete raw image (if original was sparse)
@@ -119,8 +119,7 @@ main() {
     fi
 
     # Misc variables + ensure ${OUT_DIR} exists
-    local -r DEPS_DIR="${RB_AOSP_BASE}/deps"
-    local -r TUNE2FS_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin/tune2fs"
+    local -r AOSP_HOST_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin"
     mkdir -p "${OUT_DIR}"
     rm -rf "${OUT_DIR}/"* # Clean up previous diff results
 
