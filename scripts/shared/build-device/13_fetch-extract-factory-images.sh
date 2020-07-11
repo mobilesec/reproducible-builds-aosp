@@ -29,7 +29,7 @@ main() {
 
 	# Download link via primitive web scrapping
 	grep -i "${DEVICE_CODENAME}-${BUILD_ID}" \
-		<( curl "https://developers.google.com/android/images" ) \
+		<( curl "https://developers.google.com/android/images" -H 'cookie: devsite_wall_acks=nexus-image-tos' ) \
 		| sed -n "s/^.*href=\"\s*\(\S*\)\".*$/\1/p" > link
 	wget "$(cat link)"
 
