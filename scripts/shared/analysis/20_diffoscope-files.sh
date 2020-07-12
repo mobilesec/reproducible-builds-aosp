@@ -61,7 +61,8 @@ function preProcessImage {
 }
 
 function postProcessImage {
-    local DIFF_IN="$1"
+    # Normalize path (e.g. /my/path/./to/somewhere -> /my/path/to/somewhere)
+    local DIFF_IN="$(realpath $1)"
 
     # Sanity check that we are dealing with a mount
     set +o errexit # Disable early exit

@@ -40,7 +40,7 @@ main() {
     fi
 
     # Fetch manifest from Google CI build
-    local -r BUILD_ENV="GoogleCI"
+    local -r BUILD_ENV="Google"
     local -r IMAGE_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
     mkdir -p "${IMAGE_DIR}"
     rm -rf "${IMAGE_DIR}/"* # Clean up previously fetched files

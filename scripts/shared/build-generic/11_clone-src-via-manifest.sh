@@ -27,7 +27,7 @@ main() {
     repo init -u "https://android.googlesource.com/platform/manifest"
 
     # Copy custom and manifest
-    local -r BUILD_ENV="GoogleCI"
+    local -r BUILD_ENV="Google"
     local -r IMAGE_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
     local -r MANIFESTS_DIR="${SRC_DIR}/.repo/manifests"
     local -r CUSTOM_MANIFEST="manifest_${BUILD_NUMBER}.xml"
