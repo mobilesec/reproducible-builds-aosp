@@ -1,12 +1,62 @@
 #!/bin/bash
 set -o errexit -o nounset -o pipefail -o xtrace
 
-function decompressSparseImage {
-    local -r IMG_SPARSE="$1"
-    local -r IMG_RAW="$2"
+function preprocessImage {
+    # Mutable diffoscope params
+    local DIFF_IN_META="$1"
 
-    # Deomcpress into raw ext2/3/4 partition image
-    "${AOSP_HOST_BIN}/simg2img" "${IMG_SPARSE}" "${IMG_RAW}"
+    local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
+    # Detect sparse images
+    local IN_SPARSE_IMG=false
+    set +o errexit # Disable early exit
+    file "${DIFF_IN_RESOLVED}" | grep 'Android sparse image'
+    if [[ "$?" -eq 0 ]]; then
+        IN_SPARSE_IMG=true
+    fi
+    set -o errexit # Re-enable early exit
+
+    # Convert them to raw images that can be readily mounted
+    if [[ "${IN_SPARSE_IMG}" = true ]]; then
+        # Deomcpress into raw ext2/3/4 partition image
+        "${AOSP_HOST_BIN}/simg2img" "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.raw"
+        eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.raw"
+    fi
+
+    local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
+    # Detect ext4 images with EXT4_FEATURE_RO_COMPAT_SHARED_BLOCKS (`shared_blocks` or `FEATURE_R14` if not explicitly named).
+    # Current kernels (as or writing 5.4 upstream) don't support this yet, thus mount.ext4 with defaults (including rw) fails
+    # Thus we double the image size (simple heuristic that should work in 99% of cases) and remove the block sharing feature
+    local IN_EXT_IMG_SHARED_BLOCKS=false
+    set +o errexit # Disable early exit
+    # Check if ext4 image (file tends to show ext2)
+    file "${DIFF_IN_RESOLVED}" | grep -P '(ext2)|(ext3)|(ext4)'
+    if [[ "$?" -eq 0 ]]; then
+        # Check for 'shared_blocks'
+        "${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_RESOLVED}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
+        if [[ "$?" -eq 0 ]]; then
+            IN_EXT_IMG_SHARED_BLOCKS=true
+        fi
+    fi
+    set -o errexit # Re-enable early exit
+
+    # As stated, set the ext4 'read-only' flag, see https://www.mankier.com/8/tune2fs#-O
+    if [[ "${IN_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
+        # Determine new expanded block number
+        local EXPANDED_BLOCK_COUNT=$(( $("${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_RESOLVED}" | grep 'Block count' | cut -d: -f2) * 2 ))
+        "${TUNE2FS_BIN}/resize2fs" "${DIFF_IN_RESOLVED}" "$EXPANDED_BLOCK_COUNT"
+        "${TUNE2FS_BIN}/e2fsck" -E unshare_blocks "${DIFF_IN_RESOLVED}"
+    fi
+
+    # Extract apex_payload.img from APEX archives for separate diffoscope run
+    mkdir "${DIFF_IN_RESOLVED}.mount"
+    sudo mount "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.mount"
+    mkdir "${DIFF_IN_RESOLVED}.apexes"
+    sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
+    find "${DIFF_IN_RESOLVED}.apexes" -type f -iname '*.apex' \
+        -exec unzip "{}" -d "{}.unzip" \; \
+        -exec mv "{}.unzip/apex_payload.img" "{}-apex_payload.img" \; \
+        -exec rm -rf "{}.unzip" "{}" \;
+
 }
 
 function diffoscopeFile {
@@ -14,72 +64,12 @@ function diffoscopeFile {
     local -r IN_1="$1"
     local -r IN_2="$2"
     local -r DIFF_OUT="$3"
-    # Mutable diffoscope params
+    # Start values for diff input params
     local DIFF_IN_1="${IN_1}"
     local DIFF_IN_2="${IN_2}"
-    
-    # Detect sparse images
-    local IN_1_SPARSE_IMG=false
-    local IN_2_SPARSE_IMG=false
-    set +o errexit # Disable early exit
-    file "${DIFF_IN_1}" | grep 'Android sparse image'
-    if [[ "$?" -eq 0 ]]; then
-        IN_1_SPARSE_IMG=true
-    fi
-    file "${DIFF_IN_2}" | grep 'Android sparse image'
-    if [[ "$?" -eq 0 ]]; then
-        IN_2_SPARSE_IMG=true
-    fi
-    set -o errexit # Re-enable early exit
 
-    # Convert them to raw images that can be readily mounted
-    if [[ "${IN_1_SPARSE_IMG}" = true ]]; then
-        decompressSparseImage "${DIFF_IN_1}" "${DIFF_IN_1}.raw"
-        DIFF_IN_1="${DIFF_IN_1}.raw"
-    fi
-    if [[ "${IN_2_SPARSE_IMG}" = true ]]; then
-        decompressSparseImage "${DIFF_IN_2}" "${DIFF_IN_2}.raw"
-        DIFF_IN_2="${DIFF_IN_2}.raw"
-    fi
-
-    # Detect ext4 images with EXT4_FEATURE_RO_COMPAT_SHARED_BLOCKS (`shared_blocks` or `FEATURE_R14` if not explicitly named).
-    # Current kernels (as or writing 5.4 upstream) don't support this yet, thus mount.ext4 with defaults (including rw) fails
-    # Thus we double the image size (simple heuristic that should work in 99% of cases) and remove the block sharing feature
-    local IN_1_EXT_IMG_SHARED_BLOCKS=false
-    local IN_2_EXT_IMG_SHARED_BLOCKS=false
-    set +o errexit # Disable early exit
-    # Check if ext4 image (file tends to show ext2)
-    file "${DIFF_IN_1}" | grep -P '(ext2)|(ext3)|(ext4)'
-    if [[ "$?" -eq 0 ]]; then
-        # Check for 'shared_blocks'
-        "${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_1}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
-        if [[ "$?" -eq 0 ]]; then
-            IN_1_EXT_IMG_SHARED_BLOCKS=true
-        fi
-    fi
-    file "${DIFF_IN_2}" | grep -P '(ext2)|(ext3)|(ext4)'
-    if [[ "$?" -eq 0 ]]; then
-        # Check for 'shared_blocks'
-        "${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_2}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
-        if [[ "$?" -eq 0 ]]; then
-            IN_2_EXT_IMG_SHARED_BLOCKS=true
-        fi
-    fi
-    set -o errexit # Re-enable early exit
-
-    # As stated, set the ext4 'read-only' flag, see https://www.mankier.com/8/tune2fs#-O
-    if [[ "${IN_1_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        # Determine new expanded block number
-        local EXPANDED_BLOCK_COUNT_1=$(( $("${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_1}" | grep 'Block count' | cut -d: -f2) * 2 ))
-        "${TUNE2FS_BIN}/resize2fs" "${DIFF_IN_1}" "$EXPANDED_BLOCK_COUNT_1"
-        "${TUNE2FS_BIN}/e2fsck" -E unshare_blocks "${DIFF_IN_1}"
-    fi
-    if [[ "${IN_2_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        # Determine new expanded block number
-        local EXPANDED_BLOCK_COUNT_2=$(( $("${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_2}" | grep 'Block count' | cut -d: -f2) * 2 ))
-        "${TUNE2FS_BIN}/resize2fs" "${DIFF_IN_2}" "$EXPANDED_BLOCK_COUNT_2"
-        "${TUNE2FS_BIN}/e2fsck" -E unshare_blocks "${DIFF_IN_2}"
-    fi
+    preprocessImage "DIFF_IN_1"
+    preprocessImage "DIFF_IN_2"
 
     set +o errexit # Disable early exit
     sudo "$(command -v diffoscope)" --output-empty --progress \
