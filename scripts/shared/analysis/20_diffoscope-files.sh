@@ -94,6 +94,8 @@ function diffoscopeFile {
     preProcessImage "DIFF_IN_1"
     preProcessImage "DIFF_IN_2"
 
+    # Ensure that parent directory exists
+    mkdir -p "$(dirname "${DIFF_OUT}")"
     set +o errexit # Disable early exit
     sudo "$(command -v diffoscope)" --output-empty --progress \
             --exclude-directory-metadata=recursive --exclude 'apex_payload.img' --exclude 'CERT.RSA' --exclude 'apex_pubkey' --exclude 'update-payload-key.pub.pem' \
