@@ -45,7 +45,6 @@ function preProcessImage {
         eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.mount"
 
         # Extract apex_payload.img from APEX archives for separate diffoscope run
-        
         if [[ "$(sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
             mkdir "${DIFF_IN_RESOLVED}.apexes"
             sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
@@ -54,6 +53,14 @@ function preProcessImage {
                 -exec mv "{}.unzip/apex_payload.img" "{}-apex_payload.img" \; \
                 -exec rm -rf "{}.unzip" "{}" \;
 
+            # Have another look at the list if files in common, but only consider APEX related ones
+            local -r APEX_FOLDER_BASENAME="$(basename "${DIFF_IN_RESOLVED}.apexes")"
+            local -ar APEX_PAYLOAD_FILES=($(comm -12 \
+                <(cd "${IN_DIR_1}" && find -type f | sort) \
+                <(cd "${IN_DIR_2}" && find -type f | sort) \
+            | grep "${APEX_FOLDER_BASENAME}"))
+            # Append to list of files requiring processing via diffoscope
+            FILES+=( "${APEX_PAYLOAD_FILES[@]}" )
         fi
     fi
     set -o errexit # Re-enable early exit
@@ -125,16 +132,14 @@ main() {
     # apktool quirk workaround, see https://github.com/iBotPeaches/Apktool/issues/2048
     sudo mkdir -p  "/root/.local/share/apktool/framework"
 
-    # Create list of files in common for both directories
-    local -ar FILES=($(comm -12 \
+    # Create list of files in common for both directories. Ignore super.img, we unpacked it previously
+    local -a FILES=($(comm -12 \
         <(cd "${IN_DIR_1}" && find -type f | sort) \
         <(cd "${IN_DIR_2}" && find -type f | sort) \
-    ))
+    | grep -v 'super.img'))
 
-    for FILE in "${FILES[@]}"; do
-        if [[ "${FILE}" != *"super.img" && "${FILE}" != *".link" ]]; then # Ignore super.img, we decompressed it previously
-            diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
-        fi
+    for ((i = 0; i < "${#FILES[@]}"; i++)); do
+        diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
     done
 
     # Cleanup both builds after diffing process
