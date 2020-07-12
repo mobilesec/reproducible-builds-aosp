@@ -44,7 +44,7 @@ function diffoscopeFile {
 
     # Detect ext4 images with EXT4_FEATURE_RO_COMPAT_SHARED_BLOCKS (`shared_blocks` or `FEATURE_R14` if not explicitly named).
     # Current kernels (as or writing 5.4 upstream) don't support this yet, thus mount.ext4 with defaults (including rw) fails
-    # Thus we set the 'read-only' feature on these, allowing mount.ext4 with defaults (now ro) to suceed.
+    # Thus we double the image size (simple heuristic that should work in 99% of cases) and remove the block sharing feature
     local IN_1_EXT_IMG_SHARED_BLOCKS=false
     local IN_2_EXT_IMG_SHARED_BLOCKS=false
     set +o errexit # Disable early exit
@@ -69,10 +69,16 @@ function diffoscopeFile {
 
     # As stated, set the ext4 'read-only' flag, see https://www.mankier.com/8/tune2fs#-O
     if [[ "${IN_1_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        "${TUNE2FS_BIN}/tune2fs" -O "read-only" "${DIFF_IN_1}"
+        # Determine new expanded block number
+        local EXPANDED_BLOCK_COUNT_1=$(( $("${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_1}" | grep 'Block count' | cut -d: -f2) * 2 ))
+        "${TUNE2FS_BIN}/resize2fs" "${DIFF_IN_1}" "$EXPANDED_BLOCK_COUNT_1"
+        "${TUNE2FS_BIN}/e2fsck" -E unshare_blocks "${DIFF_IN_1}"
     fi
     if [[ "${IN_2_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        "${TUNE2FS_BIN}/tune2fs" -O "read-only" "${DIFF_IN_2}"
+        # Determine new expanded block number
+        local EXPANDED_BLOCK_COUNT_2=$(( $("${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_2}" | grep 'Block count' | cut -d: -f2) * 2 ))
+        "${TUNE2FS_BIN}/resize2fs" "${DIFF_IN_2}" "$EXPANDED_BLOCK_COUNT_2"
+        "${TUNE2FS_BIN}/e2fsck" -E unshare_blocks "${DIFF_IN_2}"
     fi
 
     set +o errexit # Disable early exit
@@ -82,22 +88,6 @@ function diffoscopeFile {
             --html-dir "${DIFF_OUT}.html-dir" \
             "${DIFF_IN_1}" "${DIFF_IN_2}"
     set -o errexit # Re-enable early exit
-
-    # Clear `read-only` flag
-    if [[ "${IN_1_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        "${TUNE2FS_BIN}/tune2fs" -O "^read-only" "${DIFF_IN_1}"
-    fi
-    if [[ "${IN_2_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        "${TUNE2FS_BIN}/tune2fs" -O "^read-only" "${DIFF_IN_2}"
-    fi
-
-    # Delete raw image (if original was sparse)
-    if [[ "${IN_1_SPARSE_IMG}" = true ]]; then
-        rm "${IN_1}.raw"
-    fi
-    if [[ "${IN_2_SPARSE_IMG}" = true ]]; then
-        rm "${IN_2}.raw"
-    fi
 }
 
 main() {

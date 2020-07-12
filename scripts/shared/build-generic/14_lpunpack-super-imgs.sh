@@ -19,13 +19,12 @@ main() {
     fi
 
     # lpunpack binary from previously built target
-    local -r BUILD_DIR="${RB_AOSP_BASE}/src/out"
-    local -r LPUNPACK_BIN="${BUILD_DIR}/host/linux-x86/bin/lpunpack"
+    local -r AOSP_HOST_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin"
 
     # Unpack super.img from GoogleCI build
     local -r BUILD_ENV="GoogleCI"
     local -r TARGET_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
-    "${LPUNPACK_BIN}" "${TARGET_DIR}/super.img" "${TARGET_DIR}"
+    "${AOSP_HOST_BIN}/lpunpack" "${TARGET_DIR}/super.img" "${TARGET_DIR}"
 }
 
 main "$@"
