@@ -139,6 +139,7 @@ main() {
     | grep -v 'super.img'))
 
     for ((i = 0; i < "${#FILES[@]}"; i++)); do
+        FILE="${FILES[$i]}"
         diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
     done
 
