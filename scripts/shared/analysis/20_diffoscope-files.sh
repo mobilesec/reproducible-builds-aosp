@@ -1,62 +1,77 @@
 #!/bin/bash
 set -o errexit -o nounset -o pipefail -o xtrace
 
-function preprocessImage {
+function preProcessImage {
     # Mutable diffoscope params
     local DIFF_IN_META="$1"
 
     local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
-    # Detect sparse images
-    local IN_SPARSE_IMG=false
+    # Sanity check that we are dealing with a image
     set +o errexit # Disable early exit
-    file "${DIFF_IN_RESOLVED}" | grep 'Android sparse image'
+    file "${DIFF_IN_RESOLVED}" | grep -P '(ext2)|(ext3)|(ext4)|(Android sparse image)'
     if [[ "$?" -eq 0 ]]; then
-        IN_SPARSE_IMG=true
-    fi
-    set -o errexit # Re-enable early exit
+        set -o errexit # Re-enable early exit
 
-    # Convert them to raw images that can be readily mounted
-    if [[ "${IN_SPARSE_IMG}" = true ]]; then
-        # Deomcpress into raw ext2/3/4 partition image
-        "${AOSP_HOST_BIN}/simg2img" "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.raw"
-        eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.raw"
-    fi
-
-    local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
-    # Detect ext4 images with EXT4_FEATURE_RO_COMPAT_SHARED_BLOCKS (`shared_blocks` or `FEATURE_R14` if not explicitly named).
-    # Current kernels (as or writing 5.4 upstream) don't support this yet, thus mount.ext4 with defaults (including rw) fails
-    # Thus we double the image size (simple heuristic that should work in 99% of cases) and remove the block sharing feature
-    local IN_EXT_IMG_SHARED_BLOCKS=false
-    set +o errexit # Disable early exit
-    # Check if ext4 image (file tends to show ext2)
-    file "${DIFF_IN_RESOLVED}" | grep -P '(ext2)|(ext3)|(ext4)'
-    if [[ "$?" -eq 0 ]]; then
-        # Check for 'shared_blocks'
-        "${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_RESOLVED}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
+        # Detect sparse images
+        set +o errexit # Disable early exit
+        file "${DIFF_IN_RESOLVED}" | grep 'Android sparse image'
         if [[ "$?" -eq 0 ]]; then
-            IN_EXT_IMG_SHARED_BLOCKS=true
+            set -o errexit # Re-enable early exit
+            # Deomcpress into raw ext2/3/4 partition image
+            "${AOSP_HOST_BIN}/simg2img" "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.raw"
+            eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.raw"
+        fi
+        set -o errexit # Re-enable early exit
+
+        # Detect ext4 images with EXT4_FEATURE_RO_COMPAT_SHARED_BLOCKS (`shared_blocks` or `FEATURE_R14` if not explicitly named).
+        # Current kernels (as or writing 5.4 upstream) don't support this yet, thus mount.ext4 with defaults (including rw) fails
+        # Thus we double the image size (simple heuristic that should work in 99% of cases) and remove the block sharing feature
+        #set +o errexit # Disable early exit
+        # Check for 'shared_blocks'
+        #"${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_RESOLVED}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
+        #if [[ "$?" -eq 0 ]]; then
+            #set -o errexit # Re-enable early exit
+            # Determine new expanded block number
+            #local EXPANDED_BLOCK_COUNT=$(( $("${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_RESOLVED}" | grep 'Block count' | cut -d: -f2) * 2 ))
+            #"${TUNE2FS_BIN}/resize2fs" "${DIFF_IN_RESOLVED}" "$EXPANDED_BLOCK_COUNT"
+            #"${TUNE2FS_BIN}/e2fsck" -E unshare_blocks "${DIFF_IN_RESOLVED}"
+        #fi
+        #set -o errexit # Re-enable early exit
+
+        local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
+        # Mount image to ensure stable file iteration order
+        mkdir "${DIFF_IN_RESOLVED}.mount"
+        sudo mount -o ro "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.mount"
+        eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.mount"
+
+        # Extract apex_payload.img from APEX archives for separate diffoscope run
+        
+        if [[ "$(sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
+            mkdir "${DIFF_IN_RESOLVED}.apexes"
+            sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
+            find "${DIFF_IN_RESOLVED}.apexes" -type f -iname '*.apex' \
+                -exec unzip "{}" -d "{}.unzip" \; \
+                -exec mv "{}.unzip/apex_payload.img" "{}-apex_payload.img" \; \
+                -exec rm -rf "{}.unzip" "{}" \;
+
         fi
     fi
     set -o errexit # Re-enable early exit
 
-    # As stated, set the ext4 'read-only' flag, see https://www.mankier.com/8/tune2fs#-O
-    if [[ "${IN_EXT_IMG_SHARED_BLOCKS}" = true ]]; then
-        # Determine new expanded block number
-        local EXPANDED_BLOCK_COUNT=$(( $("${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_RESOLVED}" | grep 'Block count' | cut -d: -f2) * 2 ))
-        "${TUNE2FS_BIN}/resize2fs" "${DIFF_IN_RESOLVED}" "$EXPANDED_BLOCK_COUNT"
-        "${TUNE2FS_BIN}/e2fsck" -E unshare_blocks "${DIFF_IN_RESOLVED}"
+}
+
+function postProcessImage {
+    local DIFF_IN="$1"
+
+    # Sanity check that we are dealing with a mount
+    set +o errexit # Disable early exit
+    mount | grep "${DIFF_IN}"
+    if [[ "$?" -eq 0 ]]; then
+        set -o errexit # Re-enable early exit
+
+        sudo umount "$DIFF_IN"
     fi
-
-    # Extract apex_payload.img from APEX archives for separate diffoscope run
-    mkdir "${DIFF_IN_RESOLVED}.mount"
-    sudo mount "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.mount"
-    mkdir "${DIFF_IN_RESOLVED}.apexes"
-    sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
-    find "${DIFF_IN_RESOLVED}.apexes" -type f -iname '*.apex' \
-        -exec unzip "{}" -d "{}.unzip" \; \
-        -exec mv "{}.unzip/apex_payload.img" "{}-apex_payload.img" \; \
-        -exec rm -rf "{}.unzip" "{}" \;
-
+    set -o errexit # Re-enable early exit
 }
 
 function diffoscopeFile {
@@ -68,8 +83,8 @@ function diffoscopeFile {
     local DIFF_IN_1="${IN_1}"
     local DIFF_IN_2="${IN_2}"
 
-    preprocessImage "DIFF_IN_1"
-    preprocessImage "DIFF_IN_2"
+    preProcessImage "DIFF_IN_1"
+    preProcessImage "DIFF_IN_2"
 
     set +o errexit # Disable early exit
     sudo "$(command -v diffoscope)" --output-empty --progress \
@@ -78,6 +93,9 @@ function diffoscopeFile {
             --html-dir "${DIFF_OUT}.html-dir" \
             "${DIFF_IN_1}" "${DIFF_IN_2}"
     set -o errexit # Re-enable early exit
+
+    postProcessImage "${DIFF_IN_1}"
+    postProcessImage "${DIFF_IN_2}"
 }
 
 main() {
