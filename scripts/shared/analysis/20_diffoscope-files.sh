@@ -52,9 +52,9 @@ function preProcessImage {
             # Have another look at the list if files in common, but only consider APEX related ones
             local -r APEX_FOLDER_BASENAME="$(basename "${DIFF_IN_RESOLVED}.apexes")"
             local -ar APEX_PAYLOAD_FILES=($(comm -12 \
-                <(cd "${IN_DIR_1}" && find -type 'f,l' | sort) \
-                <(cd "${IN_DIR_2}" && find -type 'f,l' | sort) \
-            | grep "${APEX_FOLDER_BASENAME}"))
+                <(cd "${IN_DIR_1}" && find "${APEX_FOLDER_BASENAME}" -type 'f,l' | sort) \
+                <(cd "${IN_DIR_2}" && find "${APEX_FOLDER_BASENAME}" -type 'f,l' | sort) \
+            ))
             # Append to list of files requiring processing via diffoscope
             FILES+=( "${APEX_PAYLOAD_FILES[@]}" )
         fi
@@ -74,6 +74,12 @@ function postProcessImage {
         set -o errexit # Re-enable early exit
 
         sudo umount "$DIFF_IN"
+        sudo rmdir "$DIFF_IN"
+
+        if [[ "$DIFF_IN" = *".img.raw.mount" ]]; then
+            # Delete raw image that was uncompressed from the sparse one
+            rm "$(basename -s '.mount' "$DIFF_IN")"
+        fi
     fi
     set -o errexit # Re-enable early exit
 }
