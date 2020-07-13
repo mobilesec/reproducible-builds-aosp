@@ -23,21 +23,6 @@ function preProcessImage {
         fi
         set -o errexit # Re-enable early exit
 
-        # Detect ext4 images with EXT4_FEATURE_RO_COMPAT_SHARED_BLOCKS (`shared_blocks` or `FEATURE_R14` if not explicitly named).
-        # Current kernels (as or writing 5.4 upstream) don't support this yet, thus mount.ext4 with defaults (including rw) fails
-        # Thus we double the image size (simple heuristic that should work in 99% of cases) and remove the block sharing feature
-        #set +o errexit # Disable early exit
-        # Check for 'shared_blocks'
-        #"${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_RESOLVED}" | grep -P 'Filesystem features:[ a-zA-Z_-]+(shared_blocks)|(FEATURE_R14)'
-        #if [[ "$?" -eq 0 ]]; then
-            #set -o errexit # Re-enable early exit
-            # Determine new expanded block number
-            #local EXPANDED_BLOCK_COUNT=$(( $("${TUNE2FS_BIN}/tune2fs" -l "${DIFF_IN_RESOLVED}" | grep 'Block count' | cut -d: -f2) * 2 ))
-            #"${TUNE2FS_BIN}/resize2fs" "${DIFF_IN_RESOLVED}" "$EXPANDED_BLOCK_COUNT"
-            #"${TUNE2FS_BIN}/e2fsck" -E unshare_blocks "${DIFF_IN_RESOLVED}"
-        #fi
-        #set -o errexit # Re-enable early exit
-
         local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
         # Mount image to ensure stable file iteration order
         mkdir "${DIFF_IN_RESOLVED}.mount"
@@ -47,17 +32,28 @@ function preProcessImage {
         # Extract apex_payload.img from APEX archives for separate diffoscope run
         if [[ "$(sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
             mkdir "${DIFF_IN_RESOLVED}.apexes"
-            sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
+            sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' \
+                -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
             find "${DIFF_IN_RESOLVED}.apexes" -type f -iname '*.apex' \
                 -exec unzip "{}" -d "{}.unzip" \; \
                 -exec mv "{}.unzip/apex_payload.img" "{}-apex_payload.img" \; \
                 -exec rm -rf "{}.unzip" "{}" \;
+            
+            # Some production APEX files have the `com.google.android` prefix,
+            # while GSI and aosp_* targets strictly use the `com.android` prefix
+            # Perform linking for these to the common prefix to enable filename based matching
+            (
+                cd "${DIFF_IN_RESOLVED}.apexes" && \
+                find -type f -iname 'com.google.android.*-apex_payload.img' \
+                    -exec bash -c 'ln -s "$0" "$(echo "$0" | sed "s/com.google.android/com.android/")"' "{}" \;
+            )
+            # AFAIK the bash -c invokation is needed to make the sed subshell invocation lazily evaluated during find result iteration
 
             # Have another look at the list if files in common, but only consider APEX related ones
             local -r APEX_FOLDER_BASENAME="$(basename "${DIFF_IN_RESOLVED}.apexes")"
             local -ar APEX_PAYLOAD_FILES=($(comm -12 \
-                <(cd "${IN_DIR_1}" && find -type f | sort) \
-                <(cd "${IN_DIR_2}" && find -type f | sort) \
+                <(cd "${IN_DIR_1}" && find -type 'f,l' | sort) \
+                <(cd "${IN_DIR_2}" && find -type 'f,l' | sort) \
             | grep "${APEX_FOLDER_BASENAME}"))
             # Append to list of files requiring processing via diffoscope
             FILES+=( "${APEX_PAYLOAD_FILES[@]}" )
@@ -98,7 +94,10 @@ function diffoscopeFile {
     mkdir -p "$(dirname "${DIFF_OUT}")"
     set +o errexit # Disable early exit
     sudo "$(command -v diffoscope)" --output-empty --progress \
-            --exclude-directory-metadata=recursive --exclude 'apex_payload.img' --exclude 'CERT.RSA' --exclude 'apex_pubkey' --exclude 'update-payload-key.pub.pem' \
+            --exclude-directory-metadata=recursive \
+            --exclude 'original/META-INF/CERT.RSA' \
+            --exclude 'apex_payload.img' --exclude 'apex_pubkey' --exclude 'META-INF/CERT.RSA' \
+            --exclude 'update-payload-key.pub.pem' --exclude 'releasekey.x509.pem' --exclude 'testkey.x509.pem' \
             --json "${DIFF_OUT}.json" \
             --html-dir "${DIFF_OUT}.html-dir" \
             "${DIFF_IN_1}" "${DIFF_IN_2}"
