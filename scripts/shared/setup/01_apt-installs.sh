@@ -1,6 +1,22 @@
 #!/bin/bash
 set -o errexit -o nounset -o xtrace
 
+installDiffoscope() {
+    # Required to install more current version of diffoscope via pip
+    sudo apt-get --assume-yes install python3-pip
+
+    # Install temporarily to pull in all runtime dependencies
+    sudo apt-get --assume-yes install diffoscope
+    sudo apt-get --assume-yes remove diffoscope
+
+    # Install more current version via pip
+    pip3 install diffoscope
+
+    # diffoscope has a feature to list missing deps, use this to install any deps we may have missed previously
+    sudo apt-get --assume-yes install $(diffoscope --list-missing-tools debian | grep 'Available-in-Debian-packages' | cut -d: -f2 | sed 's/,//g')
+    pip3 install $(diffoscope --list-missing-tools debian | grep 'Missing-Python-Modules' | cut -d: -f2 | sed 's/,//g')
+}
+
 main() {
     # We want these scripts to work with a wide range of Debian based systems, thus all commands requiring elevated
     # privileges utilize sudo (to support Ubuntu based build system), event though it is a pointless noop in some
@@ -30,12 +46,7 @@ main() {
 
     # Required for reproducible build scripts
     sudo apt-get --assume-yes install curl jq bindfs wget diffstat
-
-    # Install temporarily to pull in all runtime dependencies
-    #sudo apt-get --assume-yes install diffoscope
-    #sudo apt-get --assume-yes remove diffoscope
-    # Required to install more current version of diffoscope via pip
-    sudo apt-get --assume-yes install python3-pip
+    installDiffoscope
 }
 
 main "$@"
