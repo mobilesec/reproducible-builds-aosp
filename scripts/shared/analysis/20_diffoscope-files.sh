@@ -25,13 +25,13 @@ function preProcessImage {
 
         local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
         # Mount image to ensure stable file iteration order
-        mkdir "${DIFF_IN_RESOLVED}.mount"
+        mkdir -p "${DIFF_IN_RESOLVED}.mount"
         sudo mount -o ro "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.mount"
         eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.mount"
 
         # Extract apex_payload.img from APEX archives for separate diffoscope run
         if [[ "$(sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
-            mkdir "${DIFF_IN_RESOLVED}.apexes"
+            mkdir -p "${DIFF_IN_RESOLVED}.apexes"
             sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' \
                 -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
             find "${DIFF_IN_RESOLVED}.apexes" -type f -iname '*.apex' \
