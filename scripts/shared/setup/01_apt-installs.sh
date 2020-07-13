@@ -1,5 +1,5 @@
 #!/bin/bash
-set -o errexit -o nounset -o pipefail -o xtrace
+set -o errexit -o nounset -o xtrace
 
 main() {
     # We want these scripts to work with a wide range of Debian based systems, thus all commands requiring elevated
@@ -32,8 +32,8 @@ main() {
     sudo apt-get --assume-yes install curl jq bindfs wget diffstat
 
     # Install temporarily to pull in all runtime dependencies
-    sudo apt-get --assume-yes install diffoscope
-    sudo apt-get --assume-yes remove diffoscope
+    #sudo apt-get --assume-yes install diffoscope
+    #sudo apt-get --assume-yes remove diffoscope
     # Required to install more current version of diffoscope via pip
     sudo apt-get --assume-yes install python3-pip
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -o errexit -o nounset -o pipefail -o xtrace
+set -o errexit -o nounset -o xtrace
 
 main() {
     # Essentially just follow the instructions from https://source.android.com/setup/build/downloading

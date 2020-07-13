@@ -11,7 +11,6 @@ RB_BUILD_ENV="docker"
 
 compose_cmds() {
 cat <<EOF | tr '\n' '; '
-bash "./scripts/shared/build-device/10_clone-src-device.sh" "${AOSP_REF}"
 bash
 EOF
 }

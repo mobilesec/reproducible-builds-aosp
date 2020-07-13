@@ -1,5 +1,5 @@
 #!/bin/bash
-set -o errexit -o nounset -o pipefail -o xtrace
+set -o errexit -o nounset -o xtrace
 
 main() {
     # Dummy values since this user is shared. Note that these can't remain empty, otherwise repo refuses to init
