@@ -47,10 +47,7 @@ main() {
     sudo apt-get --assume-yes install python
 
     # Required for reproducible build scripts
-    sudo apt-get --assume-yes install curl jq bindfs wget diffstat udevil
-    # Configure udevil to treat our build dir as media dir and thus permit mount points there
-    sudo bash -c 'echo -e "allowed_media_dirs_ext4 = /media/$USER, /home/dev/aosp/build/**\n" >> /etc/udevil/udevil.conf'
-
+    sudo apt-get --assume-yes install curl jq bindfs wget diffstat libguestfs-tools
     installDiffoscope
 }
 

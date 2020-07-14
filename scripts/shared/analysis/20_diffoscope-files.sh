@@ -26,7 +26,10 @@ function preProcessImage {
         local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
         # Mount image to ensure stable file iteration order
         mkdir -p "${DIFF_IN_RESOLVED}.mount"
-        udevil mount -t ext4 -o ro "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.mount"
+        # guestfs allows working with complex file systems images (e.g. LVM volume groups with multiple LVs) and thus requires
+        # us to be explicit about what part of image we want to mount. Running `virt-filesystems -a system.img.raw` returns the
+        # name of the "virtual" device and can be directly fed to guestmount (usually this is /dev/sda)
+        guestmount -a "${DIFF_IN_RESOLVED}" -m "$(virt-filesystems -a system.img.raw)" --ro "${DIFF_IN_RESOLVED}.mount"
         sudo bindfs -u "${USER}" -g "${USER}" "--create-for-user=${USER}" "--create-for-group=${USER}" "${DIFF_IN_RESOLVED}.mount" "${DIFF_IN_RESOLVED}.bind"
         eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.bind"
 
@@ -78,7 +81,7 @@ function postProcessImage {
 
         sudo fusermount -u "${IMAGE}.bind"
         rmdir "${IMAGE}.bind"
-        udevil umount "${IMAGE}.mount"
+        guestunmount "${IMAGE}.mount"
         rmdir "${IMAGE}.mount"
 
         if [[ "$IMAGE" = *".img.raw" ]]; then
