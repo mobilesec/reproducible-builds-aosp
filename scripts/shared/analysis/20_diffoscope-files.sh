@@ -78,7 +78,7 @@ function postProcessImage {
 
         if [[ "$DIFF_IN" = *".img.raw.mount" ]]; then
             # Delete raw image that was uncompressed from the sparse one
-            rm "$(basename -s '.mount' "$DIFF_IN")"
+            rm "$(dirname $DIFF_IN)/$(basename -s '.mount' "$DIFF_IN")"
         fi
     fi
     set -o errexit # Re-enable early exit
