@@ -26,13 +26,14 @@ function preProcessImage {
         local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
         # Mount image to ensure stable file iteration order
         mkdir -p "${DIFF_IN_RESOLVED}.mount"
-        sudo mount -o ro "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.mount"
-        eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.mount"
+        udevil mount -t ext4 -o ro "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.mount"
+        sudo bindfs -u "${USER}" -g "${USER}" "--create-for-user=${USER}" "--create-for-group=${USER}" "${DIFF_IN_RESOLVED}.mount" "${DIFF_IN_RESOLVED}.bind"
+        eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.bind"
 
         # Extract apex_payload.img from APEX archives for separate diffoscope run
-        if [[ "$(sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
+        if [[ "$(find "${DIFF_IN_RESOLVED}.bind" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
             mkdir -p "${DIFF_IN_RESOLVED}.apexes"
-            sudo find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' \
+            find "${DIFF_IN_RESOLVED}.bind" -type f -iname '*.apex' \
                 -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
             find "${DIFF_IN_RESOLVED}.apexes" -type f -iname '*.apex' \
                 -exec unzip "{}" -d "{}.unzip" \; \
@@ -73,12 +74,16 @@ function postProcessImage {
     if [[ "$?" -eq 0 ]]; then
         set -o errexit # Re-enable early exit
 
-        sudo umount "$DIFF_IN"
-        sudo rmdir "$DIFF_IN"
+        IMAGE="$(dirname $DIFF_IN)/$(basename -s '.bind' "$DIFF_IN")"
 
-        if [[ "$DIFF_IN" = *".img.raw.mount" ]]; then
+        sudo fusermount -u "${IMAGE}.bind"
+        rmdir "${IMAGE}.bind"
+        udevil umount "${IMAGE}.mount"
+        rmdir "${IMAGE}.mount"
+
+        if [[ "$IMAGE" = *".img.raw" ]]; then
             # Delete raw image that was uncompressed from the sparse one
-            rm "$(dirname $DIFF_IN)/$(basename -s '.mount' "$DIFF_IN")"
+            rm "$IMAGE"
         fi
     fi
     set -o errexit # Re-enable early exit
@@ -99,7 +104,7 @@ function diffoscopeFile {
     # Ensure that parent directory exists
     mkdir -p "$(dirname "${DIFF_OUT}")"
     set +o errexit # Disable early exit
-    sudo "$(command -v diffoscope)" --output-empty --progress \
+    "$(command -v diffoscope)" --output-empty --progress \
             --exclude-directory-metadata=recursive \
             --exclude 'original/META-INF/CERT.RSA' \
             --exclude 'apex_payload.img' --exclude 'apex_pubkey' --exclude 'META-INF/CERT.RSA' \
