@@ -47,7 +47,7 @@ main() {
     sudo apt-get --assume-yes install python
 
     # Required for reproducible build scripts
-    sudo apt-get --assume-yes install curl jq bindfs wget diffstat libguestfs-tools
+    sudo apt-get --assume-yes install curl jq wget diffstat libguestfs-tools
     installDiffoscope
 }
 

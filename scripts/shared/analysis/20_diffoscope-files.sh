@@ -29,14 +29,13 @@ function preProcessImage {
         # guestfs allows working with complex file systems images (e.g. LVM volume groups with multiple LVs) and thus requires
         # us to be explicit about what part of image we want to mount. Running `virt-filesystems -a system.img.raw` returns the
         # name of the "virtual" device and can be directly fed to guestmount (usually this is /dev/sda)
-        guestmount -a "${DIFF_IN_RESOLVED}" -m "$(virt-filesystems -a "${DIFF_IN_RESOLVED}")" --ro "${DIFF_IN_RESOLVED}.mount"
-        sudo bindfs -u "${USER}" -g "${USER}" "--create-for-user=${USER}" "--create-for-group=${USER}" "${DIFF_IN_RESOLVED}.mount" "${DIFF_IN_RESOLVED}.bind"
-        eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.bind"
+        guestmount -o "uid=$(id -u)" -o "gid=$(id -g)" -a "${DIFF_IN_RESOLVED}" -m "$(virt-filesystems -a "${DIFF_IN_RESOLVED}")" --ro "${DIFF_IN_RESOLVED}.mount"
+        eval $DIFF_IN_META="${DIFF_IN_RESOLVED}.mount"
 
         # Extract apex_payload.img from APEX archives for separate diffoscope run
-        if [[ "$(find "${DIFF_IN_RESOLVED}.bind" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
+        if [[ "$(find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
             mkdir -p "${DIFF_IN_RESOLVED}.apexes"
-            find "${DIFF_IN_RESOLVED}.bind" -type f -iname '*.apex' \
+            find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' \
                 -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
             find "${DIFF_IN_RESOLVED}.apexes" -type f -iname '*.apex' \
                 -exec unzip "{}" -d "{}.unzip" \; \
@@ -77,10 +76,8 @@ function postProcessImage {
     if [[ "$?" -eq 0 ]]; then
         set -o errexit # Re-enable early exit
 
-        IMAGE="$(dirname $DIFF_IN)/$(basename -s '.bind' "$DIFF_IN")"
+        IMAGE="$(dirname $DIFF_IN)/$(basename -s '.mount' "$DIFF_IN")"
 
-        sudo fusermount -u "${IMAGE}.bind"
-        rmdir "${IMAGE}.bind"
         guestunmount "${IMAGE}.mount"
         rmdir "${IMAGE}.mount"
 
