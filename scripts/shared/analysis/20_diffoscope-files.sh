@@ -155,7 +155,7 @@ main() {
 
     for ((i = 0; i < "${#FILES[@]}"; i++)); do
         # Normalize path due to "./" prefix from find (e.g. /my/path/./to/somewhere -> /my/path/to/somewhere)
-        FILE="realpath $(${FILES[$i]})"
+        FILE="$(realpath ${FILES[$i]})"
         diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
     done
 

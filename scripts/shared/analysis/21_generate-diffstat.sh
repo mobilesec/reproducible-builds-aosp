@@ -1,6 +1,60 @@
 #!/bin/bash
 set -o errexit -o nounset -o pipefail -o xtrace
 
+cleanupBloatedFilePaths() {
+    # More recent version of diffoscope (changed somewhere between 137 and 151) emit for nearly every node
+    # the full path (instead of just a single elemnt). This requires some post processing to clean up the diffstat
+    # First extract diffstat keys and values
+    DIFFSTAT_KEYS=($(head -n -1 "${DIFF_JSON}.diffstat" \
+        | sed -E -e 's/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\1/'))
+    DIFFSTAT_VALUES=($(head --zero-terminated -n -1 "${DIFF_JSON}.diffstat" \
+        | sed -E -e 's/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\2/'))
+
+    local -ar DIFFSTAT_KEYS_PATHS=($(for DIFFSTAT_KEY in "${DIFFSTAT_KEYS[@]}"; do
+        # Check for at least 1 separator
+        if [[ "$DIFFSTAT_KEY" = *"::"* ]]; then
+            LEAF_NODE="$(awk --field-separator '::' '{print $NF}' <(echo "$DIFFSTAT_KEY"))"
+            # Some leaf nodes contain the full path
+            if [[ "$LEAF_NODE" = *"aosp/build"*  ]]; then
+                echo "$LEAF_NODE"
+            else
+                # One before last is path, last is tool usage
+                awk --field-separator '::' '{printf("%s::%s\n", $(NF-1), $NF)}' <(echo "$DIFFSTAT_KEY")
+            fi
+        else
+            echo "$DIFFSTAT_KEY"
+        fi
+    done))
+
+    # Convert absolute path on host to absolute path in image, e.g.
+    # /root/aosp/build/.../system.img.raw.mount/system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo -> /system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo
+    local -ar DIFFSTAT_KEYS_NEW=($(for DIFFSTAT_KEY in "${DIFFSTAT_KEYS_PATHS[@]}"; do
+        # node contains absolute path of host filesystem
+        if [[ "$DIFFSTAT_KEY" = *"aosp/build"*  ]]; then
+            awk --field-separator '.mount/' '{printf("/%s\n", $2)}' <(echo "$DIFFSTAT_KEY")
+        else
+            echo "$DIFFSTAT_KEY"
+        fi
+    done))
+
+    # Determine longest node path for awk printing
+    local -i DIFFSTAT_KEY_MAX_LENGTH=0
+    for DIFFSTAT_KEY in "${DIFFSTAT_KEYS_NEW[@]}"; do
+        DIFFSTAT_KEY_MAX_LENGTH=$(( ${#DIFFSTAT_KEY} > $DIFFSTAT_KEY_MAX_LENGTH ? ${#DIFFSTAT_KEY} : $DIFFSTAT_KEY_MAX_LENGTH ))
+    done
+
+    # Regenerate cleaned diffstat file
+    (
+        for ((i = 0; i < "${#DIFFSTAT_KEYS_NEW[@]}"; i++)); do
+            local -r DIFFSTAT_KEY_NEW="${DIFFSTAT_KEYS_NEW[$i]}"
+            local -r DIFFSTAT_VALUE="${DIFFSTAT_VALUES[$i]}"
+
+            awk "$(echo "{printf(\" %-${DIFFSTAT_KEY_MAX_LENGTH}s | %10s\n\", \$1, \$2)}")" <(echo "$DIFFSTAT_KEY_NEW" "$DIFFSTAT_VALUE")
+        done
+        tail -n 1 "$DIFF_JSON.diffstat"
+    ) > "${DIFF_JSON}.diffstat_clean"
+}
+
 main() {
     # Argument sanity check
     if [[ "$#" -ne 1 ]]; then
@@ -61,60 +115,11 @@ main() {
     ' <(cat "${DIFF_JSON}") | \
         diffstat > "${DIFF_JSON}.diffstat"
 
+        cleanupBloatedFilePaths
+
         # JSON files take considerable space, get rid of them
         rm "${DIFF_JSON}"
 
-        # More recent version of diffoscope (changed somewhere between 137 and 151) emit for nearly every node
-        # the full path (instead of just a single elemnt). This requires some post processing to clean up
-        # First extract diffstat keys and values
-        DIFFSTAT_KEYS=($(head -n -1 "${DIFF_JSON}.diffstat" \
-            | sed -E -e 's/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\1/'))
-        DIFFSTAT_VALUES=($(head --zero-terminated -n -1 "${DIFF_JSON}.diffstat" \
-            | sed -E -e 's/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\2/'))
-
-        local -ar DIFFSTAT_KEYS_PATHS=($(for DIFFSTAT_KEY in "${DIFFSTAT_KEYS[@]}"; do
-            # Check for at least 1 separator
-            if [[ "$DIFFSTAT_KEY" = *"::"* ]]; then
-                LEAF_NODE="$(awk --field-separator '::' '{print $NF}' <(echo "$DIFFSTAT_KEY"))"
-                # Some leaf nodes contain the full path
-                if [[ "$LEAF_NODE" = *"aosp/build"*  ]]; then
-                    echo "$LEAF_NODE"
-                else
-                    # One before last is path, last is tool usage
-                    awk --field-separator '::' '{printf("%s::%s\n", $(NF-1), $NF)}' <(echo "$DIFFSTAT_KEY")
-                fi
-            else
-                echo "$DIFFSTAT_KEY"
-            fi
-        done))
-
-        # Convert absolute path on host to absolute path in image, e.g.
-        # /root/aosp/build/.../system.img.raw.mount/system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo -> /system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo
-        local -ar DIFFSTAT_KEYS_NEW=($(for DIFFSTAT_KEY in "${DIFFSTAT_KEYS_PATHS[@]}"; do
-            # node contains absolute path of host filesystem
-            if [[ "$DIFFSTAT_KEY" = *"aosp/build"*  ]]; then
-                awk --field-separator '.mount/' '{printf("/%s\n", $2)}' <(echo "$DIFFSTAT_KEY")
-            else
-                echo "$DIFFSTAT_KEY"
-            fi
-        done))
-
-        # Determine longest node path for awk printing
-        local -i DIFFSTAT_KEY_MAX_LENGTH=0
-        for DIFFSTAT_KEY in "${DIFFSTAT_KEYS_NEW[@]}"; do
-            DIFFSTAT_KEY_MAX_LENGTH=$(( ${#DIFFSTAT_KEY} > $DIFFSTAT_KEY_MAX_LENGTH ? ${#DIFFSTAT_KEY} : $DIFFSTAT_KEY_MAX_LENGTH ))
-        done
-
-        # Regenerate cleaned diffstat file
-        (
-            for ((i = 0; i < "${#DIFFSTAT_KEYS_NEW[@]}"; i++)); do
-                local -r DIFFSTAT_KEY_NEW="${DIFFSTAT_KEYS_NEW[$i]}"
-                local -r DIFFSTAT_VALUE="${DIFFSTAT_VALUES[$i]}"
-
-                awk "$(echo "{printf(\" %-${DIFFSTAT_KEY_MAX_LENGTH}s | %10s\n\", \$1, \$2)}")" <(echo "$DIFFSTAT_KEY_NEW" "$DIFFSTAT_VALUE")
-            done
-            tail -n 1 "$DIFF_JSON.diffstat"
-        ) > "${DIFF_JSON}.diffstat_clean"
     done
 }
 
