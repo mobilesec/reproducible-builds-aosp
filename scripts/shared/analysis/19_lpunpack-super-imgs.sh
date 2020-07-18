@@ -6,17 +6,17 @@ unpackSuper() {
     local -r BUILD_ENV="$2"
     local -r TARGET_DIR="${RB_AOSP_BASE}/build/${AOSP_REF_OR_BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
 
-    # Only perform unpacking if either system or vendor are missing and we do have super image
+    # Only perform unpacking if either system or vendor are missing and we and a super image exists
     if [[ ! -f "${TARGET_DIR}/system.img" ]] || [[ ! -f "${TARGET_DIR}/vendor.img" ]]; then
         if [[ -f "${TARGET_DIR}/super.img" ]]; then
             local SUPER_IMG="${TARGET_DIR}/super.img"
 
-            # Detect sparse images
+            # Detect sparse image
             set +o errexit # Disable early exit
             file "${SUPER_IMG}" | grep 'Android sparse image'
             if [[ "$?" -eq 0 ]]; then
                 set -o errexit # Re-enable early exit
-                # Deomcpress into raw image
+                # Decompress into raw image
                 "${AOSP_HOST_BIN}/simg2img" "${TARGET_DIR}/super.img" "${TARGET_DIR}/super.img.raw"
                 SUPER_IMG="${TARGET_DIR}/super.img.raw"
             fi

@@ -67,8 +67,7 @@ function preProcessImage {
 }
 
 function postProcessImage {
-    # Normalize path (e.g. /my/path/./to/somewhere -> /my/path/to/somewhere)
-    local DIFF_IN="$(realpath $1)"
+    local DIFF_IN="$1"
 
     # Sanity check that we are dealing with a mount
     set +o errexit # Disable early exit
@@ -155,7 +154,8 @@ main() {
     | grep -v 'super.img'))
 
     for ((i = 0; i < "${#FILES[@]}"; i++)); do
-        FILE="${FILES[$i]}"
+        # Normalize path due to "./" prefix from find (e.g. /my/path/./to/somewhere -> /my/path/to/somewhere)
+        FILE="realpath $(${FILES[$i]})"
         diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
     done
 
