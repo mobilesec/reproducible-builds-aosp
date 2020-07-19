@@ -154,9 +154,10 @@ main() {
     | grep -v 'super.img'))
 
     for ((i = 0; i < "${#FILES[@]}"; i++)); do
-        # Normalize path due to "./" prefix from find (e.g. /my/path/./to/somewhere -> /my/path/to/somewhere)
-        FILE="$(realpath ${FILES[$i]})"
-        diffoscopeFile "${IN_DIR_1}/${FILE}" "${IN_DIR_2}/${FILE}" "${OUT_DIR}/${FILE}.diff"
+        FILE="${FILES[$i]}"
+        # Normalize concated paths (e.g "/path/to/./somewhere.img") to canonical ones (e.g. "/path/to/somewhere.img") via realpath
+        diffoscopeFile "$(realpath "${IN_DIR_1}/${FILE}")" "$(realpath "${IN_DIR_2}/${FILE}")" \
+            "$(realpath "${OUT_DIR}/${FILE}.diff")"
     done
 
     # Cleanup both builds after diffing process
