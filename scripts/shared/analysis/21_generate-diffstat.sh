@@ -1,5 +1,5 @@
 #!/bin/bash
-set -o errexit -o nounset -o pipefail -o xtrace
+set -o errexit -o nounset -o pipefail -o noglob -o xtrace
 
 cleanupBloatedFilePaths() {
     # More recent version of diffoscope (changed somewhere between 137 and 151) emit for nearly every node
@@ -51,7 +51,7 @@ cleanupBloatedFilePaths() {
 
             awk "$(echo "{printf(\" %-${DIFFSTAT_KEY_MAX_LENGTH}s | %10s\n\", \$1, \$2)}")" <(echo "$DIFFSTAT_KEY_NEW" "$DIFFSTAT_VALUE")
         done
-        tail -n 1 "$DIFF_JSON.diffstat"
+        tail -n 1 "${DIFF_JSON}.diffstat"
     ) > "${DIFF_JSON}.diffstat_clean"
 }
 
