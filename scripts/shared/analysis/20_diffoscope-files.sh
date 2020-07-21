@@ -120,10 +120,7 @@ function diffoscopeFile {
     set +o errexit # Disable early exit
     # Due to a bug when using --max-diff-block-lines-saved and --html-dir at the same time, we call diffoscope twice
     "$(command -v diffoscope)" "${DIFFOSCOPE_ARGS[@]}" \
-        --max-diff-block-lines-saved 200 \
         --json "${DIFF_OUT}.json" \
-        "${DIFF_IN_1}" "${DIFF_IN_2}"
-    "$(command -v diffoscope)" "${DIFFOSCOPE_ARGS[@]}" \
         --html-dir "${DIFF_OUT}.html-dir" \
         "${DIFF_IN_1}" "${DIFF_IN_2}"
     set -o errexit # Re-enable early exit
