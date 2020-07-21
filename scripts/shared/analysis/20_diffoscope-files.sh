@@ -5,7 +5,8 @@ function preProcessImage {
     # Mutable diffoscope params
     local DIFF_IN_META="$1"
 
-    local DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
+    local DIFF_IN_BASE=$(eval echo \$"$DIFF_IN_META")
+    local DIFF_IN_RESOLVED=$DIFF_IN_BASE
     # Sanity check that we are dealing with a image
     set +o errexit # Disable early exit
     file "${DIFF_IN_RESOLVED}" | grep -P '(ext2)|(ext3)|(ext4)|(Android sparse image)'
@@ -34,10 +35,10 @@ function preProcessImage {
 
         # Extract apex_payload.img from APEX archives for separate diffoscope run
         if [[ "$(find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
-            mkdir -p "${DIFF_IN_RESOLVED}.apexes"
-            find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' \
-                -exec cp {} "${DIFF_IN_RESOLVED}.apexes/" \;
-            find "${DIFF_IN_RESOLVED}.apexes" -type f -iname '*.apex' \
+            mkdir -p "${DIFF_IN_BASE}.apexes"
+            find "${DIFF_IN_BASE}.mount" -type f -iname '*.apex' \
+                -exec cp {} "${DIFF_IN_BASE}.apexes/" \;
+            find "${DIFF_IN_BASE}.apexes" -type f -iname '*.apex' \
                 -exec unzip "{}" -d "{}.unzip" \; \
                 -exec mv "{}.unzip/apex_payload.img" "{}-apex_payload.img" \; \
                 -exec rm -rf "{}.unzip" "{}" \;
@@ -46,14 +47,14 @@ function preProcessImage {
             # while GSI and aosp_* targets strictly use the `com.android` prefix
             # Perform linking for these to the common prefix to enable filename based matching
             (
-                cd "${DIFF_IN_RESOLVED}.apexes" && \
+                cd "${DIFF_IN_BASE}.apexes" && \
                 find -type f -iname 'com.google.android.*-apex_payload.img' \
                     -exec bash -c 'ln -s "$0" "$(echo "$0" | sed "s/com.google.android/com.android/")"' "{}" \;
             )
             # AFAIK the bash -c invokation is needed to make the sed subshell invocation lazily evaluated during find result iteration
 
             # Have another look at the list if files in common, but only consider APEX related ones
-            local -r APEX_FOLDER_BASENAME="$(basename "${DIFF_IN_RESOLVED}.apexes")"
+            local -r APEX_FOLDER_BASENAME="$(basename "${DIFF_IN_BASE}.apexes")"
             local -ar APEX_PAYLOAD_FILES=($(comm -12 \
                 <(cd "${IN_DIR_1}" && find "${APEX_FOLDER_BASENAME}" -type 'f,l' | sort) \
                 <(cd "${IN_DIR_2}" && find "${APEX_FOLDER_BASENAME}" -type 'f,l' | sort) \
