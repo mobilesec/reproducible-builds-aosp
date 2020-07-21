@@ -36,7 +36,7 @@ function preProcessImage {
         # Extract apex_payload.img from APEX archives for separate diffoscope run
         if [[ "$(find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
             mkdir -p "${DIFF_IN_BASE}.apexes"
-            find "${DIFF_IN_BASE}.mount" -type f -iname '*.apex' \
+            find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' \
                 -exec cp {} "${DIFF_IN_BASE}.apexes/" \;
             find "${DIFF_IN_BASE}.apexes" -type f -iname '*.apex' \
                 -exec unzip "{}" -d "{}.unzip" \; \
