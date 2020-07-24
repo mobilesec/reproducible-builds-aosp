@@ -109,7 +109,13 @@ function diffoscopeFile {
     # Display output in all cases and show continous progress (helps with debugging and logging)
     DIFFOSCOPE_ARGS+=( --output-empty --progress )
     # Disregard directory/container metadata (e.g. ctime/mtime) on all levels
-    DIFFOSCOPE_ARGS+=( --exclude-directory-metadata=recursive )
+    DIFFOSCOPE_ARGS+=( --exclude-directory-metadata 'recursive' )
+    # Don't inspect symbol table and relocations
+    DIFFOSCOPE_ARGS+=( --exclude-command '^readelf.*\s--symbols' --exclude-command '^readelf.*\s--relocs' )
+    # Don't inspect hexdumps/debug data/strings
+    DIFFOSCOPE_ARGS+=( --exclude-command '^readelf.*\s--hex-dump=' --exclude-command '^readelf.*\s--debug-dump=info' --exclude-command '^strings\s' )
+    # Don't inspect disassembly for code sections
+    DIFFOSCOPE_ARGS+=( --exclude-command '^objdump.*\s--disassemble' )
     # APKs embed certificates
     DIFFOSCOPE_ARGS+=( --exclude 'original/META-INF/CERT.RSA' )
     # APEX files embed a certificates and a separate public key. Furthermore ignore APEX payload images, treated in separate step

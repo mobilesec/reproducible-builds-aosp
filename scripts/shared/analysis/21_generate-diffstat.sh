@@ -28,12 +28,12 @@ cleanupBloatedFilePaths() {
         done
     ))
 
-    # Convert absolute path on host to absolute path in image, e.g.
+    # Convert paths on host to absolute path in image, e.g.
     # /root/aosp/build/.../system.img.raw.mount/system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo -> /system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo
     local -ar DIFFSTAT_KEYS_NEW=($(
         for DIFFSTAT_KEY in "${DIFFSTAT_KEYS_PATHS[@]}"; do
-            # node contains absolute path of host filesystem
-            if [[ "$DIFFSTAT_KEY" = *"aosp/build"*  ]]; then
+            # node contains path of host filesystem
+            if [[ "$DIFFSTAT_KEY" =~ .img(.raw)?.mount/  ]]; then
                 awk --field-separator '.mount/' '{printf("/%s\n", $2)}' <(echo "$DIFFSTAT_KEY")
             else
                 echo "$DIFFSTAT_KEY"
@@ -59,6 +59,13 @@ cleanupBloatedFilePaths() {
         done
         tail -n 1 "${DIFF_JSON}.diffstat"
     ) > "${DIFF_JSON}.diffstat_clean"
+}
+
+generateCsvFile() {
+    # Convert diffstat to CSV for further processing
+    head -n -1 "${DIFF_JSON}.diffstat_clean" \
+        | sed -E -e "s/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\1,\2/" \
+        > "${DIFF_JSON}.diffstat.csv"
 }
 
 main() {
@@ -122,6 +129,7 @@ main() {
         diffstat > "${DIFF_JSON}.diffstat"
 
         cleanupBloatedFilePaths
+        generateCsvFile
 
         # JSON files take considerable space, get rid of them
         rm "${DIFF_JSON}"
