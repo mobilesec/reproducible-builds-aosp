@@ -125,8 +125,9 @@ main() {
         ) ] | join("::") ) ) }
         + { ($path | map(tostring) | join(".")): $in | getpath($path) }
     ) | join("\n")
-    ' <(cat "${DIFF_JSON}") | \
-        diffstat > "${DIFF_JSON}.diffstat"
+    ' <(cat "${DIFF_JSON}") > "${DIFF_JSON}.flattened.diff"
+
+        diffstat -k "${DIFF_JSON}.flattened.diff" > "${DIFF_JSON}.diffstat"
 
         cleanupBloatedFilePaths
         generateCsvFile
