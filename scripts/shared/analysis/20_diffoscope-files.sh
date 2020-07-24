@@ -109,7 +109,7 @@ function diffoscopeFile {
     # Display output in all cases and show continous progress (helps with debugging and logging)
     DIFFOSCOPE_ARGS+=( --output-empty --progress )
     # Disregard directory/container metadata (e.g. ctime/mtime) on all levels
-    DIFFOSCOPE_ARGS+=( --exclude-directory-metadata 'recursive' )
+    DIFFOSCOPE_ARGS+=( --exclude-directory-metadata=recursive )
     # Don't inspect symbol table and relocations
     DIFFOSCOPE_ARGS+=( --exclude-command '^readelf.*\s--symbols' --exclude-command '^readelf.*\s--relocs' )
     # Don't inspect hexdumps/debug data/strings
