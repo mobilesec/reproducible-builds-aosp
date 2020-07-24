@@ -175,7 +175,7 @@ main() {
         FILE="${FILES[$i]}"
         # Normalize concated paths (e.g "/path/to/./somewhere.img") to canonical ones (e.g. "/path/to/somewhere.img") via realpath
         diffoscopeFile "$(realpath "${IN_DIR_1}/${FILE}")" "$(realpath "${IN_DIR_2}/${FILE}")" \
-            "$(realpath "${OUT_DIR}/${FILE}.diff")"
+            "$(realpath -m "${OUT_DIR}/${FILE}.diff")"
     done
 
     # Cleanup both builds after diffing process
