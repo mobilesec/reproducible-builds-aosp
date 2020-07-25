@@ -69,7 +69,7 @@ main() {
         # - Since diffstat can't handle spaces (escaping doesn't help either), convert all spaces (from tool invocations) to _
         # - Finally, reassemble valid patch file markers by preprending '--- a/' and '+++ b/' (third substition)
         sed -E -e '/--- /{s/.*\.img(\.raw)?\.mount\/(.*)$/\2/g;s/\s/_/g;s/^/--- a\//g}' \
-            -e '/+++ /{s/.*\.img(\.raw)?\.mount\/(.*)$/\2/g;s/\s/_/g;s/^/+++ b\//g}' \
+            -e '/\+\+\+ /{s/.*\.img(\.raw)?\.mount\/(.*)$/\2/g;s/\s/_/g;s/^/+++ b\//g}' \
             "${DIFF_JSON_FILE}.flattened.diff" > "${DIFF_JSON_FILE}.flattened_clean.diff"
 
         # Run diffstat on cleaned flat diff file, create machine friendly CSV output

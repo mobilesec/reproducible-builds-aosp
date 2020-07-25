@@ -178,6 +178,10 @@ main() {
             "$(realpath -m "${OUT_DIR}/${FILE}.diff")"
     done
 
+    # Cleanup .apexes folder(s) in input directories
+    find "${IN_DIR_1}" -type d -name '*.apexes' -exec rm -rf {} \;
+    find "${IN_DIR_2}" -type d -name '*.apexes' -exec rm -rf {} \;
+
     # Cleanup both builds after diffing process
     rm -rf "${IN_DIR_1}"
     rm -rf "${IN_DIR_2}"
