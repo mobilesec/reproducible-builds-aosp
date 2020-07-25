@@ -1,77 +1,5 @@
 #!/bin/bash
 set -o errexit -o nounset -o pipefail -o xtrace
-shopt -s nullglob
-
-cleanupBloatedFilePaths() {
-    local -r DIFF_JSON_FILE="$1"
-
-    # More recent version of diffoscope (changed somewhere between 137 and 151) emit for nearly every node
-    # the full path (instead of just a single elemnt). This requires some post processing to clean up the diffstat
-    # First extract diffstat keys and values
-    local -r DIFFSTAT_KEYS=($(head -n -1 "${DIFF_JSON_FILE}.diffstat" \
-        | sed -E -e 's/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\1/'))
-    local -r DIFFSTAT_VALUES=($(head -n -1 "${DIFF_JSON_FILE}.diffstat" \
-        | sed -E -e 's/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\2/'))
-
-    local -ar DIFFSTAT_KEYS_PATHS=($(
-        for DIFFSTAT_KEY in "${DIFFSTAT_KEYS[@]}"; do
-            # Check for at least 1 separator
-            if [[ "$DIFFSTAT_KEY" = *"::"* ]]; then
-                LEAF_NODE="$(awk --field-separator '::' '{print $NF}' <(echo "$DIFFSTAT_KEY"))"
-                # Some leaf nodes contain the full path
-                if [[ "$LEAF_NODE" = *"aosp/build"*  ]]; then
-                    echo "$LEAF_NODE"
-                else
-                    # One before last is path, last is tool usage
-                    awk --field-separator '::' '{printf("%s::%s\n", $(NF-1), $NF)}' <(echo "$DIFFSTAT_KEY")
-                fi
-            else
-                echo "$DIFFSTAT_KEY"
-            fi
-        done
-    ))
-
-    # Convert paths on host to absolute path in image, e.g.
-    # /root/aosp/build/.../system.img.raw.mount/system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo -> /system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo
-    local -ar DIFFSTAT_KEYS_NEW=($(
-        for DIFFSTAT_KEY in "${DIFFSTAT_KEYS_PATHS[@]}"; do
-            # node contains path of host filesystem
-            if [[ "$DIFFSTAT_KEY" =~ .img(.raw)?.mount/  ]]; then
-                awk --field-separator '.mount/' '{printf("/%s\n", $2)}' <(echo "$DIFFSTAT_KEY")
-            else
-                echo "$DIFFSTAT_KEY"
-            fi
-        done
-    ))
-
-    # Determine longest node path for awk printing
-    local -i DIFFSTAT_KEY_MAX_LENGTH=0
-    for DIFFSTAT_KEY in "${DIFFSTAT_KEYS_NEW[@]}"; do
-        DIFFSTAT_KEY_MAX_LENGTH=$(( ${#DIFFSTAT_KEY} > $DIFFSTAT_KEY_MAX_LENGTH ? ${#DIFFSTAT_KEY} : $DIFFSTAT_KEY_MAX_LENGTH ))
-    done
-
-    # Regenerate cleaned diffstat file
-    (
-        local DIFFSTAT_KEY_NEW=""
-        local DIFFSTAT_VALUE=""
-        for ((i = 0; i < "${#DIFFSTAT_KEYS_NEW[@]}"; i++)); do
-            DIFFSTAT_KEY_NEW="${DIFFSTAT_KEYS_NEW[$i]}"
-            DIFFSTAT_VALUE="${DIFFSTAT_VALUES[$i]}"
-
-            awk "$(echo "{printf(\" %-${DIFFSTAT_KEY_MAX_LENGTH}s | %10s\n\", \$1, \$2)}")" <(echo "$DIFFSTAT_KEY_NEW" "$DIFFSTAT_VALUE")
-        done
-        tail -n 1 "${DIFF_JSON_FILE}.diffstat"
-    ) > "${DIFF_JSON_FILE}.diffstat_clean"
-}
-
-generateCsvFile() {
-    local -r DIFF_JSON_FILE="$1"
-
-    # Convert diffstat to CSV for further processing
-    head -n -1 "${DIFF_JSON_FILE}.diffstat_clean" \
-        | sed -E -e "s/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\1,\2/" \
-        > "${DIFF_JSON_FILE}.diffstat.csv"
-}
 
 main() {
     # Argument sanity check
@@ -95,15 +23,15 @@ main() {
     for DIFF_JSON_FILE in "${DIFF_JSON_FILES[@]}"; do
         # jq filters have a strong write-once smell if you never worked with them before. Thus a small breakdown
         # of the steps involved for this one:
-        # * We iterate over all paths in JSON object that lead to a unified diff that is actually present
+        # - We iterate over all paths in JSON object that lead to a unified diff that is actually present
         #   (i.e. type of property is string). We start with an empty object and add properties for each such path.
-        # * Specifically we add 3 properties ("source1", "source2" and "unified_diff" in exactly that order)
-        #   * For both "source" propertiers we generate a unique key based on the *keys* of the path
+        # - Specifically we add 3 properties ("source1", "source2" and "unified_diff" in exactly that order)
+        #   - For both "source" propertiers we generate a unique key based on the *keys* of the path
         #     leading to said source by combining these with a ".". For the value we want to concat all
         #     source property values that lie on this path. Note that such a concatination is only a real path
         #     in some instances, more often than not the last "source" value on this path is the tool invocation
         #     on a specific file. Thus we join with "::". Finally we prepend diff markers (e.g. "--- ") to allow automatic processing.
-        #     * For each $path we need all prefix arrays that lead to the respective "source" properties.
+        #     - For each $path we need all prefix arrays that lead to the respective "source" properties.
         #       Note that all (except the last) "source" property doesn't exist on the path directly. Rather for
         #       each intermediate step, after indexing the element in the "details" array, we need to manually append
         #       the respective source property. For example, for the path
@@ -116,8 +44,8 @@ main() {
         #         details.4.details.2.source1
         #
         #      Finally we retrieve the values for all these paths via getpath and concat via join.
-        #   * The last property for each 3 tuple is the unified diff, which we simply retrieve via getpath
-        # * Finally we join all values with newlines, resultung in a clean set of diffs (i.e. patch without metadata like author, etc.)
+        #   - The last property for each 3 tuple is the unified diff, which we simply retrieve via getpath
+        # - Finally we join all values with newlines, resultung in a clean set of diffs (i.e. patch without metadata like author, etc.)
         jq -r '
     . as $in
     | reduce (
@@ -125,7 +53,7 @@ main() {
         ) as $path ({}; .
         + { ($path | .[($path | length - 1)] = "source1" | map(tostring) | join(".")) : ( "--- " + ( [ $in | getpath(
         $path[0:range(0; ($path | length) + 1)] | select((. | last) | type == "number") | . += ["source1"]
-        ) ] | join("__") ) ) }
+        ) ] | join("::") ) ) }
         + { ($path | .[($path | length - 1)] = "source2" | map(tostring) | join(".")) : ( "+++ " + ( [ $in | getpath(
         $path[0:range(0; ($path | length) + 1)] | select((. | last) | type == "number") | . += ["source2"]
         ) ] | join("::") ) ) }
@@ -133,13 +61,24 @@ main() {
     ) | join("\n")
     ' <(cat "${DIFF_JSON_FILE}") > "${DIFF_JSON_FILE}.flattened.diff"
 
-        diffstat -k "${DIFF_JSON_FILE}.flattened.diff" > "${DIFF_JSON_FILE}.diffstat"
+        # More recent version of diffoscope (changed somewhere between 137 and 151) emit for nearly every node
+        # the full path (instead of just a single elemnt). This requires some post processing to clean up, specifically:
+        # - Remove redundant paths (the sed substitution greedily consumes nodes untill the last)
+        # - Convert paths on host to absolute path in image (grouping after \.img(\.raw)?\.mount\/ capture path in image) , e.g.
+        #   /root/aosp/build/.../system.img.raw.mount/system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo -> system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo
+        # - Since diffstat can't handle spaces (escaping doesn't help either), convert all spaces (from tool invocations) to _
+        # - Finally, reassemble valid patch file markers by preprending '--- a/' and '+++ b/' (third substition)
+        sed -E -e '/--- /{s/.*\.img(\.raw)?\.mount\/(.*)$/\2/g;s/\s/_/g;s/^/--- a\//g}' \
+            -e '/+++ /{s/.*\.img(\.raw)?\.mount\/(.*)$/\2/g;s/\s/_/g;s/^/+++ b\//g}' \
+            "${DIFF_JSON_FILE}.flattened.diff" > "${DIFF_JSON_FILE}.flattened_clean.diff"
 
-        cleanupBloatedFilePaths "$DIFF_JSON_FILE"
-        generateCsvFile "$DIFF_JSON_FILE"
+        # Run diffstat on cleaned flat diff file, create machine friendly CSV output
+        diffstat -p 1 -k -t "${DIFF_JSON_FILE}.flattened_clean.diff" > "${DIFF_JSON_FILE}.csv"
 
-        # JSON files take considerable space, get rid of them
+        # All diff file versions take considerable space, get rid of them
         rm "${DIFF_JSON_FILE}"
+        rm "${DIFF_JSON_FILE}.flattened.diff"
+        rm "${DIFF_JSON_FILE}.flattened_clean.diff"
 
     done
 }
