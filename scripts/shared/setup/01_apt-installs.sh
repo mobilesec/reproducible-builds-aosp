@@ -15,7 +15,7 @@ installDiffoscope() {
     # diffoscope has a feature to list missing deps, use this to install any deps we may have missed previously
     sudo apt-get --assume-yes install $(diffoscope --list-missing-tools debian | grep 'Available-in-Debian-packages' | cut -d: -f2 | sed 's/,//g')
     #pip3 install $(diffoscope --list-missing-tools debian | grep 'Missing-Python-Modules' | cut -d: -f2 | sed 's/,//g')
-    # The above command install the rpm package via pip, but running diffoscope emits the following warning:
+    # The above command installs the rpm package via pip, but running diffoscope emits the following warning:
     # UserWarning: The RPM Python bindings are not currently available via PyPI.
 }
 

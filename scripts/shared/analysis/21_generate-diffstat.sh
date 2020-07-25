@@ -1,13 +1,16 @@
 #!/bin/bash
-set -o errexit -o nounset -o pipefail -o noglob -o xtrace
+set -o errexit -o nounset -o pipefail -o xtrace
+shopt -s nullglob
 
 cleanupBloatedFilePaths() {
+    local -r DIFF_JSON_FILE="$1"
+
     # More recent version of diffoscope (changed somewhere between 137 and 151) emit for nearly every node
     # the full path (instead of just a single elemnt). This requires some post processing to clean up the diffstat
     # First extract diffstat keys and values
-    local -r DIFFSTAT_KEYS=($(head -n -1 "${DIFF_JSON}.diffstat" \
+    local -r DIFFSTAT_KEYS=($(head -n -1 "${DIFF_JSON_FILE}.diffstat" \
         | sed -E -e 's/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\1/'))
-    local -r DIFFSTAT_VALUES=($(head -n -1 "${DIFF_JSON}.diffstat" \
+    local -r DIFFSTAT_VALUES=($(head -n -1 "${DIFF_JSON_FILE}.diffstat" \
         | sed -E -e 's/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\2/'))
 
     local -ar DIFFSTAT_KEYS_PATHS=($(
@@ -57,15 +60,17 @@ cleanupBloatedFilePaths() {
 
             awk "$(echo "{printf(\" %-${DIFFSTAT_KEY_MAX_LENGTH}s | %10s\n\", \$1, \$2)}")" <(echo "$DIFFSTAT_KEY_NEW" "$DIFFSTAT_VALUE")
         done
-        tail -n 1 "${DIFF_JSON}.diffstat"
-    ) > "${DIFF_JSON}.diffstat_clean"
+        tail -n 1 "${DIFF_JSON_FILE}.diffstat"
+    ) > "${DIFF_JSON_FILE}.diffstat_clean"
 }
 
 generateCsvFile() {
+    local -r DIFF_JSON_FILE="$1"
+
     # Convert diffstat to CSV for further processing
-    head -n -1 "${DIFF_JSON}.diffstat_clean" \
+    head -n -1 "${DIFF_JSON_FILE}.diffstat_clean" \
         | sed -E -e "s/^[ \t]*([^ \t]+)[ \t]*\|[ \t]*([0-9]+).*$/\1,\2/" \
-        > "${DIFF_JSON}.diffstat.csv"
+        > "${DIFF_JSON_FILE}.diffstat.csv"
 }
 
 main() {
@@ -86,7 +91,8 @@ main() {
     # Navigate to diff dir
     cd "${DIFF_DIR}"
 
-    for DIFF_JSON in *.json; do
+    local -ar DIFF_JSON_FILES=($(find -type f -name '*.json'))
+    for DIFF_JSON_FILE in "${DIFF_JSON_FILES[@]}"; do
         # jq filters have a strong write-once smell if you never worked with them before. Thus a small breakdown
         # of the steps involved for this one:
         # * We iterate over all paths in JSON object that lead to a unified diff that is actually present
@@ -125,15 +131,15 @@ main() {
         ) ] | join("::") ) ) }
         + { ($path | map(tostring) | join(".")): $in | getpath($path) }
     ) | join("\n")
-    ' <(cat "${DIFF_JSON}") > "${DIFF_JSON}.flattened.diff"
+    ' <(cat "${DIFF_JSON_FILE}") > "${DIFF_JSON_FILE}.flattened.diff"
 
-        diffstat -k "${DIFF_JSON}.flattened.diff" > "${DIFF_JSON}.diffstat"
+        diffstat -k "${DIFF_JSON_FILE}.flattened.diff" > "${DIFF_JSON_FILE}.diffstat"
 
-        cleanupBloatedFilePaths
-        generateCsvFile
+        cleanupBloatedFilePaths "$DIFF_JSON_FILE"
+        generateCsvFile "$DIFF_JSON_FILE"
 
         # JSON files take considerable space, get rid of them
-        rm "${DIFF_JSON}"
+        rm "${DIFF_JSON_FILE}"
 
     done
 }
