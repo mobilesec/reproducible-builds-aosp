@@ -5,10 +5,6 @@ set -o errexit -o nounset -o pipefail -o xtrace
 . "./scripts/common/jenkins-utils.sh"
 
 main() {
-    # Jenkins API token generated via http://<jenkins-server>/user/<username>/configure while being logged in as <username>
-    local -r JENKINS_USER="dev"
-    local -r JENKINS_API_TOKEN="11c395a9242bc5b9d4d87c284c5503b6e3"
-
     # Jenkins Build Parameters
     local -r AOSP_REF="android-10.0.0_r30"
     local -r BUILD_ID="QQ2A.200305.002"
