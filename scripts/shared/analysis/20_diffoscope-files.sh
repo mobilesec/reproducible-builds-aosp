@@ -121,7 +121,7 @@ function diffoscopeFile {
     # APEX files embed a certificates and a separate public key. Furthermore ignore APEX payload images, treated in separate step
     DIFFOSCOPE_ARGS+=( --exclude 'META-INF/CERT.RSA' --exclude 'apex_pubkey' --exclude 'apex_payload.img' )
     # Certificates used by OTA updates
-    DIFFOSCOPE_ARGS+=( --exclude 'update-payload-key.pub.pem' --exclude 'releasekey.x509.pem' --exclude 'testkey.x509.pem' )
+    DIFFOSCOPE_ARGS+=( --exclude 'system/etc/update_engine/update-payload-key.pub.pem' --exclude 'releasekey.x509.pem' --exclude 'testkey.x509.pem' )
 
     set +o errexit # Disable early exit
     # Due to a bug when using --max-diff-block-lines-saved and --html-dir at the same time, we call diffoscope twice
