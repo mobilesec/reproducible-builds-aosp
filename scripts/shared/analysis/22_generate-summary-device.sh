@@ -40,23 +40,25 @@ main() {
     echo -e "${HEADER_LINE}" > "$SUMMARY_FILE"
     echo -e "${HEADER_LINE}" > "$SUMMARY_MAJOR_FILE"
 
-    for CSV_FILE in "${CSV_FILES[@]}"; do
+    # read considers an encountered EOF as error, but for that's fine in our multiline usage here
+    set +o errexit # Disable early exit
+    read -r -d '' AWK_SUM_SOURCE_CSV <<-'_EOF_'
+    @include "join"
+    {
+        for (i=1 ; i<=NF-1 ; i++) {
+            a[i] += $i
+        }
+    }
 
+    END {
+        printf("%s\n", join(a, 1, NF-1, ","))
+    }
+_EOF_
+    set -o errexit # Re-enable early exit
+
+    for CSV_FILE in "${CSV_FILES[@]}"; do
         local BASE_NAME="$(basename --suffix '.diff.json.csv' "$CSV_FILE")"
         local CSV_CONTENT="$(tail -n +2 "$CSV_FILE")"
-
-        read -r -d '' AWK_SUM_SOURCE_CSV <<-'_EOF_'
-        @include "join"
-        {
-            for (i=1 ; i<=NF-1 ; i++) {
-                a[i] += $i
-            }
-        }
-
-        END {
-            printf("%s\n", join(a, 1, NF-1, ","))
-        }
-_EOF_
 
         # Write summary CSV entry
         echo -n "${BASE_NAME}," >> "$SUMMARY_FILE"
@@ -84,18 +86,20 @@ _EOF_
         fi
     done
 
+    set +o errexit # Disable early exit
     read -r -d '' AWK_SUM_SUMMARY <<-'_EOF_'
-        @include "join"
-        {
-            for (i=2 ; i<=NF ; i++) {
-                a[i] += $i
-            }
+    @include "join"
+    {
+        for (i=2 ; i<=NF ; i++) {
+            a[i] += $i
         }
+    }
 
-        END {
-            printf("All,%s\n", join(a, 2, NF, ","))
-        }
+    END {
+        printf("All,%s\n", join(a, 2, NF, ","))
+    }
 _EOF_
+    set -o errexit # Re-enable early exit
 
     # Final sum over all files
     awk --field-separator ',' "$AWK_SUM_SUMMARY" <(tail -n +2 "$SUMMARY_FILE") >> "$SUMMARY_FILE"
