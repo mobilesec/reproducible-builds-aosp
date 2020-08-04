@@ -37,16 +37,22 @@ main() {
 
     # read considers an encountered EOF as error, but for that's fine in our multiline usage here
     set +o errexit # Disable early exit
-    read -r -d '' AWK_SUM_SOURCE_CSV <<-'_EOF_'
+    read -r -d '' AWK_SUM_SOURCE_CSV <<'_EOF_'
     @include "join"
+    BEGIN {
+        for (i=1 ; i<=3 ; i++) {
+            a[i] = 0
+        }
+    }
+
     {
-        for (i=1 ; i<=NF-1 ; i++) {
+        for (i=1 ; i<=3 ; i++) {
             a[i] += $i
         }
     }
 
     END {
-        printf("%s\n", join(a, 1, NF-1, ","))
+        printf("%s\n", join(a, 1, 3, ","))
     }
 _EOF_
     set -o errexit # Re-enable early exit
@@ -60,10 +66,7 @@ _EOF_
         awk --field-separator ',' "$AWK_SUM_SOURCE_CSV" <(echo "$CSV_CONTENT") >> "$SUMMARY_FILE"
 
         # Special logic that only tracks major differences
-        if [[ "$BASE_NAME" = "com.android."* && "$BASE_NAME" != "com.android.runtime.release"* ]]; then
-            # Skip vendor and all APEX filesx except 
-            local CSV_MAJOR_CONTENT=""
-        elif [[ "$BASE_NAME" = "system.img" ]]; then
+        if [[ "$BASE_NAME" = "system.img" ]]; then
             # Exclude NOTICE.xml
             local CSV_MAJOR_CONTENT="$(grep 'NOTICE.xml.gz' -v <(echo "$CSV_CONTENT"))"
         else
@@ -79,16 +82,22 @@ _EOF_
     done
 
     set +o errexit # Disable early exit
-    read -r -d '' AWK_SUM_SUMMARY <<-'_EOF_'
+    read -r -d '' AWK_SUM_SUMMARY <<'_EOF_'
     @include "join"
+    BEGIN {
+        for (i=2 ; i<=4 ; i++) {
+            a[i] = 0
+        }
+    }
+
     {
-        for (i=2 ; i<=NF ; i++) {
+        for (i=2 ; i<=4 ; i++) {
             a[i] += $i
         }
     }
 
     END {
-        printf("All,%s\n", join(a, 2, NF, ","))
+        printf("All,%s\n", join(a, 2, 4, ","))
     }
 _EOF_
     set -o errexit # Re-enable early exit
