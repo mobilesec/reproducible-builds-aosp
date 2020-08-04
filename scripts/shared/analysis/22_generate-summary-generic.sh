@@ -74,11 +74,9 @@ _EOF_
             local CSV_MAJOR_CONTENT="$CSV_CONTENT"
         fi
 
-        if [[ "$CSV_MAJOR_CONTENT" != "" ]]; then
-            # Write major summary CSV entry
-            echo -n "${BASE_NAME}," >> "$SUMMARY_MAJOR_FILE"
-            awk --field-separator ',' "$AWK_SUM_SOURCE_CSV" <(echo "$CSV_MAJOR_CONTENT") >> "$SUMMARY_MAJOR_FILE"
-        fi
+        # Write major summary CSV entry
+        echo -n "${BASE_NAME}," >> "$SUMMARY_MAJOR_FILE"
+        awk --field-separator ',' "$AWK_SUM_SOURCE_CSV" <(echo "$CSV_MAJOR_CONTENT") >> "$SUMMARY_MAJOR_FILE"
     done
 
     set +o errexit # Disable early exit
