@@ -71,8 +71,10 @@ _EOF_
         awk --field-separator ',' "$AWK_SUM_SOURCE_CSV" <(echo "$CSV_CONTENT") >> "$SUMMARY_FILE"
 
         # Special logic that only tracks major differences
+        local MAJOR_ARTIFACT="true"
         if [[ "$BASE_NAME" = "vendor.img" || ( "$BASE_NAME" = "com.android."* && "$BASE_NAME" != "com.android.runtime.release"* ) ]]; then
             # Skip vendor and all APEX filesx except 
+            local MAJOR_ARTIFACT="false"
             local CSV_MAJOR_CONTENT=""
         elif [[ "$BASE_NAME" = "boot.img" ]]; then
             # Exclude res/images
@@ -85,7 +87,7 @@ _EOF_
             local CSV_MAJOR_CONTENT="$CSV_CONTENT"
         fi
 
-        if [[ "$CSV_MAJOR_CONTENT" != "" ]]; then
+        if [[ "$MAJOR_ARTIFACT" = "true" ]]; then
             # Write major summary CSV entry
             echo -n "${BASE_NAME}," >> "$SUMMARY_MAJOR_FILE"
             awk --field-separator ',' "$AWK_SUM_SOURCE_CSV" <(echo "$CSV_MAJOR_CONTENT") >> "$SUMMARY_MAJOR_FILE"
