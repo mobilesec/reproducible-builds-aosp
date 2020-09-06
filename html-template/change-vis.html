@@ -5,8 +5,8 @@
   <title>SOAP - Hierarchical Diff Visualization</title>
   <meta charset="utf-8" />
 
-  <link href="./assets/css/common.css" rel="stylesheet" />
-  <link href="./assets/css/tooltip.css" rel="stylesheet" />
+  <link href="../assets/css/common.css" rel="stylesheet" />
+  <link href="../assets/css/tooltip.css" rel="stylesheet" />
   <style>
     small {
       color: #888;
@@ -17,9 +17,9 @@
 <body>
   <div id="visualization" style="width: 1200px; height: 900px"></div>
 
-  <script src="./assets/js/carrotsearch.foamtree.js"></script>
-  <script src="./assets/js/hammer.min.js"></script>
-  <script src="./assets/js/tooltip.min.js"></script>
+  <script src="../assets/js/carrotsearch.foamtree.js"></script>
+  <script src="../assets/js/hammer.min.js"></script>
+  <script src="../assets/js/tooltip.min.js"></script>
   <script>
     function convertCSVToJSON(str, delimiter = ',') {
       const titles = str.slice(0, str.indexOf('\n')).split(delimiter);
