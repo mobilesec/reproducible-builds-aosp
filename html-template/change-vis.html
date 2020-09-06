@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SOAP - Hierarchical Diff Visualization</title>
+  <meta charset="utf-8" />
+
+  <link href="./assets/css/common.css" rel="stylesheet" />
+  <link href="./assets/css/tooltip.css" rel="stylesheet" />
+  <style>
+    small {
+      color: #888;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="visualization" style="width: 1200px; height: 900px"></div>
+
+  <script src="./assets/js/carrotsearch.foamtree.js"></script>
+  <script src="./assets/js/hammer.min.js"></script>
+  <script src="./assets/js/tooltip.min.js"></script>
+  <script>
+    function convertCSVToJSON(str, delimiter = ',') {
+      const titles = str.slice(0, str.indexOf('\n')).split(delimiter);
+      const rows = str.slice(str.indexOf('\n') + 1).split('\n');
+      while (rows[rows.length - 1] === '') {
+        rows.pop();
+      }
+      return rows.map(row => {
+        const values = row.split(delimiter);
+        return titles.reduce((object, curr, i) => (object[curr] = values[i], object), {})
+      });
+    };
+
+    // Tree traverse object and sum up leaf nodes into non-leaf nodes
+    function traverseNode(node) {
+      if (!node.hasOwnProperty('groups')) {
+        return {
+          INSERTED: node.value.INSERTED,
+          DELETED: node.value.DELETED,
+          MODIFIED: node.value.MODIFIED,
+          weight: node.weight
+        };
+      }
+
+      // let weightSum = 0;
+      let valueSums = {
+        INSERTED: 0,
+        DELETED: 0,
+        MODIFIED: 0,
+        weight: 0,
+      }
+      for (const propName in node['groups']) {
+        if (node['groups'].hasOwnProperty(propName)) {
+          valueAdd = traverseNode(node['groups'][propName]);
+          valueSums.INSERTED += valueAdd.INSERTED;
+          valueSums.DELETED += valueAdd.DELETED;
+          valueSums.MODIFIED += valueAdd.MODIFIED;
+          valueSums.weight += valueAdd.weight;
+        }
+      }
+
+      node['groups'] = Object.values(node['groups']);
+      node['weight'] = valueSums.weight;
+      node['value'] = {
+        INSERTED: valueSums.INSERTED,
+        DELETED: valueSums.DELETED,
+        MODIFIED: valueSums.MODIFIED,
+      };
+
+      return valueSums;
+    }
+
+    window.addEventListener("load", async function () {
+      // A simple utility for tracking mouse position and showing/hiding the tooltip.
+      // Taken from the tooltip demo in foamtree
+      var tooltip = (function () {
+        var tip = new Tooltip("Test", { auto: true });
+        var shown = false;
+        var timeout;
+        var lastShownPageX, lastShownPageY;
+        var pageX, pageY;
+        var currentGroup;
+
+        function hide() {
+          tip.hide();
+          shown = false;
+          window.clearTimeout(timeout);
+        }
+
+        function show() {
+          if (currentGroup && currentGroup.label) {
+            // Set some example content on the tooltip.
+            tip.content(
+              "Inserted: <strong>" + currentGroup.value.INSERTED + "</strong><br>" +
+              "Deleted: <strong>" + currentGroup.value.DELETED + "</strong><br>" +
+              "Modified: <strong>" + currentGroup.value.MODIFIED + "</strong><br>" +
+              "Average (i.e. weight): <strong>" + currentGroup.weight + "</strong><br>"
+            );
+            tip.position(pageX, pageY);
+            tip.show();
+            lastShownPageX = pageX;
+            lastShownPageY = pageY;
+            shown = true;
+          }
+        }
+
+        function group(g) {
+          currentGroup = g;
+        }
+
+        // Register a mouse move listener that will show and hide the tooltip.
+        document.body.addEventListener("mousemove", function (e) {
+          pageX = e.pageX;
+          pageY = e.pageY;
+
+          // Hide if the mouse pointer gets farther than 10px from the last tooltip location
+          if (shown && Math.sqrt(Math.pow(pageX - lastShownPageX, 2) + Math.pow(pageY - lastShownPageY, 2)) > 10) {
+            hide();
+          }
+
+          // Show the tooltip after the pointer stops for some time
+          window.clearTimeout(timeout);
+          timeout = window.setTimeout(show, 500)
+        });
+
+        return {
+          group: group,
+          hide: hide
+        };
+      })();
+
+      const res = await fetch('$CHANGE_VIS_CSV_FILE');
+      const body = await res.text();
+      const diffsFlat = convertCSVToJSON(body);
+
+      // Create object 
+      let changeObject = {};
+      for (const diffFlat of diffsFlat) {
+        const path = diffFlat.FILENAME.charAt(0) === '/' ? diffFlat.FILENAME.substr(1) : diffFlat.FILENAME;
+        const pathSegments = path.split(/\/|::/);
+
+        let currentPos = changeObject;
+        const lastPathSegment = pathSegments.splice(pathSegments.length - 1);
+        for (const pathSegment of pathSegments) {
+          currentPos['groups'] = currentPos['groups'] ? currentPos['groups'] : {}
+          currentPos['groups'][pathSegment] = currentPos['groups'][pathSegment] ? currentPos['groups'][pathSegment] : {
+            label: pathSegment
+          };
+          currentPos = currentPos['groups'][pathSegment];
+        }
+        currentPos['groups'] = currentPos['groups'] ? currentPos['groups'] : {}
+        currentPos['groups'][lastPathSegment] = {
+          label: lastPathSegment[0],
+          weight: (Number(diffFlat.INSERTED) + Number(diffFlat.DELETED) + Number(diffFlat.MODIFIED)) / 3,
+          value: {
+            INSERTED: Number(diffFlat.INSERTED),
+            DELETED: Number(diffFlat.DELETED),
+            MODIFIED: Number(diffFlat.MODIFIED)
+          }
+        }
+      }
+
+      console.log(changeObject)
+
+      traverseNode(changeObject);
+
+      console.log(changeObject);
+
+      var foamtree = new CarrotSearchFoamTree({
+        id: "visualization",
+        onGroupHover: function (event) {
+          // Tell the tooltip which group is currently hovered on
+          tooltip.group(event.group);
+        },
+
+        // Hide the tooltip on zoom, open/close and expose
+        onGroupMouseWheel: tooltip.hide,
+        onGroupExposureChanging: tooltip.hide,
+        onGroupOpenOrCloseChanging: tooltip.hide,
+
+        layout: "squarified",
+        stacking: "flattened",
+        dataObject: changeObject
+      });
+    });
+  </script>
+</body>
+
+</html>
