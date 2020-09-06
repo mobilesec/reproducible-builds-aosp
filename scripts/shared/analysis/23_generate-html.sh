@@ -19,7 +19,6 @@ main() {
     # Template directory
     local -r SCRIPT_LOCATION="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     local -r LOCATION_IN_RB_AOSP="scripts/shared/analysis"
-    # local -r LOCATION_IN_RB_AOSP="scripts/shared/analysis/22_generate-summary-device.sh"
     local -r SCRIPT_BASE=${SCRIPT_LOCATION%"$LOCATION_IN_RB_AOSP"}
     # Templates
     local -r TEMPLATE_CHANGE_VIS="${SCRIPT_BASE}html-template/change-vis.html"
@@ -34,7 +33,6 @@ main() {
     for DIFFOSCOPE_REPORT in "${DIFFOSCOPE_REPORTS[@]}"; do
         DIFFOSCOPE_REPORTS_TEMPLATE+="<a href=\"${DIFFOSCOPE_REPORT}\">${DIFFOSCOPE_REPORT}</a><br>"
     done
-    echo "${DIFFOSCOPE_REPORTS_TEMPLATE}"
 
     # Generate Change visualisation reports + template string
     local -ar CHANGE_VIS_CSV_FILES=($(find . -path '*.diff.json.csv'))
@@ -42,10 +40,9 @@ main() {
     for CHANGE_VIS_CSV_FILE in "${CHANGE_VIS_CSV_FILES[@]}"; do
         local CHANGE_VIS_REPORT="$(basename --suffix '.diff.json.csv' "$CHANGE_VIS_CSV_FILE").change-vis.html"
         cp "$TEMPLATE_CHANGE_VIS" "$CHANGE_VIS_REPORT"
-        local CHANGE_VIS_CSV_FILE_LOCAL="$(basename "$CHANGE_VIS_CSV_FILE")"
         # Make safe for sed replace, see https://stackoverflow.com/a/2705678
-        local CHANGE_VIS_CSV_FILE_LOCAL_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_CSV_FILE_LOCAL" | sed -e 's/[\/&]/\\&/g')
-        sed -E -i -e "s/\\\$CHANGE_VIS_CSV_FILE/$CHANGE_VIS_CSV_FILE_LOCAL_ESCAPED/" "$CHANGE_VIS_REPORT"
+        local CHANGE_VIS_CSV_FILE_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_CSV_FILE" | sed -e 's/[\/&]/\\&/g')
+        sed -E -i -e "s/\\\$CHANGE_VIS_CSV_FILE/$CHANGE_VIS_CSV_FILE_ESCAPED/" "$CHANGE_VIS_REPORT"
         CHANGE_VIS_REPORTS_TEMPLATE+="<a href=\"${CHANGE_VIS_REPORT}\">${CHANGE_VIS_REPORT}</a><br>"
     done
 
@@ -53,7 +50,7 @@ main() {
     local -r SUMMARY_REPORT="./summary.html"
     cp "$TEMPLATE_SUMMARY" "$SUMMARY_REPORT"
     # Make safe for sed replace, see https://stackoverflow.com/a/2705678
-    local -r DIFF_DIR_ESCAPED=$(printf '%s\n' "$DIFF_DIR" | sed -e 's/[\/&]/\\&/g')
+    local -r DIFF_DIR_ESCAPED=$(printf '%s\n' "$(basename "$DIFF_DIR")" | sed -e 's/[\/&]/\\&/g')
     local -r DIFFOSCOPE_REPORTS_TEMPLATE_ESCAPED=$(printf '%s\n' "$DIFFOSCOPE_REPORTS_TEMPLATE" | sed -e 's/[\/&]/\\&/g')
     local -r CHANGE_VIS_REPORTS_TEMPLATE_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_REPORTS_TEMPLATE" | sed -e 's/[\/&]/\\&/g')
     sed -E -i -e "s/\\\$DIFF_DIR/$DIFF_DIR_ESCAPED/" \
