@@ -27,7 +27,7 @@ main() {
     cd "$DIFFS_DIR"
 
     # Generate SOAP reports template string
-    local -ar SOAP_REPORTS=($(find . -path '*__*/summary.html'))
+    local -ar SOAP_REPORTS=($(find . -path '*__*/summary.html' | sort))
     local SOAP_REPORTS_TEMPLATE=""
     for SOAP_REPORT in "${SOAP_REPORTS[@]}"; do
         SOAP_REPORTS_TEMPLATE+="<a href=\"${SOAP_REPORT}\">${SOAP_REPORT}</a><br>"

@@ -28,14 +28,14 @@ main() {
     cd "$DIFF_DIR"
 
     # Generate diffoscope reports template string
-    local -ar DIFFOSCOPE_REPORTS=($(find . -path '*.diff.html-dir/index.html'))
+    local -ar DIFFOSCOPE_REPORTS=($(find . -path '*.diff.html-dir/index.html' | sort))
     local DIFFOSCOPE_REPORTS_TEMPLATE=""
     for DIFFOSCOPE_REPORT in "${DIFFOSCOPE_REPORTS[@]}"; do
         DIFFOSCOPE_REPORTS_TEMPLATE+="<a href=\"${DIFFOSCOPE_REPORT}\">${DIFFOSCOPE_REPORT}</a><br>"
     done
 
     # Generate Change visualisation reports + template string
-    local -ar CHANGE_VIS_CSV_FILES=($(find . -path '*.diff.json.csv'))
+    local -ar CHANGE_VIS_CSV_FILES=($(find . -path '*.diff.json.csv' | sort))
     local CHANGE_VIS_REPORTS_TEMPLATE=""
     for CHANGE_VIS_CSV_FILE in "${CHANGE_VIS_CSV_FILES[@]}"; do
         local CHANGE_VIS_REPORT="$(basename --suffix '.diff.json.csv' "$CHANGE_VIS_CSV_FILE").change-vis.html"
