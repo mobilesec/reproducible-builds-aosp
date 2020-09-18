@@ -37,7 +37,7 @@
     function traverseNode(node) {
       if (!node.hasOwnProperty('groups')) {
         // Handle empty root node
-        if (node.hasOwnProperty('value') && node.hasOwnProperty('weight')) {
+        if (!node.hasOwnProperty('value') || !node.hasOwnProperty('weight')) {
           return {
             INSERTED: 0,
             DELETED: 0,
