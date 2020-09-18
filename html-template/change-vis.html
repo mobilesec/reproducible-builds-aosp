@@ -36,6 +36,16 @@
     // Tree traverse object and sum up leaf nodes into non-leaf nodes
     function traverseNode(node) {
       if (!node.hasOwnProperty('groups')) {
+        // Handle empty root node
+        if (node.hasOwnProperty('value') && node.hasOwnProperty('weight')) {
+          return {
+            INSERTED: 0,
+            DELETED: 0,
+            MODIFIED: 0,
+            weight: 1
+          };
+        }
+
         return {
           INSERTED: node.value.INSERTED,
           DELETED: node.value.DELETED,

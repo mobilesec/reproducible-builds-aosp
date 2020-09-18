@@ -31,6 +31,11 @@ main() {
     local -ar DIFFOSCOPE_REPORTS=($(find . -path '*.diff.html-dir/index.html' | sort))
     local DIFFOSCOPE_REPORTS_TEMPLATE=""
     for DIFFOSCOPE_REPORT in "${DIFFOSCOPE_REPORTS[@]}"; do
+        # Fix jQuery location from local to a CDN, specifically
+        # src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"
+        sed -i 's/src="jquery.js"/src="https:\/\/code.jquery.com\/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO\/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn\/6Z\/hRTt8+pR6L4N2" crossorigin="anonymous"/g' \
+            "$DIFFOSCOPE_REPORT"
+
         DIFFOSCOPE_REPORTS_TEMPLATE+="<a href=\"${DIFFOSCOPE_REPORT}\">${DIFFOSCOPE_REPORT}</a><br>"
     done
 
