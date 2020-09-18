@@ -25,7 +25,7 @@ Thus, our second goal, ***analyzing the differences between our builds and refer
 Reports
 -------
 
-Report results for builds performed by the INS institute can be found [here](https://android.ins.jku.at/soap/report-overview.html). The links contain the AOSP source tag (or Google build id), build target and build environment for both the reference AOSP build and ours. For each of these we list all analyzed build artifacts and the following reports:
+Report results for builds performed by the INS institute can be found [here](https://android.ins.jku.at/soap/report-overview.html). The links contain the AOSP source tag (or Google build id), build target and build environment for both the reference AOSP build and ours. For each of these we provide the following reports for all analyzed build artifacts:
 
 - ***Detailed Reports*** Show unified diffs between builds, while
 - ***Diff Change Visualizations*** provides a simple treemap visualization highlighting the distribution of changes within an artefact.
