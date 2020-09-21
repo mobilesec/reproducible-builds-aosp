@@ -39,6 +39,8 @@ main() {
         "${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_(lsb_release -si)(lsb_release -sr)"
     bash "./scripts/shared/analysis/21_generate-csv.sh" "${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_(lsb_release -si)(lsb_release -sr)"
     bash "./scripts/shared/analysis/22_generate-summary-device.sh" "${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_(lsb_release -si)(lsb_release -sr)"
+    bash "./scripts/shared/analysis/23_generate-html.sh" "${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_(lsb_release -si)(lsb_release -sr)"
+    bash "./scripts/shared/analysis/24_generate-index-html.sh" "${RB_AOSP_BASE}/diff"
 }
 
 main "$@"
