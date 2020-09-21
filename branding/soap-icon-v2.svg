@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   width="245"
+   height="245"
+   viewBox="-0.5 -0.5 245 245"
+   id="svg22"
+   sodipodi:docname="soap-icon-v2.svg"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   inkscape:export-filename="C:\mroland\#P_AndroidSec2020\website-android-landingpage\static\images\logos\soap-icon.png"
+   inkscape:export-xdpi="74.449997"
+   inkscape:export-ydpi="74.449997">
+  <metadata
+     id="metadata26">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="3700"
+     inkscape:window-height="2120"
+     id="namedview24"
+     showgrid="false"
+     fit-margin-top="18.58716"
+     fit-margin-left="29.77667"
+     fit-margin-right="5"
+     fit-margin-bottom="0"
+     inkscape:zoom="4.7918782"
+     inkscape:cx="52.578401"
+     inkscape:cy="100.10598"
+     inkscape:window-x="3828"
+     inkscape:window-y="-12"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg22" />
+  <defs
+     id="defs2">
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter971"
+       x="-0.014336244"
+       width="1.0286725"
+       y="-0.044478629"
+       height="1.0889573">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="1.4567115"
+         id="feGaussianBlur973" />
+    </filter>
+  </defs>
+  <g
+     id="g933"
+     transform="matrix(0.81605732,0.17286702,-0.60297631,0.52389002,-66.42606,93.108803)"
+     style="opacity:0.6;filter:url(#filter971)">
+    <rect
+       x="-347.909"
+       y="-237.02321"
+       width="160"
+       height="89.760002"
+       rx="38.599998"
+       ry="38.599998"
+       transform="rotate(161)"
+       pointer-events="all"
+       id="rect4-9"
+       style="fill:#b3b3b3;fill-opacity:1;stroke:none" />
+    <rect
+       x="-338.26074"
+       y="-219.01694"
+       width="135.00124"
+       height="61.982491"
+       rx="28.298336"
+       ry="26.03303"
+       transform="matrix(-0.94585421,0.32459177,-0.299561,-0.95407715,0,0)"
+       pointer-events="all"
+       id="rect6-8"
+       style="fill:#d5d5d5;fill-opacity:1;stroke:none;stroke-width:0.99603885" />
+    <text
+       id="text10-6-8"
+       font-size="40px"
+       y="208.61572"
+       x="283.4978"
+       style="font-size:38.02215195px;font-family:Helvetica;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke-width:0.95055383"
+       transform="matrix(0.99720178,-0.34195064,0.14870058,0.95181512,0,0)">
+      <tspan
+         style="-inkscape-font-specification:'Helvetica Neue LT Std';font-family:'Helvetica Neue LT Std';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal"
+         id="tspan979">AOSP</tspan>
+    </text>
+  </g>
+  <rect
+     style="fill:#7bbeeb;stroke:none"
+     id="rect4"
+     pointer-events="all"
+     transform="rotate(161)"
+     ry="38.599998"
+     rx="38.599998"
+     height="89.760002"
+     width="160"
+     y="-218.28876"
+     x="-136.80542" />
+  <rect
+     style="fill:#ace3ff;stroke:none"
+     id="rect6"
+     pointer-events="all"
+     transform="rotate(161)"
+     ry="27.25"
+     rx="27.25"
+     height="64.879997"
+     width="130"
+     y="-205.84875"
+     x="-121.80541" />
+  <circle
+     style="fill:#ffffff;stroke:#ace3ff;stroke-width:5"
+     r="10"
+     id="ellipse14"
+     pointer-events="all"
+     cy="103.02716"
+     cx="70.166946" />
+  <circle
+     style="fill:#ffffff;stroke:#ace3ff;stroke-width:5"
+     r="20"
+     id="ellipse16"
+     pointer-events="all"
+     cy="40.587158"
+     cx="70.166946" />
+  <circle
+     style="fill:#ffffff;stroke:#ace3ff;stroke-width:5"
+     r="15"
+     id="ellipse18"
+     pointer-events="all"
+     cy="75.587158"
+     cx="110.16694" />
+  <text
+     transform="rotate(-19)"
+     style="font-size:40px;font-family:Helvetica;text-anchor:middle;fill:#7bbeeb"
+     x="56.864006"
+     y="187.72516"
+     font-size="40px"
+     id="text10-6">
+    <tspan
+       style="-inkscape-font-specification:'Helvetica Neue LT Std';font-family:'Helvetica Neue LT Std';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal"
+       id="tspan977">SOAP</tspan>
+  </text>
+</svg>
