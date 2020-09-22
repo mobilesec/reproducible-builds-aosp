@@ -1,8 +1,8 @@
 <?xml version='1.1' encoding='UTF-8'?>
-<flow-definition plugin="workflow-job@2.36">
+<flow-definition plugin="workflow-job@2.39">
   <actions>
-    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.5.1"/>
-    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.5.1">
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.7.0"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.7.0">
       <jobProperties/>
       <triggers/>
       <parameters/>
@@ -18,6 +18,7 @@
         <dontRestrictJobConfiguration>false</dontRestrictJobConfiguration>
       </strategy>
     </org.jenkinsci.plugins.authorizeproject.AuthorizeProjectProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>
@@ -53,8 +54,22 @@
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.79">
-    <script>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.81">
+    <script>/*
+Copyright 2020 Manuel Pöll
+
+Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 pipeline {
     agent any
 
@@ -85,8 +100,13 @@ pipeline {
         }
         stage(&apos;Analysis&apos;) {
             steps {
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/18_build-lpunpack.sh \&quot;${RB_BUILD_TARGET}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/19_lpunpack-super-imgs.sh \&quot;${AOSP_REF}\&quot; \&quot;${GOOGLE_BUILD_TARGET}\&quot; \&quot;${RB_BUILD_TARGET}\&quot;&quot;
                 sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/20_diffoscope-files.sh \&quot;${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}\&quot; \&quot;${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}\&quot; \&quot;${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/21_generate-diffstat.sh \&quot;${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/21_generate-csv.sh \&quot;${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/22_generate-summary-device.sh \&quot;${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/23_generate-html.sh \&quot;${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/24_generate-index-html.sh \&quot;${RB_AOSP_BASE}/diff\&quot;&quot;
             }
         }
     }

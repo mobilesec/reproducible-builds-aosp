@@ -1,8 +1,8 @@
 <?xml version='1.1' encoding='UTF-8'?>
-<flow-definition plugin="workflow-job@2.36">
+<flow-definition plugin="workflow-job@2.39">
   <actions>
-    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.5.1"/>
-    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.5.1">
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.7.0"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.7.0">
       <jobProperties/>
       <triggers/>
       <parameters/>
@@ -35,8 +35,22 @@
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.79">
-    <script>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.81">
+    <script>/*
+Copyright 2020 Manuel Pöll
+
+Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 pipeline {
     agent any
 
@@ -44,7 +58,7 @@ pipeline {
         PATH=&quot;$PATH:/home/dev/bin:/home/dev/.local/bin&quot;
         SCRIPT_DIR=&quot;/home/dev/rb-aosp&quot;
         RB_AOSP_BASE=&quot;/home/dev/aosp&quot;
-        GOOGLE_BUILD_ENV=&quot;GoogleCI&quot;
+        GOOGLE_BUILD_ENV=&quot;Google&quot;
         RB_BUILD_ENV=&quot;\$(lsb_release -si)\$(lsb_release -sr)&quot;
     }
 
@@ -61,15 +75,18 @@ pipeline {
         }
         stage(&apos;Building&apos;) {
             steps {
-                sh  &quot;${SCRIPT_DIR}/scripts/shared/build-generic/12_build-generic.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
-                sh  &quot;${SCRIPT_DIR}/scripts/shared/build-generic/13_build-lpunpack.sh \&quot;${BUILD_TARGET}\&quot;&quot;
-                sh  &quot;${SCRIPT_DIR}/scripts/shared/build-generic/14_lpunpack-super-imgs.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/build-generic/12_build-generic.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
             }
         }
         stage(&apos;Analysis&apos;) {
             steps {
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/18_build-lpunpack.sh \&quot;${BUILD_TARGET}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/19_lpunpack-super-imgs.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
                 sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/20_diffoscope-files.sh \&quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}\&quot; \&quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}\&quot; \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/21_generate-diffstat.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/21_generate-csv.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/22_generate-summary-generic.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/23_generate-html.sh \&quot;${RB_AOSP_BASE}/diff/${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/24_generate-index-html.sh \&quot;${RB_AOSP_BASE}/diff\&quot;&quot;
             }
         }
     }
