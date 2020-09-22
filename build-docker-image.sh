@@ -18,6 +18,6 @@ set -o errexit -o nounset -o pipefail -o xtrace
 
 docker build \
     --target builder \
-    --tag "mpoell/rb-aosp:latest" \
+    --tag "mobilesec/rb-aosp:latest" \
     --no-cache=true \
     .

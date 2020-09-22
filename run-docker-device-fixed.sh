@@ -51,7 +51,7 @@ main() {
         --mount "type=bind,source=${HOME}/aosp/src/.repo/project.list,target=/root/aosp/src/.repo/project.list" \
         --mount "type=bind,source=${HOME}/aosp/src/.repo/projects,target=/root/aosp/src/.repo/projects" \
         --mount "type=bind,source=${HOME}/aosp/diff,target=/root/aosp/diff" \
-        "mpoell/rb-aosp:latest" /bin/bash -l -c "$(compose_cmds)"
+        "mobilesec/rb-aosp:latest" /bin/bash -l -c "$(compose_cmds)"
 }
 
 main "$@"
