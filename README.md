@@ -25,7 +25,8 @@ Setup is now finished. You can now invoke one of the following master scripts pe
 ### Docker Container
 
 1. Start with any x86-based environment capable of running Docker containers.
-2. Build the Docker container by executing `build-docker-image.sh`
+2. Follow the [official install instructions](https://docs.docker.com/engine/install/) for Docker.
+3. Build the Docker container by executing `build-docker-image.sh`
 
 Setup is now finished. You can now invoke one of the following master scripts performing the AOSP build and SOAP analysis process:
 
@@ -35,8 +36,8 @@ Setup is now finished. You can now invoke one of the following master scripts pe
 ### Jenkins Server
 
 1. Start with a Debian-based environment (at least Debian 10, or Ubuntu 18.04) running on a x86 architecture.
-2. Run `jenkins/setup/01_install-jenkins` to install Jenkins, note that the executing user needs permission to install new APT packages. Alternatively perform the Jenkins installation on your own.
-3. Invoke `jenkins/setup/02_create_pipelines` to import the two Jenkins pipelines found in `jenkins`. As an alternative, one may create the parameterized pipelines via the GUI, refer to the `.Jenkinsfile` files for the build scripts and be sure to create all parameters required for them.
+2. Follow the [official install instructions](https://www.jenkins.io/doc/book/installing/#debianubuntu) for Jenkins.
+3. Invoke `jenkins/setup/01_create_pipelines.sh` to import the two Jenkins pipelines found in `jenkins`. As an alternative, one may create the parameterized pipelines via the GUI, refer to the `.Jenkinsfile` files for the build scripts and be sure to create all parameters required for them.
 
 Setup is now finished. You can now invoke one of the following master scripts performing the AOSP build and SOAP analysis process:
 
