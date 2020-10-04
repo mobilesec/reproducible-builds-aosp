@@ -36,8 +36,13 @@ Setup is now finished. You can now invoke one of the following master scripts pe
 ### Jenkins Server
 
 1. Start with a Debian-based environment (at least Debian 10, or Ubuntu 18.04) running on a x86 architecture.
-2. Follow the [official install instructions](https://www.jenkins.io/doc/book/installing/#debianubuntu) for Jenkins.
-3. Invoke `jenkins/setup/01_create_pipelines.sh` to import the two Jenkins pipelines found in `jenkins`. As an alternative, one may create the parameterized pipelines via the GUI, refer to the `.Jenkinsfile` files for the build scripts and be sure to create all parameters required for them.
+2. Prepare a build environment by executing all scripts under `scripts/shared/setup`, except `04_config-profile-for-docker.sh`, in proper sequence. The order is indicated by the number in the first two characters of the file name and none of the scripts require parameters. Note that the executing user needs permission to install new APT packages.
+3. Follow the [official install instructions](https://www.jenkins.io/doc/book/installing/#debianubuntu) for Jenkins.
+4. Invoke `jenkins/setup/01_create_pipelines.sh` to import the two Jenkins pipelines found in `jenkins`. As an alternative, one may create the parameterized pipelines via the GUI, refer to the `.Jenkinsfile` files for the build scripts and be sure to create all parameters required for them.
+5. Adjust the imported pipeline scripts for both `rb-aosp_device`  and `rb-aosp_generic`. Specifically, in the environment section perform the following changes
+   - Change the `PATH` to reflect the user that invoked setup scripts in step one, i.e. such that `/home/${USER}/bin` and `/home/${USER}/.local/bin` point to the installed `repo` and `diffoscope` instances
+   - Change `SCRIPT_DIR` to point to the cloned repository, ensure that the `jenkins` user has read/execute access to it.
+   - Ensure that `RB_AOSP_BASE` points to a location with sufficient space (see [Hardware requirements](https://source.android.com/setup/build/requirements\#hardware-requirements)) and write access for the `jenkins` user
 
 Setup is now finished. You can now invoke one of the following master scripts performing the AOSP build and SOAP analysis process:
 
@@ -70,7 +75,10 @@ When navigating the SOAP reports with a browser, start at `$RB_AOSP_BASE/diff/re
 
 ## Background and affiliation
 
-Project by the Institute of Networks and Security at the Johannes Kepler University, details can be found at [android.ins.jku.at](https://android.ins.jku.at/reproducible-builds/). Developed by Manuel Pöll as bachelor project. Details, theoretical background and interpretation of several SOAP reports can be found in the [bachelor thesis](https://github.com/mobilesec/reproducible-builds-aosp/raw/master/background-work/An-Investigation-Into-Reproducible-Builds-for-AOSP.pdf). SOAP Reports run by the JKU INS institute can be found [here](https://android.ins.jku.at/soap/report-overview.html).
+Project by the Institute of Networks and Security at the Johannes Kepler University, details can be found at [android.ins.jku.at](https://android.ins.jku.at/reproducible-builds/). SOAP Reports run by the JKU INS institute can be found [here](https://android.ins.jku.at/soap/report-overview.html). Developed by Manuel Pöll as bachelor project.
+
+Detailed design decisions, results, and interpretations can be found in his bachelor thesis:
+- [M. Pöll: “An Investigation into Reproducible Builds for AOSP”, Bachelor’s thesis, Johannes Kepler University Linz, Institute of Networks and Security, 2020.](https://github.com/mobilesec/reproducible-builds-aosp/raw/master/background-work/An-Investigation-Into-Reproducible-Builds-for-AOSP.pdf)
 
 ## License
 

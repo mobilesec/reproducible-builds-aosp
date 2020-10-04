@@ -75,8 +75,8 @@ pipeline {
 
     environment {
         PATH=&quot;$PATH:/home/dev/bin:/home/dev/.local/bin&quot;
-        SCRIPT_DIR=&quot;/home/dev/rb-aosp&quot;
-        RB_AOSP_BASE=&quot;/home/dev/aosp&quot;
+        SCRIPT_DIR=&quot;/home/dev/reproducible-builds-aosp&quot;
+        RB_AOSP_BASE=&quot;/var/lib/jenkins/aosp&quot;
         GOOGLE_BUILD_ENV=&quot;Google&quot;
         RB_BUILD_ENV=&quot;\$(lsb_release -si)\$(lsb_release -sr)&quot;
     }

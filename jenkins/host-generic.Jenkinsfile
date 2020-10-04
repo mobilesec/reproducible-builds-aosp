@@ -18,8 +18,8 @@ pipeline {
 
     environment {
         PATH="$PATH:/home/dev/bin:/home/dev/.local/bin"
-        SCRIPT_DIR="/home/dev/rb-aosp"
-        RB_AOSP_BASE="/home/dev/aosp"
+        SCRIPT_DIR="/home/dev/reproducible-builds-aosp"
+        RB_AOSP_BASE="/var/lib/jenkins/aosp"
         GOOGLE_BUILD_ENV="Google"
         RB_BUILD_ENV="\$(lsb_release -si)\$(lsb_release -sr)"
     }
