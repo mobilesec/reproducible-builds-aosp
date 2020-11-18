@@ -38,6 +38,10 @@ main() {
     # Templates
     local -r TEMPLATE_CHANGE_VIS="${SCRIPT_BASE}html-template/change-vis.html"
     local -r TEMPLATE_SUMMARY="${SCRIPT_BASE}html-template/summary.html"
+    local -r SOAP_VERSION_FILE="${SCRIPT_BASE}.version"
+    # Report Info
+    local -r SOAP_VERSION=$(cat $SOAP_VERSION_FILE)
+    local -r DATETIME=$(date -u)
 
     # Navigate to diff dir
     cd "$DIFF_DIR"
@@ -62,7 +66,10 @@ main() {
         cp "$TEMPLATE_CHANGE_VIS" "$CHANGE_VIS_REPORT"
         # Make safe for sed replace, see https://stackoverflow.com/a/2705678
         local CHANGE_VIS_CSV_FILE_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_CSV_FILE" | sed -e 's/[\/&]/\\&/g')
-        sed -E -i -e "s/\\\$CHANGE_VIS_CSV_FILE/$CHANGE_VIS_CSV_FILE_ESCAPED/" "$CHANGE_VIS_REPORT"
+        sed -E -i -e "s/\\\$CHANGE_VIS_CSV_FILE/$CHANGE_VIS_CSV_FILE_ESCAPED/" \
+            -e "s/\\\$SOAP_VERSION/$SOAP_VERSION/" \
+            -e "s/\\\$DATETIME/$DATETIME/" \
+            "$CHANGE_VIS_REPORT"
         CHANGE_VIS_REPORTS_TEMPLATE+="<a href=\"${CHANGE_VIS_REPORT}\">${CHANGE_VIS_REPORT}</a><br>"
     done
 
@@ -76,6 +83,8 @@ main() {
     sed -E -i -e "s/\\\$DIFF_DIR/$DIFF_DIR_ESCAPED/" \
         -e "s/\\\$DIFFOSCOPE_REPORTS_TEMPLATE/$DIFFOSCOPE_REPORTS_TEMPLATE_ESCAPED/" \
         -e "s/\\\$CHANGE_VIS_REPORTS_TEMPLATE/$CHANGE_VIS_REPORTS_TEMPLATE_ESCAPED/" \
+        -e "s/\\\$SOAP_VERSION/$SOAP_VERSION/" \
+        -e "s/\\\$DATETIME/$DATETIME/" \
         "$SUMMARY_REPORT"
 }
 

@@ -48,6 +48,9 @@ main() {
 	m -j $(nproc)
 	set -o nounset
 
+	# Release build
+	make dist
+
 	# Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
 	local -r BUILD_DIR="${SRC_DIR}/out"
 	local -r BUILD_ENV="$(lsb_release -si)$(lsb_release -sr)"

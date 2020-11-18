@@ -37,6 +37,10 @@ main() {
     local -r SCRIPT_BASE=${SCRIPT_LOCATION%"$LOCATION_IN_RB_AOSP"}
     # Templates
     local -r TEMPLATE_REPORT_OVERVIEW="${SCRIPT_BASE}html-template/report-overview.html"
+    local -r SOAP_VERSION_FILE="${SCRIPT_BASE}.version"
+    # Report Info
+    local -r SOAP_VERSION=$(cat $SOAP_VERSION_FILE)
+    local -r DATETIME=$(date -u)
 
     # Navigate to diffs dir
     cd "$DIFFS_DIR"
@@ -53,7 +57,10 @@ main() {
     cp "$TEMPLATE_REPORT_OVERVIEW" "$OVERVIEW_REPORT"
     # Make safe for sed replace, see https://stackoverflow.com/a/2705678
     local -r SOAP_REPORTS_TEMPLATE_ESCAPED=$(printf '%s\n' "$SOAP_REPORTS_TEMPLATE" | sed -e 's/[\/&]/\\&/g')
-    sed -E -i -e "s/\\\$SOAP_REPORTS_TEMPLATE/$SOAP_REPORTS_TEMPLATE_ESCAPED/" "$OVERVIEW_REPORT"
+    sed -E -i -e "s/\\\$SOAP_REPORTS_TEMPLATE/$SOAP_REPORTS_TEMPLATE_ESCAPED/" \
+        -e "s/\\\$SOAP_VERSION/$SOAP_VERSION/" \
+        -e "s/\\\$DATETIME/$DATETIME/" \
+        "$OVERVIEW_REPORT"
 }
 
 main "$@"
