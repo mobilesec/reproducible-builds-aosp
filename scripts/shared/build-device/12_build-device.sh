@@ -48,7 +48,7 @@ main() {
 	m -j $(nproc)
 	set -o nounset
 
-	# Release build
+	# Create release dist
 	make dist
 
 	# Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
@@ -57,8 +57,10 @@ main() {
 	local -r TARGET_DIR="${RB_AOSP_BASE}/build/${AOSP_REF}/${BUILD_TARGET}/${BUILD_ENV}"
 	mkdir -p "${TARGET_DIR}"
 	# Copy relevant build output from BUILD_DIR to TARGET_DIR
-	cp "${BUILD_DIR}/target/product/${DEVICE_CODENAME}"/*.img "${TARGET_DIR}"
-	cp "${BUILD_DIR}/target/product/${DEVICE_CODENAME}/android-info.txt" "${TARGET_DIR}"
+	cp "${BUILD_DIR}/dist"/*-img-*.zip "${TARGET_DIR}"
+	cd "$TARGET_DIR"
+	unzip *-img-*.zip
+	rm *-img-*.zip
 }
 
 main "$@"

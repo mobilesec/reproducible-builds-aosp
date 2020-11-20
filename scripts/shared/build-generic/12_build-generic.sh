@@ -46,6 +46,9 @@ main() {
 	m -j $(nproc)
 	set -o nounset
 
+	# Create Dist bundle
+	make dist
+
 	# Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
 	local -r BUILD_DIR="${SRC_DIR}/out"
 	local -r BUILD_ENV="$(lsb_release -si)$(lsb_release -sr)"
@@ -57,9 +60,10 @@ main() {
 	local -r MAKEFILE="${SRC_DIR}/build/make/target/product/${BUILD}.mk"
 	local -r PRODUCT_DIR=$(grep 'PRODUCT_DEVICE' "${MAKEFILE}" | sed -E -e 's/^[^=]+=[ ]*//') # Remove variable assignment
 	# Copy relevant build output from BUILD_DIR to TARGET_DIR
-	cp "${BUILD_DIR}/target/product/${PRODUCT_DIR}"/*.img "${TARGET_DIR}"
-	cp "${BUILD_DIR}/target/product/${PRODUCT_DIR}"/installed-files* "${TARGET_DIR}"
-	cp "${BUILD_DIR}/target/product/${PRODUCT_DIR}/android-info.txt" "${TARGET_DIR}"
+	cp "${BUILD_DIR}/dist"/*-img-*.zip "${TARGET_DIR}"
+	cd "$TARGET_DIR"
+	unzip *-img-*.zip
+	rm *-img-*.zip
 }
 
 main "$@"
