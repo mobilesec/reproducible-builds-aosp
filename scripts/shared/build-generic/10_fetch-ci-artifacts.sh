@@ -21,7 +21,7 @@ fetchFromAndroidCI() {
 
     # The actual file content does not have a public link, only a Artifact viewer link is available. Retrieve raw file via some simple web scrapping
     # Actual file link is stored in JS object. Extract JSON literal from JS source via sed, then extract property via jq
-    grep "artifacts/${FILE}" \
+    grep "/${FILE}?" \
         <( curl "https://ci.android.com/builds/submitted/${BUILD_NUMBER}/${BUILD_TARGET}/latest/view/${FILE}" -L ) \
         | sed -E -e "s/^[ \t]+var[ \t]+JSVariables[ \t=]+//" -e "s/[ \t]*;[ \t]*$//" \
         | jq -r '."artifactUrl"' \
