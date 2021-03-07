@@ -87,7 +87,7 @@ _EOF_
 
         # Special logic that only tracks major differences
         local MAJOR_ARTIFACT="true"
-        if [[ "$BASE_NAME" = "vendor.img" || ( "$BASE_NAME" = "com.android."* && "$BASE_NAME" != "com.android.runtime.release"* ) ]]; then
+        if [[ "$BASE_NAME" = "vendor.img" ]]; then
             # Skip vendor and all APEX filesx except 
             local MAJOR_ARTIFACT="false"
             local CSV_MAJOR_CONTENT=""
