@@ -29,7 +29,7 @@ main() {
     fi
 
     # Jenkins build params
-    local -r BUILD_TARGET="aosp_x86_64-eng"
+    local -r BUILD_TARGET="aosp_x86_64-userdebug"
     local -r BUILD_NUMBER="$(getLatestCIBuildNumber "$BUILD_TARGET")"
 
     local -r GOOGLE_BUILD_ENV="Google"
