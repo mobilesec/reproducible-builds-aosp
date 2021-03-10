@@ -24,8 +24,8 @@ installDiffoscope() {
     sudo apt-get --assume-yes install diffoscope
     sudo apt-get --assume-yes remove diffoscope
 
-    # Install more current version via pip
-    pip3 install diffoscope
+    # Install more current version via pip, pinned to 151 to ensure consistent behavior
+    pip3 install diffoscope==151
 
     # diffoscope has a feature to list missing deps, use this to install any deps we may have missed previously
     sudo apt-get --assume-yes install $(diffoscope --list-missing-tools debian | grep 'Available-in-Debian-packages' | cut -d: -f2 | sed 's/,//g')
@@ -49,17 +49,8 @@ main() {
 
     sudo apt-get update
 
-    # unchanged deps from https://source.android.com/setup/build/initializing for Ubuntu 14.04
-    sudo apt-get --assume-yes install gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386  x11proto-core-dev libx11-dev  libgl1-mesa-dev libxml2-utils xsltproc unzip \
-    # renamed packages since Ubuntu 14.04:
-    #   'git-core' -> 'git'
-    #   'lib32ncurses5-dev' -> 'libncurses5-dev',
-    #   'lib32z-dev' -> 'lib32z1-dev'
-    sudo apt-get --assume-yes install git libncurses5 libncurses5-dev lib32z1-dev
-    # Additional dependencies uncovered during build
-    sudo apt-get --assume-yes install rsync libfontconfig1
-    # python2.7 required for repo, not installed in Ubuntu 18.04
-    sudo apt-get --assume-yes install python
+    # unchanged deps from https://source.android.com/setup/build/initializing for Ubuntu 18.04
+    sudo apt-get --assume-yes install git-core gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
 
     # Required for reproducible build scripts
     sudo apt-get --assume-yes install curl jq wget diffstat libguestfs-tools
