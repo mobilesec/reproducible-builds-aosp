@@ -51,6 +51,11 @@ main() {
 
     # unchanged deps from https://source.android.com/setup/build/initializing for Ubuntu 18.04
     sudo apt-get --assume-yes install git-core gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+    # Even though the latest version of repo is based on Python 3, the `#!/usr/bin/env python` shebang only works on Ubuntu via Python 2,
+    # see https://askubuntu.com/questions/1189360/how-to-make-python-shebang-use-python3
+    sudo apt-get --assume-yes install python
+    # While Ubuntu LTS has rsync preinstalled, Debian does not and AOSP needs it
+    sudo apt-get --assume-yes install rsync
 
     # Required for reproducible build scripts
     sudo apt-get --assume-yes install curl jq wget diffstat libguestfs-tools
