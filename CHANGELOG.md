@@ -1,4 +1,12 @@
 
+# 1.2.0
+
+- Remove hard coded assumption about APEX version mismatch
+- Cleaned up APT dependencies and aligned them more closely with official installation instructions
+- Update host script to be consistent with Docker/Jenkins
+- Default to the `userdebug` build type for GSI (changed on 26.1.2021 on [Android CI](https://ci.android.com))
+- New script for running a fixed build number for the generic flow
+
 # 1.1.0
 
 - Perform (partial) release procedure for both generic and device targets
