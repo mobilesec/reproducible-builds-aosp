@@ -37,17 +37,10 @@ main() {
     local -r SUMMARY_MAJOR_FILE="summary-major.csv"
     rm -f "$SUMMARY_FILE" "$SUMMARY_MAJOR_FILE"
 
-    # Hardcoded lits of files relevant for summary. If any of these is missing, we did something wrong
-    # APEX files are dyanmically enumerated, since there may be many and they are all relevant
+    # Both images and APEX files are dyanmically enumerated
     local -ar CSV_FILES=( \
         "./android-info.txt.diff.json.csv" \
-        "./boot.img.diff.json.csv" \
-        "./dtbo.img.diff.json.csv" \
-        "./system_other.img.diff.json.csv" \
-        "./system.img.diff.json.csv" \
-        "./vbmeta.img.diff.json.csv" \
-        "./vendor.img.diff.json.csv" \
-        $(find . -path '*.apexes/*' -iname '*-apex_payload.img.diff.json.csv' -type f) \
+        $(find . -iname '*.img.diff.json.csv' -type f) \
     )
 
     # Write CSV Summary Header
@@ -88,7 +81,7 @@ _EOF_
         # Special logic that only tracks major differences
         local MAJOR_ARTIFACT="true"
         if [[ "$BASE_NAME" = "vendor.img" ]]; then
-            # Skip vendor and all APEX filesx except 
+            # Skip vendor
             local MAJOR_ARTIFACT="false"
             local CSV_MAJOR_CONTENT=""
         elif [[ "$BASE_NAME" = "boot.img" ]]; then

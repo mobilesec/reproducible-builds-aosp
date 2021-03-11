@@ -84,7 +84,7 @@ pipeline {
                 sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/19_lpunpack-super-imgs.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
                 sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/20_diffoscope-files.sh \&quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}\&quot; \&quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}\&quot; \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
                 sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/21_generate-csv.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/22_generate-summary-generic.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/22_generate-summary.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
                 sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/23_generate-html.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
                 sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/24_generate-index-html.sh \&quot;${RB_AOSP_BASE}/diff\&quot;&quot;
             }
