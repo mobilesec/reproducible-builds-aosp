@@ -35,35 +35,33 @@ main() {
 
     # Navigate to src dir and init build
     local -r SRC_DIR="${RB_AOSP_BASE}/src"
-    # Communicate custom build dir to soong build system.
-    #export OUT_DIR_COMMON_BASE="${BUILD_DIR}" # Deactivated on purpose (Shared build dir leeds to build artifact caching)
     cd "${SRC_DIR}"
-    # Unfortunately envsetup doesn't work with nounset flag, specifically fails with:
-    # ./build/envsetup.sh: line 361: ZSH_VERSION: unbound variable
-    set +o nounset
-    source ./build/envsetup.sh
-    lunch "${BUILD_TARGET}"
-    m -j $(nproc)
-    set -o nounset
+    # Split into <BUILD> and <BUILDTYPE>
+    local -r BUILD="${BUILD_TARGET%-*}"
+    local -r BUILDTYPE="${BUILD_TARGET##*-}"
+    # Run the same build instruction as the Android CI
+    SANITIZE_HOST="address" FORCE_BUILD_LLVM_COMPONENTS="true" build/soong/soong_ui.bash \
+        "--make-mode" "TARGET_PRODUCT=${BUILD}" "TARGET_BUILD_VARIANT=${BUILDTYPE}" \
+        "dist" \
+        "installclean"
 
-    # Create Dist bundle
-    make dist
+    SANITIZE_HOST="address" FORCE_BUILD_LLVM_COMPONENTS="true" build/soong/soong_ui.bash \
+        "--make-mode" "TARGET_PRODUCT=${BUILD}" "TARGET_BUILD_VARIANT=${BUILDTYPE}" \
+        "droid" \
+        "dist" \
+        -j $(nproc) # Addition by us, Google uses NINJA_REMOTE_NUM_JOBS="500" variable for this
 
     # Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
     local -r BUILD_DIR="${SRC_DIR}/out"
     local -r BUILD_ENV="$(lsb_release -si)$(lsb_release -sr)"
     local -r TARGET_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
     mkdir -p "${TARGET_DIR}"
-    # Generic build targets have specific names for their folders in ${BUILD_DIR}/target/product
-    # Extract this name from the PRODUCT_DEVICE variable from their Makefile
-    local -r BUILD=$(echo ${BUILD_TARGET} | sed -E -e 's/-[a-z]+$//') # Remove -BUILDTYPE suffix
-    local -r MAKEFILE="${SRC_DIR}/build/make/target/product/${BUILD}.mk"
-    local -r PRODUCT_DIR=$(grep 'PRODUCT_DEVICE' "${MAKEFILE}" | sed -E -e 's/^[^=]+=[ ]*//') # Remove variable assignment
     # Copy relevant build output from BUILD_DIR to TARGET_DIR
-    cp "${BUILD_DIR}/dist"/*-img-*.zip "${TARGET_DIR}"
+    cp "${BUILD_DIR}/dist"/*.img "${TARGET_DIR}"
+    cp "${BUILD_DIR}/dist/${BUILD_TARGET}-img-${BUILD_NUMBER}.zip" "${TARGET_DIR}"
     cd "$TARGET_DIR"
-    unzip *-img-*.zip
-    rm *-img-*.zip
+    unzip "${BUILD_TARGET}-img-${BUILD_NUMBER}.zip"
+    rm "${BUILD_TARGET}-img-${BUILD_NUMBER}.zip"
 }
 
 main "$@"

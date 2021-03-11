@@ -25,8 +25,8 @@ fetchFromAndroidCI() {
         <( curl "https://ci.android.com/builds/submitted/${BUILD_NUMBER}/${BUILD_TARGET}/latest/view/${FILE}" -L ) \
         | sed -E -e "s/^[ \t]+var[ \t]+JSVariables[ \t=]+//" -e "s/[ \t]*;[ \t]*$//" \
         | jq -r '."artifactUrl"' \
-        > "${IMAGE_DIR}/${FILE}.link"
-    curl "$(cat "${IMAGE_DIR}/${FILE}.link")" -L > "${IMAGE_DIR}/${FILE}" # Fetch actual ${FILE}
+        > "${FILE}.link"
+    curl "$(cat "${FILE}.link")" -L > "${FILE}" # Fetch actual ${FILE}
 }
 
 fetchArtifactList() {
@@ -34,7 +34,7 @@ fetchArtifactList() {
         <( curl "https://ci.android.com/builds/submitted/${BUILD_NUMBER}/${BUILD_TARGET}/latest" -L ) \
         | sed -E -e "s/^[ \t]+var[ \t]+JSVariables[ \t=]+//" -e "s/[ \t]*;[ \t]*$//" \
         | jq -r '."artifacts"[]."name"' \
-        > "${IMAGE_DIR}/artifacts_list"
+        > "artifacts_list"
 }
 
 main() {
@@ -58,25 +58,32 @@ main() {
     local -r BUILD_ENV="Google"
     local -r IMAGE_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
     mkdir -p "${IMAGE_DIR}"
-    rm -rf "${IMAGE_DIR}/"* # Clean up previously fetched files
+    cd "${IMAGE_DIR}"
+    rm -rf * # Clean up previously fetched files
 
     # Create artifact list
     fetchArtifactList
 
     # Iterate all artifacts and download them
-    local -ar ARTIFACTS=($(cat "${IMAGE_DIR}/artifacts_list"))
+    local -ar ARTIFACTS=($(cat "artifacts_list"))
     for ARTIFACT in "${ARTIFACTS[@]}"; do
         # Only fetch files that can be meaningfully compared to local build
-        if [[ "${ARTIFACT}" == "manifest_"*".xml" ]] || [[ "${ARTIFACT}" == "android-info.txt" ]] || [[ "${ARTIFACT}" == "installed-files"* ]] || [[ "${ARTIFACT}" == *".img" ]]; then
+        if [[ "${ARTIFACT}" == "manifest_"*".xml" ]] || [[ "${ARTIFACT}" == "${BUILD_TARGET}-img-${BUILD_NUMBER}.zip" ]] || [[ "${ARTIFACT}" == *".img" ]]; then
             if [[ "${ARTIFACT}" == *"/"* ]]; then
                 local DIR="${ARTIFACT%%/*}"
-                mkdir -p "${IMAGE_DIR}/${DIR}"
+                mkdir -p "${DIR}"
             fi
 
             echo "${ARTIFACT}"
             fetchFromAndroidCI ${ARTIFACT}
         fi
     done
+    
+    # Some images don't exist in artifact list directly, but need to be unzipped
+    if [[ -f "${BUILD_TARGET}-img-${BUILD_NUMBER}.zip" ]]; then
+        unzip "${BUILD_TARGET}-img-${BUILD_NUMBER}.zip"
+        rm "${BUILD_TARGET}-img-${BUILD_NUMBER}.zip"
+    fi
 }
 
 main "$@"
