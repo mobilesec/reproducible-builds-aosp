@@ -61,7 +61,7 @@ main() {
     cp "${BUILD_DIR}/dist"/*.img "${TARGET_DIR}"
     cp "${BUILD_DIR}/dist/${BUILD}-img-${BUILD_NUMBER}.zip" "${TARGET_DIR}"
     cd "$TARGET_DIR"
-    unzip "${BUILD}-img-${BUILD_NUMBER}.zip"
+    unzip -o "${BUILD}-img-${BUILD_NUMBER}.zip"
     rm "${BUILD}-img-${BUILD_NUMBER}.zip"
 }
 

@@ -82,7 +82,7 @@ main() {
     
     # Some images don't exist in artifact list directly, but need to be unzipped
     if [[ -f "${BUILD}-img-${BUILD_NUMBER}.zip" ]]; then
-        unzip "${BUILD}-img-${BUILD_NUMBER}.zip"
+        unzip -o "${BUILD}-img-${BUILD_NUMBER}.zip"
         rm "${BUILD}-img-${BUILD_NUMBER}.zip"
     fi
 }
