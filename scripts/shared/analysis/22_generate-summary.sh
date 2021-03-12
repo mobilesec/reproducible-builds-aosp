@@ -135,7 +135,7 @@ _EOF_
         local CSV_CONTENT="$(tail -n +2 "$CSV_FILE")"
 
         # Perform adjustments for signing related numbers
-        local -r CSV_FILE_ADJUSTED="${BASE_NAME}.diff.json.adjusted.csv"
+        local CSV_FILE_ADJUSTED="${BASE_NAME}.diff.json.adjusted.csv"
         echo -e "$(head -n 1 ${CSV_FILE})" > "$CSV_FILE_ADJUSTED"
         awk --field-separator ',' "$AWK_SIGNING_ADJUSTMENTS_CSV" <(echo "$CSV_CONTENT") >> "$CSV_FILE_ADJUSTED"
         CSV_CONTENT="$(tail -n +2 "$CSV_FILE_ADJUSTED")"
