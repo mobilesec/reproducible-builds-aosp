@@ -48,7 +48,7 @@ main() {
     echo -e "${HEADER_LINE}" > "$SUMMARY_FILE"
     echo -e "${HEADER_LINE}" > "$SUMMARY_MAJOR_FILE"
 
-    # read considers an encountered EOF as error, but for that's fine in our multiline usage here
+    # read considers an encountered EOF as error, but that's fine in our multiline usage here
     set +o errexit # Disable early exit
     read -r -d '' AWK_SUM_SOURCE_CSV <<'_EOF_'
     @include "join"
@@ -68,11 +68,77 @@ main() {
         printf("%s\n", join(a, 1, 3, ","))
     }
 _EOF_
+
+    # Some diffs are expected due to being metadata of some excludes.
+    # An example diff can be found in `doc/expected-diffs.diff`, aggregated these are
+    # * APEX files
+    #   * zipinfo: +5, -6
+    #   * zipnote: +0, -3
+    #   * META-INF/CERT.SF: +3, -6
+    #   * META-INF/MANIFEST.MF: +2, -5
+    #   * stat: +1, -1
+    # * APK files
+    #   * zipinfo: +5, -6
+    #   * APK metadata: +1, -2
+    #   * META-INF/MANIFEST.MF: +0, -3
+    #   * META-INF/CERT.SF: +1, -4
+    #   * stat: +1, -1
+    # * etc/security/otacerts.zip
+    #   * zipinfo: +3, -3
+    #   * zipnote: +1, -1
+    #   * stat: +1, -1
+    # * etc/selinux/plat_mac_permissions.xml
+    #   * content: +3, -3
+    #   * stat: +1, -1
+    read -r -d '' AWK_SIGNING_ADJUSTMENTS_CSV <<'_EOF_'
+    {
+        if ( $4 ~ /\.apex::zipinfo/ )
+            { $1 -= 5; $2 -= 6; }
+        else if ( $4 ~ /\.apex::zipnote/ )
+            { $1 -= 0; $2 -= 3; }
+        else if ( $4 ~ /\.apex::META-INF\/CERT\.SF/ )
+            { $1 -= 3; $2 -= 6; }
+        else if ( $4 ~ /\.apex::META-INF\/MANIFEST\.MF/ )
+            { $1 -= 2; $2 -= 5; }
+        else if ( $4 ~ /\.apex::stat/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /\.apk::zipinfo/ )
+            { $1 -= 5; $2 -= 6; }
+        else if ( $4 ~ /\.apk::APK metadata/ )
+            { $1 -= 1; $2 -= 2; }
+        else if ( $4 ~ /\.apk::original\/META-INF\/MANIFEST\.MF/ )
+            { $1 -= 0; $2 -= 3; }
+        else if ( $4 ~ /\.apk::original\/META-INF\/CERT\.SF/ )
+            { $1 -= 1; $2 -= 4; }
+        else if ( $4 ~ /\.apk::stat/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /etc\/security\/otacerts\.zip::zipinfo/ )
+            { $1 -= 3; $2 -= 3; }
+        else if ( $4 ~ /etc\/security\/otacerts\.zip::zipnote/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /etc\/security\/otacerts\.zip::stat/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /etc\/selinux\/plat_mac_permissions\.xml::stat/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /etc\/selinux\/plat_mac_permissions\.xml/ )
+            { $1 -= 3; $2 -= 3; }
+
+        if ( $1 > 0 || $2 > 0 || $3 > 0 ) {
+            printf("%d,%d,%d,%s\n", $1, $2, $3, $4)
+        }
+    }
+_EOF_
     set -o errexit # Re-enable early exit
 
     for CSV_FILE in "${CSV_FILES[@]}"; do
         local BASE_NAME="$(basename --suffix '.diff.json.csv' "$CSV_FILE")"
         local CSV_CONTENT="$(tail -n +2 "$CSV_FILE")"
+
+        # Perform adjustments for signing related numbers
+        local -r CSV_FILE_ADJUSTED="${BASE_NAME}.diff.json.adjusted.csv"
+        echo -e "$(head -n 1 ${CSV_FILE})" > "$CSV_FILE_ADJUSTED"
+        awk --field-separator ',' "$AWK_SIGNING_ADJUSTMENTS_CSV" <(echo "$CSV_CONTENT") >> "$CSV_FILE_ADJUSTED"
+        CSV_CONTENT="$(tail -n +2 "$CSV_FILE_ADJUSTED")"
 
         # Write summary CSV entry
         echo -n "${BASE_NAME}," >> "$SUMMARY_FILE"

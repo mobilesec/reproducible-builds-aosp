@@ -59,10 +59,10 @@ main() {
     done
 
     # Generate Change visualisation reports + template string
-    local -ar CHANGE_VIS_CSV_FILES=($(find . -path '*.diff.json.csv' | sort))
+    local -ar CHANGE_VIS_CSV_FILES=($(find . -path '*.diff.json.adjusted.csv' | sort))
     local CHANGE_VIS_REPORTS_TEMPLATE=""
     for CHANGE_VIS_CSV_FILE in "${CHANGE_VIS_CSV_FILES[@]}"; do
-        local CHANGE_VIS_REPORT="$(basename --suffix '.diff.json.csv' "$CHANGE_VIS_CSV_FILE").change-vis.html"
+        local CHANGE_VIS_REPORT="$(basename --suffix '.diff.json.adjusted.csv' "$CHANGE_VIS_CSV_FILE").change-vis.html"
         cp "$TEMPLATE_CHANGE_VIS" "$CHANGE_VIS_REPORT"
         # Make safe for sed replace, see https://stackoverflow.com/a/2705678
         local CHANGE_VIS_CSV_FILE_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_CSV_FILE" | sed -e 's/[\/&]/\\&/g')
