@@ -66,10 +66,10 @@ main() {
 
     # Iterate all artifacts and download them
     local -ar ARTIFACTS=($(cat "artifacts_list"))
-    local -r TARGET_PRODUCT="${BUILD_TARGET%-*}"
+    local -r BUILD="${BUILD_TARGET%-*}"
     for ARTIFACT in "${ARTIFACTS[@]}"; do
         # Only fetch files that can be meaningfully compared to local build
-        if [[ "${ARTIFACT}" == "manifest_"*".xml" ]] || [[ "${ARTIFACT}" == "${TARGET_PRODUCT}-img-${BUILD_NUMBER}.zip" ]] || [[ "${ARTIFACT}" == *".img" ]]; then
+        if [[ "${ARTIFACT}" == "manifest_"*".xml" ]] || [[ "${ARTIFACT}" == "${BUILD}-img-${BUILD_NUMBER}.zip" ]] || [[ "${ARTIFACT}" == *".img" ]]; then
             if [[ "${ARTIFACT}" == *"/"* ]]; then
                 local DIR="${ARTIFACT%%/*}"
                 mkdir -p "${DIR}"
@@ -81,9 +81,9 @@ main() {
     done
     
     # Some images don't exist in artifact list directly, but need to be unzipped
-    if [[ -f "${TARGET_PRODUCT}-img-${BUILD_NUMBER}.zip" ]]; then
-        unzip -o "${TARGET_PRODUCT}-img-${BUILD_NUMBER}.zip"
-        rm "${TARGET_PRODUCT}-img-${BUILD_NUMBER}.zip"
+    if [[ -f "${BUILD}-img-${BUILD_NUMBER}.zip" ]]; then
+        unzip -o "${BUILD}-img-${BUILD_NUMBER}.zip"
+        rm "${BUILD}-img-${BUILD_NUMBER}.zip"
     fi
 }
 
