@@ -57,12 +57,12 @@ main() {
     local -r TARGET_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
     mkdir -p "${TARGET_DIR}"
     # Copy relevant build output from BUILD_DIR to TARGET_DIR
-    local -r BUILD="${BUILD_TARGET%-*}"
+    local -r TARGET_PRODUCT="${BUILD_TARGET%-*}"
     cp "${BUILD_DIR}/dist"/*.img "${TARGET_DIR}"
-    cp "${BUILD_DIR}/dist/${BUILD}-img-${BUILD_NUMBER}.zip" "${TARGET_DIR}"
+    cp "${BUILD_DIR}/dist/${TARGET_PRODUCT}-img-${BUILD_NUMBER}.zip" "${TARGET_DIR}"
     cd "$TARGET_DIR"
-    unzip -o "${BUILD}-img-${BUILD_NUMBER}.zip"
-    rm "${BUILD}-img-${BUILD_NUMBER}.zip"
+    unzip -o "${TARGET_PRODUCT}-img-${BUILD_NUMBER}.zip"
+    rm "${TARGET_PRODUCT}-img-${BUILD_NUMBER}.zip"
 }
 
 main "$@"
