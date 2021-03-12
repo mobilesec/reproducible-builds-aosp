@@ -57,7 +57,6 @@ main() {
     local -r TARGET_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
     mkdir -p "${TARGET_DIR}"
     # Copy relevant build output from BUILD_DIR to TARGET_DIR
-    local -r BUILD="${BUILD_TARGET%-*}"
     cp "${BUILD_DIR}/dist"/*.img "${TARGET_DIR}"
     cp "${BUILD_DIR}/dist/${BUILD}-img-${BUILD_NUMBER}.zip" "${TARGET_DIR}"
     cd "$TARGET_DIR"
