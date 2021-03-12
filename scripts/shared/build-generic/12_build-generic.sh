@@ -40,12 +40,12 @@ main() {
     local -r BUILD="${BUILD_TARGET%-*}"
     local -r BUILDTYPE="${BUILD_TARGET##*-}"
     # Run the same build instruction as the Android CI
-    SANITIZE_HOST="address" FORCE_BUILD_LLVM_COMPONENTS="true" build/soong/soong_ui.bash \
+    FORCE_BUILD_LLVM_COMPONENTS="true" build/soong/soong_ui.bash \
         "--make-mode" "TARGET_PRODUCT=${BUILD}" "TARGET_BUILD_VARIANT=${BUILDTYPE}" \
         "dist" \
         "installclean"
 
-    SANITIZE_HOST="address" FORCE_BUILD_LLVM_COMPONENTS="true" build/soong/soong_ui.bash \
+    FORCE_BUILD_LLVM_COMPONENTS="true" build/soong/soong_ui.bash \
         "--make-mode" "TARGET_PRODUCT=${BUILD}" "TARGET_BUILD_VARIANT=${BUILDTYPE}" \
         "droid" \
         "dist" \
@@ -57,11 +57,12 @@ main() {
     local -r TARGET_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
     mkdir -p "${TARGET_DIR}"
     # Copy relevant build output from BUILD_DIR to TARGET_DIR
+    local -r BUILD="${BUILD_TARGET%-*}"
     cp "${BUILD_DIR}/dist"/*.img "${TARGET_DIR}"
-    cp "${BUILD_DIR}/dist/${BUILD_TARGET}-img-${BUILD_NUMBER}.zip" "${TARGET_DIR}"
+    cp "${BUILD_DIR}/dist/${BUILD}-img-${BUILD_NUMBER}.zip" "${TARGET_DIR}"
     cd "$TARGET_DIR"
-    unzip "${BUILD_TARGET}-img-${BUILD_NUMBER}.zip"
-    rm "${BUILD_TARGET}-img-${BUILD_NUMBER}.zip"
+    unzip "${BUILD}-img-${BUILD_NUMBER}.zip"
+    rm "${BUILD}-img-${BUILD_NUMBER}.zip"
 }
 
 main "$@"
