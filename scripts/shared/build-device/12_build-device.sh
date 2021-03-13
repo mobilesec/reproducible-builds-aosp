@@ -18,16 +18,14 @@ set -o errexit -o nounset -o pipefail -o xtrace
 
 main() {
     # Argument sanity check
-    if [[ "$#" -ne 3 ]]; then
+    if [[ "$#" -ne 2 ]]; then
         echo "Usage: $0 <AOSP_REF> <BUILD_TARGET> <DEVICE_CODENAME>"
         echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
         echo "BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
-        echo "DEVICE_CODENAME: Simply the codename for the target device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode"
         exit 1
     fi
     local -r AOSP_REF="$1"
     local -r BUILD_TARGET="$2"
-    local -r DEVICE_CODENAME="$3"
     # Reproducible base directory
     if [[ -z "${RB_AOSP_BASE+x}" ]]; then
         # Use default location
@@ -45,7 +43,7 @@ main() {
     set +o nounset
     source ./build/envsetup.sh
     lunch "${BUILD_TARGET}"
-    m -j $(nproc)
+    m -j "$(nproc)"
     set -o nounset
 
     # Create release dist
@@ -59,8 +57,8 @@ main() {
     # Copy relevant build output from BUILD_DIR to TARGET_DIR
     cp "${BUILD_DIR}/dist"/*-img-*.zip "${TARGET_DIR}"
     cd "$TARGET_DIR"
-    unzip *-img-*.zip
-    rm *-img-*.zip
+    unzip ./*-img-*.zip
+    rm ./*-img-*.zip
 }
 
 main "$@"

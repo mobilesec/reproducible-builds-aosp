@@ -39,14 +39,16 @@ main() {
     local -r TEMPLATE_REPORT_OVERVIEW="${SCRIPT_BASE}html-template/report-overview.html"
     local -r SOAP_VERSION_FILE="${SCRIPT_BASE}.version"
     # Report Info
-    local -r SOAP_VERSION=$(cat $SOAP_VERSION_FILE)
+    local -r SOAP_VERSION=$(cat "$SOAP_VERSION_FILE")
     local -r DATETIME=$(date -u)
 
     # Navigate to diffs dir
     cd "$DIFFS_DIR"
 
     # Generate SOAP reports template string
-    local -ar SOAP_REPORTS=($(find . -path '*__*/summary.html' | sort))
+    local -a SOAP_REPORTS
+    mapfile -t SOAP_REPORTS < <(find . -path '*__*/summary.html' | sort)
+    declare -r SOAP_REPORTS
     local SOAP_REPORTS_TEMPLATE=""
     for SOAP_REPORT in "${SOAP_REPORTS[@]}"; do
         SOAP_REPORTS_TEMPLATE+="<a href=\"${SOAP_REPORT}\">${SOAP_REPORT}</a><br>"

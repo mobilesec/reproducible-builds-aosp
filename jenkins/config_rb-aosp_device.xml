@@ -90,7 +90,7 @@ pipeline {
         }
         stage(&apos;Building&apos;) {
             steps {
-                sh  &quot;${SCRIPT_DIR}/scripts/shared/build-device/12_build-device.sh \&quot;${AOSP_REF}\&quot; \&quot;${RB_BUILD_TARGET}\&quot; \&quot;${DEVICE_CODENAME}\&quot;&quot;
+                sh  &quot;${SCRIPT_DIR}/scripts/shared/build-device/12_build-device.sh \&quot;${AOSP_REF}\&quot; \&quot;${RB_BUILD_TARGET}\&quot;&quot;
             }
         }
         stage(&apos;Fetch Reference&apos;) {

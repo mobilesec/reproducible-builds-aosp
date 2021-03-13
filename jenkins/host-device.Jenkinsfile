@@ -33,7 +33,7 @@ pipeline {
         }
         stage('Building') {
             steps {
-                sh  "${SCRIPT_DIR}/scripts/shared/build-device/12_build-device.sh \"${AOSP_REF}\" \"${RB_BUILD_TARGET}\" \"${DEVICE_CODENAME}\""
+                sh  "${SCRIPT_DIR}/scripts/shared/build-device/12_build-device.sh \"${AOSP_REF}\" \"${RB_BUILD_TARGET}\""
             }
         }
         stage('Fetch Reference') {

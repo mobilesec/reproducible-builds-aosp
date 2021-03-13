@@ -43,7 +43,7 @@ main() {
         <( curl "https://developers.google.com/android/drivers" ) \
         | sed -n "s/^.*href=\"\s*\(\S*\)\".*$/\1/p" \
         > links
-    while read LINK; do
+    while read -r LINK; do
         wget "${LINK}"
     done <links
 
@@ -54,8 +54,9 @@ main() {
 
     # Expanded files are simple shell scripts that usually need to be run (in order to accept the license).
     # Automate this extraction step by identifying offset from internal extraction command and apply it directly
+    local OFFSET
     for FILE_EXTRACT in *.sh; do
-        local OFFSET="$(grep -aP 'tail -n [+0-9]+ \$0 \| tar zxv' "${FILE_EXTRACT}" | sed -n "s/^.*tail -n\s*\(\S*\).*$/\1/p")"
+        OFFSET="$(grep -aP 'tail -n [+0-9]+ \$0 \| tar zxv' "${FILE_EXTRACT}" | sed -n "s/^.*tail -n\s*\(\S*\).*$/\1/p")"
         tail -n "${OFFSET}" "${FILE_EXTRACT}" | tar zxv
     done
 

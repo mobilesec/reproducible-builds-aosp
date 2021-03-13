@@ -49,7 +49,7 @@ main() {
         "--make-mode" "TARGET_PRODUCT=${BUILD}" "TARGET_BUILD_VARIANT=${BUILDTYPE}" \
         "droid" \
         "dist" \
-        -j $(nproc) # Addition by us, Google uses NINJA_REMOTE_NUM_JOBS="500" variable for this
+        -j "$(nproc)" # Addition by us, Google uses NINJA_REMOTE_NUM_JOBS="500" variable for this
 
     # Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
     local -r BUILD_DIR="${SRC_DIR}/out"

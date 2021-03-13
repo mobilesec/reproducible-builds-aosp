@@ -40,18 +40,18 @@ main() {
     local -r IMAGE_DIR="${RB_AOSP_BASE}/build/${AOSP_REF}/${DEVICE_CODENAME}-user/${BUILD_ENV}"
     mkdir -p "${IMAGE_DIR}"
     cd "${IMAGE_DIR}"
-    rm -rf * # Clean up previously fetched files
+    rm -rf ./* # Clean up previously fetched files
 
     # Download link via primitive web scrapping
     grep -i "${DEVICE_CODENAME}-${BUILD_ID}" \
         <( curl "https://developers.google.com/android/images" -H 'cookie: devsite_wall_acks=nexus-image-tos' ) \
-        | sed -n "s/^.*href=\"\s*\(\S*\)\".*$/\1/p" > link
-    wget "$(cat link)"
+        | sed -n "s/^.*href=\"\s*\(\S*\)\".*$/\1/p" > factory-image-link
+    wget "$(cat factory-image-link)"
 
     # Extract outer zip file (contains flash sh/bat file, firmware blobs and actual partition *.img files in another zip)
-    unzip *.zip
+    unzip ./*.zip
     # Extract inner zip with *.img files (extracted into current dir, i.e. IMAGE_DIR)
-    unzip */*.zip
+    unzip ./*/*.zip
 }
 
 main "$@"

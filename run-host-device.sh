@@ -42,11 +42,10 @@ main() {
 
     local -r GOOGLE_BUILD_ENV="Google"
     local -r RB_AOSP_BASE="/home/dev/aosp"
-    local -r RB_BUILD_ENV="docker"
 
     bash "./scripts/shared/build-device/10_clone-src-device.sh" "${AOSP_REF}"
     bash "./scripts/shared/build-device/11_fetch-extract-vendor.sh" "${BUILD_ID}" "${DEVICE_CODENAME}"
-    bash "./scripts/shared/build-device/12_build-device.sh" "${AOSP_REF}" "${RB_BUILD_TARGET}" "${DEVICE_CODENAME}"
+    bash "./scripts/shared/build-device/12_build-device.sh" "${AOSP_REF}" "${RB_BUILD_TARGET}"
     bash "./scripts/shared/build-device/13_fetch-extract-factory-images.sh" "${AOSP_REF}" "${BUILD_ID}" "${DEVICE_CODENAME}"
     bash "./scripts/shared/analysis/18_build-lpunpack.sh" "${RB_BUILD_TARGET}"
     bash "./scripts/shared/analysis/19_lpunpack-super-imgs.sh" "${AOSP_REF}" "${GOOGLE_BUILD_TARGET}" "${RB_BUILD_TARGET}"

@@ -38,7 +38,7 @@ main() {
     local -r SRC_DIR="${RB_AOSP_BASE}/src"
     mkdir -p "${SRC_DIR}"
     cd "${SRC_DIR}"
-    rm -rf * # Clean up previously checked out files
+    rm -rf ./* # Clean up previously checked out files
     repo init -u "https://android.googlesource.com/platform/manifest"
 
     # Copy custom and manifest
@@ -50,7 +50,7 @@ main() {
 
     # Inform repo about custom manifest and sync it
     repo init -m "${CUSTOM_MANIFEST}"
-    repo sync -j $(nproc)
+    repo sync -j "$(nproc)"
 }
 
 main "$@"

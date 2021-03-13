@@ -26,15 +26,11 @@ unpackSuper() {
         local SUPER_IMG="${TARGET_DIR}/super.img"
 
         # Detect sparse image
-        set +o errexit # Disable early exit
-        file "${SUPER_IMG}" | grep 'Android sparse image'
-        if [[ "$?" -eq 0 ]]; then
-            set -o errexit # Re-enable early exit
+        if file "${SUPER_IMG}" | grep 'Android sparse image'; then
             # Decompress into raw image
             "${AOSP_HOST_BIN}/simg2img" "${TARGET_DIR}/super.img" "${TARGET_DIR}/super.img.raw"
             SUPER_IMG="${TARGET_DIR}/super.img.raw"
         fi
-        set -o errexit # Re-enable early exit
 
         "${AOSP_HOST_BIN}/lpunpack" "${SUPER_IMG}" "${TARGET_DIR}"   
     fi

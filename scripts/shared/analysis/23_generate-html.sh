@@ -40,14 +40,16 @@ main() {
     local -r TEMPLATE_SUMMARY="${SCRIPT_BASE}html-template/summary.html"
     local -r SOAP_VERSION_FILE="${SCRIPT_BASE}.version"
     # Report Info
-    local -r SOAP_VERSION=$(cat $SOAP_VERSION_FILE)
+    local -r SOAP_VERSION=$(cat "$SOAP_VERSION_FILE")
     local -r DATETIME=$(date -u)
 
     # Navigate to diff dir
     cd "$DIFF_DIR"
 
     # Generate diffoscope reports template string
-    local -ar DIFFOSCOPE_REPORTS=($(find . -path '*.diff.html-dir/index.html' | sort))
+    local -a DIFFOSCOPE_REPORTS
+    mapfile -t DIFFOSCOPE_REPORTS < <(find . -path '*.diff.html-dir/index.html' | sort)
+    declare -r DIFFOSCOPE_REPORTS
     local DIFFOSCOPE_REPORTS_TEMPLATE=""
     for DIFFOSCOPE_REPORT in "${DIFFOSCOPE_REPORTS[@]}"; do
         # Fix jQuery location from local to a CDN, specifically
@@ -59,13 +61,17 @@ main() {
     done
 
     # Generate Change visualisation reports + template string
-    local -ar CHANGE_VIS_CSV_FILES=($(find . -path '*.diff.json.adjusted.csv' | sort))
+    local -a CHANGE_VIS_CSV_FILES
+    mapfile -t CHANGE_VIS_CSV_FILES < <(find . -path '*.diff.json.adjusted.csv' | sort)
+    declare -r CHANGE_VIS_CSV_FILES
     local CHANGE_VIS_REPORTS_TEMPLATE=""
+    local CHANGE_VIS_REPORT
+    local CHANGE_VIS_CSV_FILE_ESCAPED
     for CHANGE_VIS_CSV_FILE in "${CHANGE_VIS_CSV_FILES[@]}"; do
-        local CHANGE_VIS_REPORT="$(basename --suffix '.diff.json.adjusted.csv' "$CHANGE_VIS_CSV_FILE").change-vis.html"
+        CHANGE_VIS_REPORT="$(basename --suffix '.diff.json.adjusted.csv' "$CHANGE_VIS_CSV_FILE").change-vis.html"
         cp "$TEMPLATE_CHANGE_VIS" "$CHANGE_VIS_REPORT"
         # Make safe for sed replace, see https://stackoverflow.com/a/2705678
-        local CHANGE_VIS_CSV_FILE_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_CSV_FILE" | sed -e 's/[\/&]/\\&/g')
+        CHANGE_VIS_CSV_FILE_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_CSV_FILE" | sed -e 's/[\/&]/\\&/g')
         sed -E -i -e "s/\\\$CHANGE_VIS_CSV_FILE/$CHANGE_VIS_CSV_FILE_ESCAPED/" \
             -e "s/\\\$SOAP_VERSION/$SOAP_VERSION/" \
             -e "s/\\\$DATETIME/$DATETIME/" \

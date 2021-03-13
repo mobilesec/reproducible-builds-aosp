@@ -59,13 +59,15 @@ main() {
     local -r IMAGE_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
     mkdir -p "${IMAGE_DIR}"
     cd "${IMAGE_DIR}"
-    rm -rf * # Clean up previously fetched files
+    rm -rf ./* # Clean up previously fetched files
 
     # Create artifact list
     fetchArtifactList
 
     # Iterate all artifacts and download them
-    local -ar ARTIFACTS=($(cat "artifacts_list"))
+    local -a ARTIFACTS
+    mapfile -t ARTIFACTS < <(cat "artifacts_list")
+    declare -r ARTIFACTS
     local -r BUILD="${BUILD_TARGET%-*}"
     for ARTIFACT in "${ARTIFACTS[@]}"; do
         # Only fetch files that can be meaningfully compared to local build
@@ -76,7 +78,7 @@ main() {
             fi
 
             echo "${ARTIFACT}"
-            fetchFromAndroidCI ${ARTIFACT}
+            fetchFromAndroidCI "${ARTIFACT}"
         fi
     done
     

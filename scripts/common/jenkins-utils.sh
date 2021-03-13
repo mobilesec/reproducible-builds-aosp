@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2020 Manuel Pöll
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,8 +25,8 @@ setJenkinsAuthCredentials() {
     local -r JENKINS_API_TOKEN_META="$2"
 
     # Jenkins API token generated via <jenkins-server-origin>/user/<username>/configure while being logged in as <username>
-    eval $JENKINS_USER_META="YOUR_JENKINS_USER_HERE"
-    eval $JENKINS_API_TOKEN_META="YOUR_API_TOKEN_HERE"
+    eval "$JENKINS_USER_META=YOUR_JENKINS_USER_HERE"
+    eval "$JENKINS_API_TOKEN_META=YOUR_API_TOKEN_HERE"
 }
 
 generateAndSetJenkinsCrumb() {
@@ -44,6 +46,6 @@ generateAndSetJenkinsCrumb() {
     # Generate Jenkins Crumb, a CSRF token (see https://wiki.jenkins.io/display/JENKINS/Remote+access+API#RemoteaccessAPI-CSRFProtection for details)
     local -r JENKINS_SERVER_ORIGIN="http://localhost:8080"
     local -r GEN_CRUMB_RES=$(curl --user "${JENKINS_USER}:${JENKINS_API_TOKEN}" "${JENKINS_SERVER_ORIGIN}/crumbIssuer/api/json")
-    eval $JENKINS_CRUMB_HEADER_META="$(echo "${GEN_CRUMB_RES}" | jq -r '.crumbRequestField' )"
-    eval $JENKINS_CRUMB_META="$(echo "${GEN_CRUMB_RES}" | jq -r '.crumb' )"
+    eval "$JENKINS_CRUMB_HEADER_META"="$(echo "${GEN_CRUMB_RES}" | jq -r '.crumbRequestField' )"
+    eval "$JENKINS_CRUMB_META"="$(echo "${GEN_CRUMB_RES}" | jq -r '.crumb' )"
 }

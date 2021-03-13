@@ -40,7 +40,7 @@ main() {
     set +o nounset
     source ./build/envsetup.sh
     lunch "${BUILD_TARGET}" # Might not be needed (see sample from https://android.googlesource.com/platform/system/extras/+/1f0277a%5E%21/)
-    mm -j $(nproc) lpunpack
+    mm -j "$(nproc)" lpunpack
     set -o nounset
 }
 

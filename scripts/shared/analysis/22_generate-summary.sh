@@ -38,13 +38,12 @@ main() {
     rm -f "$SUMMARY_FILE" "$SUMMARY_MAJOR_FILE"
 
     # Both images and APEX files are dyanmically enumerated
-    local -ar CSV_FILES=( \
-        "./android-info.txt.diff.json.csv" \
-        $(find . -iname '*.img.diff.json.csv' -type f | sort) \
-    )
+    local -a CSV_FILES
+    mapfile -t CSV_FILES < <(find . -regextype 'posix-extended' -regex '(.*android-info\.txt\.diff\.json\.csv)|(.*\.img\.diff\.json\.csv)' -type f | sort)
+    declare -r CSV_FILES
 
     # Write CSV Summary Header
-    local -r HEADER_LINE="FILENAME,$(head -n 1 ${CSV_FILES[0]} | cut -d , -f 1-3)"
+    local -r HEADER_LINE="FILENAME,$(head -n 1 "${CSV_FILES[0]}" | cut -d , -f 1-3)"
     echo -e "${HEADER_LINE}" > "$SUMMARY_FILE"
     echo -e "${HEADER_LINE}" > "$SUMMARY_MAJOR_FILE"
 
@@ -131,12 +130,14 @@ _EOF_
     set -o errexit # Re-enable early exit
 
     for CSV_FILE in "${CSV_FILES[@]}"; do
-        local BASE_NAME="$(basename --suffix '.diff.json.csv' "$CSV_FILE")"
-        local CSV_CONTENT="$(tail -n +2 "$CSV_FILE")"
+        local BASE_NAME
+        BASE_NAME="$(basename --suffix '.diff.json.csv' "$CSV_FILE")"
+        local CSV_CONTENT
+        CSV_CONTENT="$(tail -n +2 "$CSV_FILE")"
 
         # Perform adjustments for signing related numbers
         local CSV_FILE_ADJUSTED="${BASE_NAME}.diff.json.adjusted.csv"
-        echo -e "$(head -n 1 ${CSV_FILE})" > "$CSV_FILE_ADJUSTED"
+        echo -e "$(head -n 1 "${CSV_FILE}")" > "$CSV_FILE_ADJUSTED"
         awk --field-separator ',' "$AWK_SIGNING_ADJUSTMENTS_CSV" <(echo "$CSV_CONTENT") >> "$CSV_FILE_ADJUSTED"
         CSV_CONTENT="$(tail -n +2 "$CSV_FILE_ADJUSTED")"
 
@@ -146,19 +147,20 @@ _EOF_
 
         # Special logic that only tracks major differences
         local MAJOR_ARTIFACT="true"
+        local CSV_MAJOR_CONTENT
         if [[ "$BASE_NAME" = "vendor.img" ]]; then
             # Skip vendor
-            local MAJOR_ARTIFACT="false"
-            local CSV_MAJOR_CONTENT=""
+            MAJOR_ARTIFACT="false"
+            CSV_MAJOR_CONTENT=""
         elif [[ "$BASE_NAME" = "boot.img" ]]; then
             # Exclude res/images
-            local CSV_MAJOR_CONTENT="$(grep 'res/images' -v <(echo "$CSV_CONTENT"))"
+            CSV_MAJOR_CONTENT="$(grep 'res/images' -v <(echo "$CSV_CONTENT"))"
         elif [[ "$BASE_NAME" = "system.img" ]]; then
             # Exclude NOTICE.xml
-            local CSV_MAJOR_CONTENT="$(grep 'NOTICE.xml.gz' -v <(echo "$CSV_CONTENT"))"
+            CSV_MAJOR_CONTENT="$(grep 'NOTICE.xml.gz' -v <(echo "$CSV_CONTENT"))"
         else
             # Unchanged
-            local CSV_MAJOR_CONTENT="$CSV_CONTENT"
+            CSV_MAJOR_CONTENT="$CSV_CONTENT"
         fi
 
         if [[ "$MAJOR_ARTIFACT" = "true" ]]; then
@@ -190,8 +192,12 @@ _EOF_
     set -o errexit # Re-enable early exit
 
     # Final sum over all files
-    awk --field-separator ',' "$AWK_SUM_SUMMARY" <(tail -n +2 "$SUMMARY_FILE") >> "$SUMMARY_FILE"
-    awk --field-separator ',' "$AWK_SUM_SUMMARY" <(tail -n +2 "$SUMMARY_MAJOR_FILE") >> "$SUMMARY_MAJOR_FILE"
+    local SUMMARY_CONTENT
+    SUMMARY_CONTENT="$(tail -n +2 "$SUMMARY_FILE")"
+    awk --field-separator ',' "$AWK_SUM_SUMMARY" <(echo "$SUMMARY_CONTENT") >> "$SUMMARY_FILE"
+    local SUMMARY_MAJOR_CONTENT
+    SUMMARY_MAJOR_CONTENT="$(tail -n +2 "$SUMMARY_MAJOR_FILE")"
+    awk --field-separator ',' "$AWK_SUM_SUMMARY" <(echo "$SUMMARY_MAJOR_CONTENT") >> "$SUMMARY_MAJOR_FILE"
 }
 
 main "$@"

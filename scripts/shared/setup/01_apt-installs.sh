@@ -28,7 +28,10 @@ installDiffoscope() {
     pip3 install diffoscope==151
 
     # diffoscope has a feature to list missing deps, use this to install any deps we may have missed previously
-    sudo apt-get --assume-yes install $(diffoscope --list-missing-tools debian | grep 'Available-in-Debian-packages' | cut -d: -f2 | sed 's/,//g')
+    local -a APT_DEPS_BY_DIFFOSCOPE
+    read -r -a APT_DEPS_BY_DIFFOSCOPE <<< "$(diffoscope --list-missing-tools debian | grep 'Available-in-Debian-packages' | cut -d: -f2 | sed 's/,//g')"
+    declare -r APT_DEPS_BY_DIFFOSCOPE
+    sudo apt-get --assume-yes install "${APT_DEPS_BY_DIFFOSCOPE[@]}"
     #pip3 install $(diffoscope --list-missing-tools debian | grep 'Missing-Python-Modules' | cut -d: -f2 | sed 's/,//g')
     # The above command installs the rpm package via pip, but running diffoscope emits the following warning:
     # UserWarning: The RPM Python bindings are not currently available via PyPI.
@@ -38,14 +41,11 @@ main() {
     # We want these scripts to work with a wide range of Debian based systems, thus all commands requiring elevated
     # privileges utilize sudo (to support Ubuntu based build system), event though it is a pointless noop in some
     # environments, like a Docker container running Debian.
-    set +o errexit # Disable early exit
-    command -v sudo
-    if [ "$?" -ne 0 ]; then
+    if ! command -v sudo; then
         apt-get update
 
         apt-get --assume-yes install sudo
     fi
-    set -o errexit # Re-enable early exit
 
     sudo apt-get update
 
