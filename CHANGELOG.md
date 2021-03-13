@@ -1,4 +1,15 @@
 
+# 1.3.0
+
+- Codify expected diffs (metadata from diffoscope excludes) and use that to
+  - Generate adjusted CSV reports per image
+  - And only use these number in subsequent reports (summary CSV report, hierarchy visualization)
+- Simplify code and improve generation of generic CSV summary reports
+- Major refactor of the generic flow that
+  - closely mimic the build instruction of the Android CI (reduces potential differences, increases build speed)
+  - Copy and use more images files (the ones from the `...-img-....zip`) to get a more complete picture of differences in the GSI builds
+- Format files that erroneously used tabs
+
 # 1.2.0
 
 - Remove hard coded assumption about APEX version mismatch
