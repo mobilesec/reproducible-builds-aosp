@@ -40,7 +40,7 @@ main() {
     # Both images and APEX files are dyanmically enumerated
     local -ar CSV_FILES=( \
         "./android-info.txt.diff.json.csv" \
-        $(find . -iname '*.img.diff.json.csv' -type f) \
+        $(find . -iname '*.img.diff.json.csv' -type f | sort) \
     )
 
     # Write CSV Summary Header

@@ -34,7 +34,7 @@ main() {
     # Navigate to diff dir
     cd "${DIFF_DIR}"
 
-    local -ar DIFF_JSON_FILES=($(find -type f -name '*.json'))
+    local -ar DIFF_JSON_FILES=($(find -type f -name '*.json' | sort))
     for DIFF_JSON_FILE in "${DIFF_JSON_FILES[@]}"; do
         # jq filters have a strong write-once smell if you never worked with them before. Thus a small breakdown
         # of the steps involved for this one:
