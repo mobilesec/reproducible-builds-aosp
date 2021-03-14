@@ -1,4 +1,9 @@
 
+# 1.4.0
+
+- Many Improvements based on ShellCheck
+- Use more appropriate file path for adjusted CSV reports
+
 # 1.3.0
 
 - Codify expected diffs (metadata from diffoscope excludes) and use that to
