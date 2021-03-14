@@ -26,6 +26,7 @@ installDiffoscope() {
 
     # Install more current version via pip, pinned to 151 to ensure consistent behavior
     pip3 install diffoscope==151
+    export PATH="${HOME}/.local/bin:${PATH}" # Fix PATH immediatly, avoids requirement for new login
 
     # diffoscope has a feature to list missing deps, use this to install any deps we may have missed previously
     local -a APT_DEPS_BY_DIFFOSCOPE
