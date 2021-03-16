@@ -59,7 +59,7 @@ main() {
     sudo apt-get --assume-yes install rsync libncurses5
 
     # Required for reproducible build scripts
-    sudo apt-get --assume-yes install curl jq wget diffstat libguestfs-tools
+    sudo apt-get --assume-yes install curl jq wget diffstat libguestfs-tools simg2img
     installDiffoscope
 }
 

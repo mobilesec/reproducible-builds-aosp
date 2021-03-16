@@ -33,6 +33,8 @@ main() {
         mkdir -p "${RB_AOSP_BASE}"
     fi
 
+    source "./scripts/common/utils.sh"
+
     # Navigate to src dir and init build
     local -r SRC_DIR="${RB_AOSP_BASE}/src"
     # Communicate custom build dir to soong build system.
@@ -42,6 +44,11 @@ main() {
     # ./build/envsetup.sh: line 361: ZSH_VERSION: unbound variable
     set +o nounset
     source ./build/envsetup.sh
+
+    # Set BUILD_DATETIME, BUILD_NUMBER_FROM_FILE, BUILD_USERNAME and BUILD_HOSTNAME
+    local SYSTEM_IMG="${RB_AOSP_BASE}/build/${AOSP_REF}/${BUILD_TARGET}/Google/system.img"
+    setAdditionalBuildEnvironmentVars "SYSTEM_IMG"
+
     lunch "${BUILD_TARGET}"
     m -j "$(nproc)"
     set -o nounset
