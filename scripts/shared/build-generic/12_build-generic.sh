@@ -33,9 +33,17 @@ main() {
         mkdir -p "${RB_AOSP_BASE}"
     fi
 
+    local SCIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+    source "${SCIPT_DIR}/../../../scripts/common/utils.sh"
+
     # Navigate to src dir and init build
     local -r SRC_DIR="${RB_AOSP_BASE}/src"
     cd "${SRC_DIR}"
+
+    # Set BUILD_DATETIME, BUILD_NUMBER_FROM_FILE, BUILD_USERNAME and BUILD_HOSTNAME
+    local SYSTEM_IMG="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/Google/system.img"
+    setAdditionalBuildEnvironmentVars "SYSTEM_IMG"
+
     # Split into <BUILD> and <BUILDTYPE>
     local -r BUILD="${BUILD_TARGET%-*}"
     local -r BUILDTYPE="${BUILD_TARGET##*-}"

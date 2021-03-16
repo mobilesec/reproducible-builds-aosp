@@ -50,11 +50,11 @@ setAdditionalBuildEnvironmentVars() {
     )"
     export BUILD_DATETIME="$BUILD_DATETIME_TMP"
 
-    local BUILD_NUMBER_FROM_FILE_TMP
-    BUILD_NUMBER_FROM_FILE_TMP="$(grep 'ro.build.version.incremental' "${SYSTEM_IMG_RESOLVED}/system/build.prop" \
+    local BUILD_NUMBER_TMP
+    BUILD_NUMBER_TMP="$(grep 'ro.build.version.incremental' "${SYSTEM_IMG_RESOLVED}/system/build.prop" \
         | sed -n -r 's/^ro\.build\.version\.incremental=(\S+)$/\1/p' \
     )"
-    export BUILD_NUMBER_FROM_FILE="$BUILD_NUMBER_FROM_FILE_TMP"
+    export BUILD_NUMBER="$BUILD_NUMBER_TMP"
 
     local BUILD_USERNAME_TMP
     BUILD_USERNAME_TMP="$(grep 'ro.build.user' "${SYSTEM_IMG_RESOLVED}/system/build.prop" \
