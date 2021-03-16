@@ -18,7 +18,7 @@ set -o errexit -o nounset -o pipefail -o xtrace
 
 main() {
     # Argument sanity check
-    if [[ "$#" -ne 2 ]]; then
+    if [[ "$#" -ne 3 ]]; then
         echo "Usage: $0 <AOSP_REF> <RB_BUILD_TARGET> <GOOGLE_BUILD_TARGET>"
         echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
         echo "RB_BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
