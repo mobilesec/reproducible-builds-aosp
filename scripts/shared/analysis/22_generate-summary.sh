@@ -68,7 +68,9 @@ main() {
     }
 _EOF_
 
-    # Some diffs are expected due to being metadata of some excludes.
+    # All file lists except at the very top are duplicates, remove
+    # 
+    # Additionall, some diffs are expected due to being metadata of some excludes.
     # An example diff can be found in `doc/expected-diffs.diff`, aggregated these are
     # * APEX files
     #   * zipinfo: +5, -6
@@ -89,8 +91,12 @@ _EOF_
     # * etc/selinux/plat_mac_permissions.xml
     #   * content: +3, -3
     #   * stat: +1, -1
+    # Additionally, 
     read -r -d '' AWK_SIGNING_ADJUSTMENTS_CSV <<'_EOF_'
     {
+        if ( $4 ~ /::file list/ )
+            { next; }
+
         if ( $4 ~ /\.apex::zipinfo/ )
             { $1 -= 5; $2 -= 6; }
         else if ( $4 ~ /\.apex::zipnote/ )
@@ -123,7 +129,7 @@ _EOF_
             { $1 -= 3; $2 -= 3; }
 
         if ( $1 > 0 || $2 > 0 || $3 > 0 ) {
-            printf("%d,%d,%d,%s\n", $1, $2, $3, $4)
+            printf("%d,%d,%d,%s\n", $1, $2, $3, $4);
         }
     }
 _EOF_
