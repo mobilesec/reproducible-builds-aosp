@@ -48,7 +48,7 @@ main() {
     set +o nounset
     source ./build/envsetup.sh
 
-    # Set BUILD_DATETIME, BUILD_NUMBER_FROM_FILE, BUILD_USERNAME and BUILD_HOSTNAME
+    # Set BUILD_DATETIME, BUILD_NUMBER, BUILD_USERNAME and BUILD_HOSTNAME
     local SYSTEM_IMG="${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/Google/system.img"
     setAdditionalBuildEnvironmentVars "SYSTEM_IMG"
 

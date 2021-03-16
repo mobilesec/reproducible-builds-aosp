@@ -24,7 +24,7 @@ main() {
         echo "BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
         exit 1
     fi
-    local -r BUILD_NUMBER="$1"
+    local -r BUILD_NUM="$1"
     local -r BUILD_TARGET="$2"
     # Reproducible base directory
     if [[ -z "${RB_AOSP_BASE+x}" ]]; then
@@ -40,8 +40,8 @@ main() {
     local -r SRC_DIR="${RB_AOSP_BASE}/src"
     cd "${SRC_DIR}"
 
-    # Set BUILD_DATETIME, BUILD_NUMBER_FROM_FILE, BUILD_USERNAME and BUILD_HOSTNAME
-    local SYSTEM_IMG="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/Google/system.img"
+    # Set BUILD_DATETIME, BUILD_NUMBER, BUILD_USERNAME and BUILD_HOSTNAME
+    local SYSTEM_IMG="${RB_AOSP_BASE}/build/${BUILD_NUM}/${BUILD_TARGET}/Google/system.img"
     setAdditionalBuildEnvironmentVars "SYSTEM_IMG"
 
     # Split into <BUILD> and <BUILDTYPE>
@@ -62,14 +62,14 @@ main() {
     # Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
     local -r BUILD_DIR="${SRC_DIR}/out"
     local -r BUILD_ENV="$(lsb_release -si)$(lsb_release -sr)"
-    local -r TARGET_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
+    local -r TARGET_DIR="${RB_AOSP_BASE}/build/${BUILD_NUM}/${BUILD_TARGET}/${BUILD_ENV}"
     mkdir -p "${TARGET_DIR}"
     # Copy relevant build output from BUILD_DIR to TARGET_DIR
     cp "${BUILD_DIR}/dist"/*.img "${TARGET_DIR}"
-    cp "${BUILD_DIR}/dist/${BUILD}-img-${BUILD_NUMBER}.zip" "${TARGET_DIR}"
+    cp "${BUILD_DIR}/dist/${BUILD}-img-${BUILD_NUM}.zip" "${TARGET_DIR}"
     cd "$TARGET_DIR"
-    unzip -o "${BUILD}-img-${BUILD_NUMBER}.zip"
-    rm "${BUILD}-img-${BUILD_NUMBER}.zip"
+    unzip -o "${BUILD}-img-${BUILD_NUM}.zip"
+    rm "${BUILD}-img-${BUILD_NUM}.zip"
 }
 
 main "$@"
