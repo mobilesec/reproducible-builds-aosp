@@ -36,6 +36,18 @@ unpackSuper() {
     fi
 }
 
+unpackBoot() {
+    local -r BUILD_TARGET="$1"
+    local -r BUILD_ENV="$2"
+    local -r TARGET_DIR="${RB_AOSP_BASE}/build/${AOSP_REF_OR_BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
+
+    # If boot exists, decompose it into bootimg.cfg, initrd.img and zImage
+    if [[ -f "${TARGET_DIR}/boot.img" ]]; then
+        (cd "${TARGET_DIR}" && abootimg -x "boot.img")
+        rm "${TARGET_DIR}/boot.img"
+    fi
+}
+
 main() {
     # Argument sanity check
     if [[ "$#" -ne 3 ]]; then
@@ -63,6 +75,9 @@ main() {
     
     unpackSuper "${GOOGLE_BUILD_TARGET}" "${GOOGLE_BUILD_ENV}"
     unpackSuper "${RB_BUILD_TARGET}" "${RB_BUILD_ENV}"
+
+    unpackBoot "${GOOGLE_BUILD_TARGET}" "${GOOGLE_BUILD_ENV}"
+    unpackBoot "${RB_BUILD_TARGET}" "${RB_BUILD_ENV}"
 }
 
 main "$@"

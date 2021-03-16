@@ -25,7 +25,7 @@ compose_cmds() {
         bash "./scripts/shared/build-generic/11_clone-src-via-manifest.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
         bash "./scripts/shared/build-generic/12_build-generic.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
         bash "./scripts/shared/analysis/18_build-lpunpack.sh" "${BUILD_TARGET}"
-        bash "./scripts/shared/analysis/19_lpunpack-super-imgs.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}" "${BUILD_TARGET}"
+        bash "./scripts/shared/analysis/19_preprocess-imgs.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}" "${BUILD_TARGET}"
         bash "./scripts/shared/analysis/20_diffoscope-files.sh" \
             "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
             "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/\$(lsb_release -si)\$(lsb_release -sr)" \
