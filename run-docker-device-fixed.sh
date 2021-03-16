@@ -21,7 +21,7 @@ compose_cmds() {
         bash "./scripts/shared/build-device/10_fetch-extract-factory-images.sh" "${AOSP_REF}" "${BUILD_ID}" "${DEVICE_CODENAME}"
         bash "./scripts/shared/build-device/11_clone-src-device.sh" "${AOSP_REF}"
         bash "./scripts/shared/build-device/12_fetch-extract-vendor.sh" "${BUILD_ID}" "${DEVICE_CODENAME}"
-        bash "./scripts/shared/build-device/13_build-device.sh" "${AOSP_REF}" "${RB_BUILD_TARGET}"
+        bash "./scripts/shared/build-device/13_build-device.sh" "${AOSP_REF}" "${RB_BUILD_TARGET}" "${GOOGLE_BUILD_TARGET}"
         bash "./scripts/shared/analysis/18_build-lpunpack.sh" "${RB_BUILD_TARGET}"
         bash "./scripts/shared/analysis/19_lpunpack-super-imgs.sh" "${AOSP_REF}" "${GOOGLE_BUILD_TARGET}" "${RB_BUILD_TARGET}"
         bash "./scripts/shared/analysis/20_diffoscope-files.sh" \

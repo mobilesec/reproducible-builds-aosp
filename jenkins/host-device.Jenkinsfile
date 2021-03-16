@@ -34,7 +34,7 @@ pipeline {
         }
         stage('Building') {
             steps {
-                sh  "${SCRIPT_DIR}/scripts/shared/build-device/13_build-device.sh \"${AOSP_REF}\" \"${RB_BUILD_TARGET}\""
+                sh  "${SCRIPT_DIR}/scripts/shared/build-device/13_build-device.sh \"${AOSP_REF}\" \"${RB_BUILD_TARGET}\" \"${GOOGLE_BUILD_TARGET}\""
             }
         }
         stage('Analysis') {

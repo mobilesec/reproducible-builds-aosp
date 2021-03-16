@@ -19,13 +19,15 @@ set -o errexit -o nounset -o pipefail -o xtrace
 main() {
     # Argument sanity check
     if [[ "$#" -ne 2 ]]; then
-        echo "Usage: $0 <AOSP_REF> <BUILD_TARGET> <DEVICE_CODENAME>"
+        echo "Usage: $0 <AOSP_REF> <RB_BUILD_TARGET> <GOOGLE_BUILD_TARGET>"
         echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
-        echo "BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
+        echo "RB_BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
+        echo "GOOGLE_BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
         exit 1
     fi
     local -r AOSP_REF="$1"
-    local -r BUILD_TARGET="$2"
+    local -r RB_BUILD_TARGET="$2"
+    local -r GOOGLE_BUILD_TARGET="$3"
     # Reproducible base directory
     if [[ -z "${RB_AOSP_BASE+x}" ]]; then
         # Use default location
@@ -33,7 +35,8 @@ main() {
         mkdir -p "${RB_AOSP_BASE}"
     fi
 
-    source "./scripts/common/utils.sh"
+    local SCIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+    source "${SCIPT_DIR}/../../../scripts/common/utils.sh"
 
     # Navigate to src dir and init build
     local -r SRC_DIR="${RB_AOSP_BASE}/src"
@@ -46,10 +49,10 @@ main() {
     source ./build/envsetup.sh
 
     # Set BUILD_DATETIME, BUILD_NUMBER_FROM_FILE, BUILD_USERNAME and BUILD_HOSTNAME
-    local SYSTEM_IMG="${RB_AOSP_BASE}/build/${AOSP_REF}/${BUILD_TARGET}/Google/system.img"
+    local SYSTEM_IMG="${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/Google/system.img"
     setAdditionalBuildEnvironmentVars "SYSTEM_IMG"
 
-    lunch "${BUILD_TARGET}"
+    lunch "${RB_BUILD_TARGET}"
     m -j "$(nproc)"
     set -o nounset
 
@@ -59,7 +62,7 @@ main() {
     # Prepare TARGET_DIR as destination for relevant build output. Used for further analysis
     local -r BUILD_DIR="${SRC_DIR}/out"
     local -r BUILD_ENV="$(lsb_release -si)$(lsb_release -sr)"
-    local -r TARGET_DIR="${RB_AOSP_BASE}/build/${AOSP_REF}/${BUILD_TARGET}/${BUILD_ENV}"
+    local -r TARGET_DIR="${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${BUILD_ENV}"
     mkdir -p "${TARGET_DIR}"
     # Copy relevant build output from BUILD_DIR to TARGET_DIR
     cp "${BUILD_DIR}/dist"/*-img-*.zip "${TARGET_DIR}"

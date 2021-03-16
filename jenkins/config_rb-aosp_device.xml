@@ -91,7 +91,7 @@ pipeline {
         }
         stage(&apos;Building&apos;) {
             steps {
-                sh  &quot;${SCRIPT_DIR}/scripts/shared/build-device/13_build-device.sh \&quot;${AOSP_REF}\&quot; \&quot;${RB_BUILD_TARGET}\&quot;&quot;
+                sh  &quot;${SCRIPT_DIR}/scripts/shared/build-device/13_build-device.sh \&quot;${AOSP_REF}\&quot; \&quot;${RB_BUILD_TARGET}\&quot; \&quot;${GOOGLE_BUILD_TARGET}\&quot;&quot;
             }
         }
         stage(&apos;Analysis&apos;) {
