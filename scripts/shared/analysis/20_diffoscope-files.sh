@@ -79,7 +79,7 @@ function preProcessImage {
     if file "$DIFF_IN_RESOLVED" | grep 'gzip compressed data'; then
         # Unpack into folder
         mkdir "${DIFF_IN_RESOLVED}.unpack"
-        (cd "${DIFF_IN_RESOLVED}.unpack" && zcat "$DIFF_IN_RESOLVED" | cpio -idmv)
+        (cd "${DIFF_IN_RESOLVED}.unpack" && zcat "$DIFF_IN_RESOLVED" | bsdcpio --extract --make-directories --preserve-modification-time --verbose)
         eval "$DIFF_IN_META=${DIFF_IN_RESOLVED}.unpack"
     fi
 }
