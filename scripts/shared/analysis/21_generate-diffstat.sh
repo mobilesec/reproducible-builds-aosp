@@ -31,11 +31,81 @@ main() {
         mkdir -p "${RB_AOSP_BASE}"
     fi
 
+    # read considers an encountered EOF as error, but that's fine in our multiline usage here
+    set +o errexit # Disable early exit
+
+    # All file lists except at the very top are duplicates, remove
+    # 
+    # Additionall, some diffs are expected due to being metadata of some excludes.
+    # An example diff can be found in `doc/expected-diffs.diff`, aggregated these are
+    # * APEX files
+    #   * zipinfo: +5, -6
+    #   * zipnote: +0, -3
+    #   * META-INF/CERT.SF: +3, -6
+    #   * META-INF/MANIFEST.MF: +2, -5
+    #   * stat: +1, -1
+    # * APK files
+    #   * zipinfo: +5, -6
+    #   * APK metadata: +1, -2
+    #   * META-INF/MANIFEST.MF: +0, -3
+    #   * META-INF/CERT.SF: +1, -4
+    #   * stat: +1, -1
+    # * etc/security/otacerts.zip
+    #   * zipinfo: +3, -3
+    #   * zipnote: +1, -1
+    #   * stat: +1, -1
+    # * etc/selinux/plat_mac_permissions.xml
+    #   * content: +3, -3
+    #   * stat: +1, -1
+    # Additionally, 
+    read -r -d '' AWK_CODE_CSV_ADJUSTMENTS <<'_EOF_'
+    {
+        if ( $4 ~ /::file list/ )
+            { next; }
+
+        if ( $4 ~ /\.apex::zipinfo/ )
+            { $1 -= 5; $2 -= 6; }
+        else if ( $4 ~ /\.apex::zipnote/ )
+            { $1 -= 0; $2 -= 3; }
+        else if ( $4 ~ /\.apex::META-INF\/CERT\.SF/ )
+            { $1 -= 3; $2 -= 6; }
+        else if ( $4 ~ /\.apex::META-INF\/MANIFEST\.MF/ )
+            { $1 -= 2; $2 -= 5; }
+        else if ( $4 ~ /\.apex::stat/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /\.apk::zipinfo/ )
+            { $1 -= 5; $2 -= 6; }
+        else if ( $4 ~ /\.apk::APK metadata/ )
+            { $1 -= 1; $2 -= 2; }
+        else if ( $4 ~ /\.apk::original\/META-INF\/MANIFEST\.MF/ )
+            { $1 -= 0; $2 -= 3; }
+        else if ( $4 ~ /\.apk::original\/META-INF\/CERT\.SF/ )
+            { $1 -= 1; $2 -= 4; }
+        else if ( $4 ~ /\.apk::stat/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /etc\/security\/otacerts\.zip::zipinfo/ )
+            { $1 -= 3; $2 -= 3; }
+        else if ( $4 ~ /etc\/security\/otacerts\.zip::zipnote/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /etc\/security\/otacerts\.zip::stat/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /etc\/selinux\/plat_mac_permissions\.xml::stat/ )
+            { $1 -= 1; $2 -= 1; }
+        else if ( $4 ~ /etc\/selinux\/plat_mac_permissions\.xml/ )
+            { $1 -= 3; $2 -= 3; }
+
+        if ( $1 > 0 || $2 > 0 || $3 > 0 ) {
+            printf("%d,%d,%d,%s\n", $1, $2, $3, $4);
+        }
+    }
+_EOF_
+    set -o errexit # Re-enable early exit
+
     # Navigate to diff dir
     cd "${DIFF_DIR}"
 
     local -a DIFF_JSON_FILES
-    mapfile -t DIFF_JSON_FILES < <(find . -type f -name '*.json' | sort)
+    mapfile -t DIFF_JSON_FILES < <(find . -type f -name '*.diff.json' | sort)
     declare -r DIFF_JSON_FILES
     for DIFF_JSON_FILE in "${DIFF_JSON_FILES[@]}"; do
         # jq filters have a strong write-once smell if you never worked with them before. Thus a small breakdown
@@ -90,14 +160,23 @@ main() {
             "${DIFF_JSON_FILE}.flattened.diff" > "${DIFF_JSON_FILE}.flattened_clean.diff"
 
         # Run diffstat on cleaned flat diff file, create machine friendly CSV output, transform ␣ back into real spaces
+        local BASE_FILENAME
+        BASE_FILENAME="$(dirname "${DIFF_JSON_FILE}")/$(basename -s '.diff.json' "${DIFF_JSON_FILE}")"
+        local DIFFSTAT_RAW_CSV_FILE="${BASE_FILENAME}.diffstat.raw.csv"
         diffstat -p 1 -k -t "${DIFF_JSON_FILE}.flattened_clean.diff" \
-            | sed -e 's/␣/ /g' > "${DIFF_JSON_FILE}.csv"
+            | sed -e 's/␣/ /g' > "${DIFFSTAT_RAW_CSV_FILE}"
+
+        # Diffstat CSV adjustments
+        local CSV_CONTENT
+        CSV_CONTENT="$(tail -n +2 "$DIFFSTAT_RAW_CSV_FILE")"
+        local DIFFSTAT_CSV_FILE="${BASE_FILENAME}.diffstat.csv"
+        echo -e "$(head -n 1 "${DIFFSTAT_RAW_CSV_FILE}")" > "$DIFFSTAT_CSV_FILE"
+        awk --field-separator ',' "$AWK_CODE_CSV_ADJUSTMENTS" <(echo "$CSV_CONTENT") >> "$DIFFSTAT_CSV_FILE"
 
         # All diff file versions take considerable space, get rid of them
         rm "${DIFF_JSON_FILE}"
         rm "${DIFF_JSON_FILE}.flattened.diff"
         rm "${DIFF_JSON_FILE}.flattened_clean.diff"
-
     done
 }
 
