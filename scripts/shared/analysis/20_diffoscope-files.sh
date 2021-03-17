@@ -23,7 +23,7 @@ function preProcessImage {
     local DIFF_IN_BASE
     DIFF_IN_BASE=$(eval echo \$"$DIFF_IN_META")
     local DIFF_IN_RESOLVED=$DIFF_IN_BASE
-    # Sanity check that we are dealing with a image
+    # Sanity check that we are dealing with a disk image
     if file "${DIFF_IN_RESOLVED}" | grep -P '(ext2)|(ext3)|(ext4)|(Android sparse image)'; then
         # Detect sparse images
         if file "${DIFF_IN_RESOLVED}" | grep 'Android sparse image'; then
@@ -74,6 +74,14 @@ function preProcessImage {
             FILES+=( "${APEX_PAYLOAD_FILES[@]}" )
         fi
     fi
+
+    # Check if we are dealing with a Linux initial ramdisk
+    if file "$DIFF_IN_RESOLVED" | grep 'gzip compressed data'; then
+        # Unpack into folder
+        mkdir "${DIFF_IN_RESOLVED}.unpack"
+        (cd "${DIFF_IN_RESOLVED}.unpack" && zcat "$DIFF_IN_RESOLVED" | cpio -idmv)
+        eval "$DIFF_IN_META=${DIFF_IN_RESOLVED}.unpack"
+    fi
 }
 
 function postProcessImage {
@@ -91,6 +99,11 @@ function postProcessImage {
             rm "$IMAGE"
         fi
     fi
+
+    if [[ "$DIFF_IN" = *".unpack" ]]; then
+        # Delete unpacked initial ramdisk
+        rm -rf "$DIFF_IN"
+    fi
 }
 
 function diffoscopeFile {
@@ -107,6 +120,13 @@ function diffoscopeFile {
 
     # Ensure that parent directory exists
     mkdir -p "$(dirname "${DIFF_OUT}")"
+
+    if [[ "$DIFF_IN_1" = *".mount" ]] || [[ "$DIFF_IN_1" == *".unpack" ]]; then
+        local -r FILE_SIZES_FILE="${DIFF_OUT}.file-sizes-1.csv"
+        echo -e "FILENAME,SIZE" > "$FILE_SIZES_FILE"
+        # Store file sizes for metric calculation later on
+        (cd "$DIFF_IN_1" && find . -exec stat --format="%n,%s" {} \+ | sort) >> "$FILE_SIZES_FILE"
+    fi
 
     # Assembly lengthy list of diffoscope arguments
     local -a DIFFOSCOPE_ARGS=()
