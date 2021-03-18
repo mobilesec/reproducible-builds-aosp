@@ -62,9 +62,38 @@ _EOF_
         local BASE_FILENAME
         BASE_FILENAME="$(dirname "${DIFFSTAT_CSV_FILE}")/$(basename -s '.diffstat.csv' "${DIFFSTAT_CSV_FILE}")"
 
+        # Determine flags related to APEX files fo future reference
+        local IS_APEX=false
+        local IS_IMG_WITH_APEX_WITHIN=false
+        if [[ "$BASE_FILENAME" == *'.apex-apex_payload.img' ]]; then
+            IS_APEX=true
+        elif [[ "$BASE_FILENAME" == *".img" ]]; then
+            IS_IMG_WITH_APEX_WITHIN=true
+        fi
+
         # Transform diffstat CSV to diff score metric
-        local DIFFSTAT_CONTENT
-        DIFFSTAT_CONTENT="$(tail -n +2 "$DIFFSTAT_CSV_FILE")"
+        unset DIFFSTAT_CONTENT
+        local DIFFSTAT_CONTENT=""
+        if [ "$IS_IMG_WITH_APEX_WITHIN" == true ]; then
+            set +o errexit # Disable early exit
+            DIFFSTAT_CONTENT+="$(tail -n +2 "$DIFFSTAT_CSV_FILE" \
+                | grep --invert-match '\.apex' \
+            )"
+            set -o errexit # Re-enable early exit
+        elif [[ "$IS_APEX" == true ]]; then
+            # Extract diffstat lines from parent image for outer full APEX file
+            local APEX_NAME PARENT_IMG_BASENAME
+            APEX_NAME="$(sed 's/com\.android\.//' <( echo $(basename -s '.apex-apex_payload.img' "$BASE_FILENAME") ))"
+            PARENT_IMG_BASENAME="$(dirname $(dirname $BASE_FILENAME))/$(basename -s '.apexes' $(dirname $BASE_FILENAME))"
+            local PARENT_IMG_DIFFSTAT_CSV_FILE="${PARENT_IMG_BASENAME}.diffstat.csv"
+            set +o errexit # Disable early exit
+            DIFFSTAT_CONTENT+="$(tail -n +2 "$PARENT_IMG_DIFFSTAT_CSV_FILE" \
+                | grep "${APEX_NAME}\.apex" \
+            )"
+            set -o errexit # Re-enable early exit
+            DIFFSTAT_CONTENT+=$'\n'
+        fi
+        DIFFSTAT_CONTENT+="$(tail -n +2 "$DIFFSTAT_CSV_FILE")"
         local METRIC_DIFF_SCORE_FILE="${BASE_FILENAME}.metric.diff-score.csv"
         echo -e "$HEADER_LINE" > "$METRIC_DIFF_SCORE_FILE"
         awk --field-separator ',' "$AWK_CODE_DIFFSTAT_TO_DIFF_SCORE" <(echo "$DIFFSTAT_CONTENT") >> "$METRIC_DIFF_SCORE_FILE"
@@ -76,27 +105,27 @@ _EOF_
         awk --field-separator ',' "$AWK_CODE_DIFF_SCORE_SUMMARY" <(echo "$METRIC_CONTENT") >> "$SUMMARY_FILE"
 
         # Special logic that only tracks major differences
-        local MAJOR_ARTIFACT="true"
-        local METRIC_MAJOR_CONTENT
+        local MAJOR_ARTIFACT=true
+        local MAJOR_METRIC_CONTENT
         if [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
             # Skip vendor
-            MAJOR_ARTIFACT="false"
-            METRIC_MAJOR_CONTENT=""
-        elif [[ "$BASE_FILENAME" == *"initrd.img" ]]; then
+            MAJOR_ARTIFACT=false
+            MAJOR_METRIC_CONTENT=""
+        elif [[ "$BASE_FILENAME" == *"initrd.img" ]] || [[ "$BASE_FILENAME" == *"ramdisk.img" ]] || [[ "$BASE_FILENAME" == *"ramdisk-debug.img" ]]; then
             # Exclude res/images
-            METRIC_MAJOR_CONTENT="$(grep 'res/images' -v <(echo "$METRIC_CONTENT"))"
+            MAJOR_METRIC_CONTENT="$(grep 'res/images' -v <(echo "$METRIC_CONTENT"))"
         elif [[ "$BASE_FILENAME" == *"system.img" ]]; then
             # Exclude NOTICE.xml
-            METRIC_MAJOR_CONTENT="$(grep 'NOTICE.xml.gz' -v <(echo "$METRIC_CONTENT"))"
+            MAJOR_METRIC_CONTENT="$(grep 'NOTICE.xml.gz' -v <(echo "$METRIC_CONTENT"))"
         else
             # Unchanged
-            METRIC_MAJOR_CONTENT="$METRIC_CONTENT"
+            MAJOR_METRIC_CONTENT="$METRIC_CONTENT"
         fi
 
-        if [[ "$MAJOR_ARTIFACT" == "true" ]]; then
+        if [[ "$MAJOR_ARTIFACT" == true ]]; then
             # Write major summary CSV entry
             echo -n "${BASE_FILENAME}," >> "$SUMMARY_MAJOR_FILE"
-            awk --field-separator ',' "$AWK_CODE_DIFF_SCORE_SUMMARY" <(echo "$METRIC_MAJOR_CONTENT") >> "$SUMMARY_MAJOR_FILE"
+            awk --field-separator ',' "$AWK_CODE_DIFF_SCORE_SUMMARY" <(echo "$MAJOR_METRIC_CONTENT") >> "$SUMMARY_MAJOR_FILE"
         fi
     done
 }
@@ -122,9 +151,11 @@ _EOF_
 
     # Start summary files
     local -r SUMMARY_FILE="summary.metric.weight-score.csv"
-    rm -f "$SUMMARY_FILE"
+    local -r SUMMARY_MAJOR_FILE="summary.metric.major-weight-score.csv"
+    rm -f "$SUMMARY_FILE" "$SUMMARY_MAJOR_FILE"
     local -r SUMMARY_HEADER_LINE="ARTIFACT,SIZE_ALL,SIZE_CHANGED,WEIGHT_SCORE"
     echo -e "${SUMMARY_HEADER_LINE}" > "$SUMMARY_FILE"
+    echo -e "${SUMMARY_HEADER_LINE}" > "$SUMMARY_MAJOR_FILE"
 
     local -r HEADER_LINE="FILENAME,SIZE"
 
@@ -240,8 +271,32 @@ _EOF_
                 SIZE_CHANGED="$SIZE_ALL"
             fi
         fi
-        echo -n -e "${BASE_FILENAME},${SIZE_ALL},${SIZE_CHANGED},"$(bc <<< "scale=4; ${SIZE_CHANGED}/${SIZE_ALL}")"\n" >> "$SUMMARY_FILE"            
-            
+        local WEIGHT_SCORE="$(bc <<< "scale=4; ${SIZE_CHANGED}/${SIZE_ALL}")"
+        echo -n -e "${BASE_FILENAME},${SIZE_ALL},${SIZE_CHANGED},"${WEIGHT_SCORE}"\n" >> "$SUMMARY_FILE"            
+        
+        # Special logic that only tracks major differences
+        local MAJOR_ARTIFACT=true
+        local MAJOR_SIZE_CHANGED
+        if [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
+            # Skip vendor
+            MAJOR_ARTIFACT=false
+            MAJOR_SIZE_CHANGED=""
+        elif [[ "$BASE_FILENAME" == *"initrd.img" ]] || [[ "$BASE_FILENAME" == *"ramdisk.img" ]] || [[ "$BASE_FILENAME" == *"ramdisk-debug.img" ]]; then
+            # Exclude res/images
+            MAJOR_SIZE_CHANGED="$(awk --field-separator ',' "$AWK_CODE_WEIGHT_SCORE_SUMMARY" <(echo "$(tail -n +2 "$METRIC_WEIGHT_SCORE_CHANGED_FILE" | grep --invert-match 'res/images' )"))"
+        elif [[ "$BASE_FILENAME" == *"system.img" ]]; then
+            # Exclude NOTICE.xml
+            MAJOR_SIZE_CHANGED="$(awk --field-separator ',' "$AWK_CODE_WEIGHT_SCORE_SUMMARY" <(echo "$(tail -n +2 "$METRIC_WEIGHT_SCORE_CHANGED_FILE" | grep --invert-match 'NOTICE.xml.gz' )"))"
+        else
+            # Unchanged
+            MAJOR_SIZE_CHANGED="$SIZE_CHANGED"
+        fi
+
+        if [[ "$MAJOR_ARTIFACT" == true ]]; then
+            # Write major summary CSV entry
+            WEIGHT_SCORE="$(bc <<< "scale=4; ${MAJOR_SIZE_CHANGED}/${SIZE_ALL}")"
+            echo -n -e "${BASE_FILENAME},${SIZE_ALL},${MAJOR_SIZE_CHANGED},${WEIGHT_SCORE}\n" >> "$SUMMARY_MAJOR_FILE"
+        fi
     done
 }
 
