@@ -60,7 +60,7 @@ function preProcessImage {
                 mapfile -t APEX_DIRS_UNZIPPED < <(find "${DIFF_IN_BASE}.apexes" -type d -iname '*.apex.unzip' | sort)
                 declare -r APEX_DIRS_UNZIPPED
                 for APEX_DIR_UNZIPPED in "${APEX_DIRS_UNZIPPED[@]}"; do
-                    local FILE_SIZES_FILE="${APEX_OUT_DIR}/$(basename -s '.unzip' "${APEX_DIR_UNZIPPED}").source-1.file-sizes.csv"
+                    local FILE_SIZES_FILE="${APEX_OUT_DIR}/$(sed 's/com.google.android/com.android/' <( echo "$(basename -s '.unzip' "${APEX_DIR_UNZIPPED}")" )).source-1.file-sizes.csv"
                     echo -e "FILENAME,SIZE" > "$FILE_SIZES_FILE"
                     # Store file sizes for metric calculation later on
                     (cd "$APEX_DIR_UNZIPPED" && find . -exec stat --format="%n,%s" {} \+ | sort) >> "$FILE_SIZES_FILE"

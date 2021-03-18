@@ -16,10 +16,11 @@
 
 set -o errexit -o nounset -o pipefail -o xtrace
 
-generateMetricChangeLines() {
+# diff score metric, i.e. number of changed lines
+generateMetricDiffScore() {
     # read considers an encountered EOF as error, but that's fine in our multiline usage here
     set +o errexit # Disable early exit
-    read -r -d '' AWK_CODE_DIFFSTAT_TO_CHANGE_LINES <<'_EOF_'
+    read -r -d '' AWK_CODE_DIFFSTAT_TO_DIFF_SCORE <<'_EOF_'
     {
         printf("%s,%d\n", $4, max($1, $2));
     }
@@ -29,30 +30,30 @@ generateMetricChangeLines() {
     }
 _EOF_
 
-    read -r -d '' AWK_CODE_CHANGE_LINES_SUMMARY <<'_EOF_'
+    read -r -d '' AWK_CODE_DIFF_SCORE_SUMMARY <<'_EOF_'
     BEGIN {
-        change_lines_sum = 0
+        diff_score_sum = 0
     }
 
     {
-        change_lines_sum += $2
+        diff_score_sum += $2
     }
 
     END {
-        printf("%d\n", change_lines_sum)
+        printf("%d\n", diff_score_sum)
     }
 _EOF_
     set -o errexit # Re-enable early exit
 
-    # Start summary files for the change line metric
-    local -r SUMMARY_FILE="summary.metric.change-lines.csv"
-    local -r SUMMARY_MAJOR_FILE="summary-major.metric.change-lines.csv"
+    # Start summary files
+    local -r SUMMARY_FILE="summary.metric.diff-score.csv"
+    local -r SUMMARY_MAJOR_FILE="summary.metric.major-diff-score.csv"
     rm -f "$SUMMARY_FILE" "$SUMMARY_MAJOR_FILE"
-    local -r SUMMARY_HEADER_LINE="ARTIFACT,CHANGE_LINES"
+    local -r SUMMARY_HEADER_LINE="ARTIFACT,DIFF_SCORE"
     echo -e "${SUMMARY_HEADER_LINE}" > "$SUMMARY_FILE"
     echo -e "${SUMMARY_HEADER_LINE}" > "$SUMMARY_MAJOR_FILE"
 
-    local -r HEADER_LINE="FILENAME,CHANGE_LINES"
+    local -r HEADER_LINE="FILENAME,DIFF_SCORE"
 
     local -a DIFFSTAT_CSV_FILES
     mapfile -t DIFFSTAT_CSV_FILES < <(find . -name '*.diffstat.csv' -type f | sort)
@@ -61,30 +62,30 @@ _EOF_
         local BASE_FILENAME
         BASE_FILENAME="$(dirname "${DIFFSTAT_CSV_FILE}")/$(basename -s '.diffstat.csv' "${DIFFSTAT_CSV_FILE}")"
 
-        # Transform diffstat CSV to change lines metric
+        # Transform diffstat CSV to diff score metric
         local DIFFSTAT_CONTENT
         DIFFSTAT_CONTENT="$(tail -n +2 "$DIFFSTAT_CSV_FILE")"
-        local METRIC_CHANGE_LINES_FILE="${BASE_FILENAME}.metric.change-lines.csv"
-        echo -e "$HEADER_LINE" > "$METRIC_CHANGE_LINES_FILE"
-        awk --field-separator ',' "$AWK_CODE_DIFFSTAT_TO_CHANGE_LINES" <(echo "$DIFFSTAT_CONTENT") >> "$METRIC_CHANGE_LINES_FILE"
+        local METRIC_DIFF_SCORE_FILE="${BASE_FILENAME}.metric.diff-score.csv"
+        echo -e "$HEADER_LINE" > "$METRIC_DIFF_SCORE_FILE"
+        awk --field-separator ',' "$AWK_CODE_DIFFSTAT_TO_DIFF_SCORE" <(echo "$DIFFSTAT_CONTENT") >> "$METRIC_DIFF_SCORE_FILE"
 
         # Write summary entry
         local METRIC_CONTENT
-        METRIC_CONTENT="$(tail -n +2 "$METRIC_CHANGE_LINES_FILE")"
+        METRIC_CONTENT="$(tail -n +2 "$METRIC_DIFF_SCORE_FILE")"
         echo -n "${BASE_FILENAME}," >> "$SUMMARY_FILE"
-        awk --field-separator ',' "$AWK_CODE_CHANGE_LINES_SUMMARY" <(echo "$METRIC_CONTENT") >> "$SUMMARY_FILE"
+        awk --field-separator ',' "$AWK_CODE_DIFF_SCORE_SUMMARY" <(echo "$METRIC_CONTENT") >> "$SUMMARY_FILE"
 
         # Special logic that only tracks major differences
         local MAJOR_ARTIFACT="true"
         local METRIC_MAJOR_CONTENT
-        if [[ "$BASE_FILENAME" = *"vendor.img" ]]; then
+        if [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
             # Skip vendor
             MAJOR_ARTIFACT="false"
             METRIC_MAJOR_CONTENT=""
-        elif [[ "$BASE_FILENAME" = *"initrd.img" ]]; then
+        elif [[ "$BASE_FILENAME" == *"initrd.img" ]]; then
             # Exclude res/images
             METRIC_MAJOR_CONTENT="$(grep 'res/images' -v <(echo "$METRIC_CONTENT"))"
-        elif [[ "$BASE_FILENAME" = *"system.img" ]]; then
+        elif [[ "$BASE_FILENAME" == *"system.img" ]]; then
             # Exclude NOTICE.xml
             METRIC_MAJOR_CONTENT="$(grep 'NOTICE.xml.gz' -v <(echo "$METRIC_CONTENT"))"
         else
@@ -92,18 +93,19 @@ _EOF_
             METRIC_MAJOR_CONTENT="$METRIC_CONTENT"
         fi
 
-        if [[ "$MAJOR_ARTIFACT" = "true" ]]; then
+        if [[ "$MAJOR_ARTIFACT" == "true" ]]; then
             # Write major summary CSV entry
             echo -n "${BASE_FILENAME}," >> "$SUMMARY_MAJOR_FILE"
-            awk --field-separator ',' "$AWK_CODE_CHANGE_LINES_SUMMARY" <(echo "$METRIC_MAJOR_CONTENT") >> "$SUMMARY_MAJOR_FILE"
+            awk --field-separator ',' "$AWK_CODE_DIFF_SCORE_SUMMARY" <(echo "$METRIC_MAJOR_CONTENT") >> "$SUMMARY_MAJOR_FILE"
         fi
     done
 }
 
-generateMetricChangedFiles() {
+# weight score metric, i.e. sum of all files that have any difference in relation to overall size
+generateMetricWeightScore() {
     # read considers an encountered EOF as error, but that's fine in our multiline usage here
     set +o errexit # Disable early exit
-    read -r -d '' AWK_CODE_CHANGED_FILES_SUMMARY <<'_EOF_'
+    read -r -d '' AWK_CODE_WEIGHT_SCORE_SUMMARY <<'_EOF_'
     BEGIN {
         files_size = 0
     }
@@ -118,10 +120,10 @@ generateMetricChangedFiles() {
 _EOF_
     set -o errexit # Re-enable early exit
 
-    # Start summary file for the changed files metric
-    local -r SUMMARY_FILE="summary.metric.changed-files.csv"
+    # Start summary files
+    local -r SUMMARY_FILE="summary.metric.weight-score.csv"
     rm -f "$SUMMARY_FILE"
-    local -r SUMMARY_HEADER_LINE="ARTIFACT,SIZE_ALL,SIZE_CHANGED"
+    local -r SUMMARY_HEADER_LINE="ARTIFACT,SIZE_ALL,SIZE_CHANGED,WEIGHT_SCORE"
     echo -e "${SUMMARY_HEADER_LINE}" > "$SUMMARY_FILE"
 
     local -r HEADER_LINE="FILENAME,SIZE"
@@ -136,19 +138,54 @@ _EOF_
         local DIFF_FILE="${BASE_FILENAME}.diffoscope.json.flattened_clean.diff"     
         local SIZE_ALL SIZE_CHANGED
 
+        # Determine flags related to APEX files fo future reference
+        local IS_APEX=false
+        local IS_IMG_WITH_APEX_WITHIN=false
+        if [[ "$BASE_FILENAME" == *'.apex-apex_payload.img' ]]; then
+            IS_APEX=true
+        elif [[ "$BASE_FILENAME" == *".img" ]]; then
+            IS_IMG_WITH_APEX_WITHIN=true
+        fi
+
         if [[ -f "${SOURCE_1_FILE_SIZES_FILE}" ]]; then
             # artifact has file sizes metadata about its members
             unset CHANGED_FILES
             local -a CHANGED_FILES
-            # Transform diffstat CSV to changd files list
-            mapfile -t CHANGED_FILES < <(tail -n +3 $DIFFSTAT_CSV_FILE \
-                | cut --delimiter=, --fields=4 \
-                | cut --delimiter=: --fields=1 \
-                | uniq \
-                | grep '.apex' -v \
-            )
-            # Extract list of deleted files from root file␣list entry in .diff
+            # Transform diffstat CSV to list of changed files
+            if [ "$IS_IMG_WITH_APEX_WITHIN" == true ]; then
+                mapfile -t CHANGED_FILES < <(tail -n +3 $DIFFSTAT_CSV_FILE \
+                    | cut --delimiter=, --fields=4 \
+                    | cut --delimiter=: --fields=1 \
+                    | uniq \
+                    | grep --invert-match '\.apex' \
+                )
+            elif [[ "$IS_APEX" == true ]]; then
+                # Extract diffstat lines from parent image for outer full APEX file
+                local APEX_NAME PARENT_IMG_BASENAME
+                APEX_NAME="$(sed 's/com\.android\.//' <( echo $(basename -s '.apex-apex_payload.img' "$BASE_FILENAME") ))"
+                PARENT_IMG_BASENAME="$(dirname $(dirname $BASE_FILENAME))/$(basename -s '.apexes' $(dirname $BASE_FILENAME))"
+                local PARENT_IMG_DIFFSTAT_CSV_FILE="${PARENT_IMG_BASENAME}.diffstat.csv"
+                mapfile -t CHANGED_FILES < <(tail -n +3 $PARENT_IMG_DIFFSTAT_CSV_FILE \
+                    | grep "${APEX_NAME}\.apex" \
+                    | cut --delimiter=, --fields=4 \
+                    | cut --delimiter=: --fields=3 \
+                    | grep --invert-match --extended-regexp '(zipinfo )|(zipnote )' \
+                    | uniq \
+                )
 
+                mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <(tail -n +3 $DIFFSTAT_CSV_FILE \
+                    | cut --delimiter=, --fields=4 \
+                    | cut --delimiter=: --fields=1 \
+                    | uniq \
+                )
+            else
+                mapfile -t CHANGED_FILES < <(tail -n +3 $DIFFSTAT_CSV_FILE \
+                    | cut --delimiter=, --fields=4 \
+                    | cut --delimiter=: --fields=1 \
+                    | uniq \
+                )
+            fi
+            # Extract list of deleted files from root file␣list entry in .diff
             if grep -- '--- a/file␣list' $DIFF_FILE; then
                 local FILE_LIST_START FILE_LIST_END    
                 FILE_LIST_START="$(awk '/^--- /{ if ( $2 ~ /a\/file␣list/ ) { print NR + 3 } }' $DIFF_FILE)"
@@ -159,23 +196,37 @@ _EOF_
                 )
             fi
 
-            # Persist list of changed files with their size
-            local METRIC_CHANGED_FILES_FILE="${BASE_FILENAME}.metric.changed-files.csv"
-            echo -e "$HEADER_LINE" > "$METRIC_CHANGED_FILES_FILE"
+            # Retrieve file size information
+            local SOURCE_1_FILE_SIZES=""
+            if [[ "$IS_APEX" == true ]]; then
+                OUTER_SOURCE_1_FILE_SIZES_FILE="$(dirname "$BASE_FILENAME")/$(basename -s '-apex_payload.img' "$BASE_FILENAME").source-1.file-sizes.csv"
+                SOURCE_1_FILE_SIZES+="$(tail -n +3 "$OUTER_SOURCE_1_FILE_SIZES_FILE" \
+                    | grep --invert-match '\.\/apex_payload\.img' \
+                )"
+                SOURCE_1_FILE_SIZES+=$'\n'
+            fi
+            SOURCE_1_FILE_SIZES+="$(tail -n +3 "$SOURCE_1_FILE_SIZES_FILE")"
+
+            # Persist list of all/changed files with their size
+            local METRIC_WEIGHT_SCORE_ALL_FILE="${BASE_FILENAME}.metric.weight-score.all.csv"
+            local METRIC_WEIGHT_SCORE_CHANGED_FILE="${BASE_FILENAME}.metric.weight-score.changed.csv"
+            echo -e "$HEADER_LINE" > "$METRIC_WEIGHT_SCORE_ALL_FILE"
+            echo -e "$HEADER_LINE" > "$METRIC_WEIGHT_SCORE_CHANGED_FILE"
             while read -r LINE; do
                 local FILENAME FILENAME_REL SIZE
                 FILENAME_REL="${LINE%,*}"
                 FILENAME="${FILENAME_REL:2}"
                 SIZE="${LINE##*,}"
                 
+                echo "${FILENAME_REL},${SIZE}" >> "$METRIC_WEIGHT_SCORE_ALL_FILE"
                 if [[ " ${CHANGED_FILES[@]} " =~ " ${FILENAME} " ]]; then
-                    echo "${FILENAME_REL},${SIZE}" >> "$METRIC_CHANGED_FILES_FILE"
+                    echo "${FILENAME_REL},${SIZE}" >> "$METRIC_WEIGHT_SCORE_CHANGED_FILE"
                 fi
-            done < <(grep -v '^ *#' < $SOURCE_1_FILE_SIZES_FILE)
+            done < <(grep --invert-match '^ *#' < <(echo "$SOURCE_1_FILE_SIZES"))
 
             # Prepare value for summary file
-            SIZE_ALL="$(awk --field-separator ',' "$AWK_CODE_CHANGED_FILES_SUMMARY" <(echo "$(tail -n +2 "$SOURCE_1_FILE_SIZES_FILE")"))"
-            SIZE_CHANGED="$(awk --field-separator ',' "$AWK_CODE_CHANGED_FILES_SUMMARY" <(echo "$(tail -n +2 "$METRIC_CHANGED_FILES_FILE")"))"
+            SIZE_ALL="$(awk --field-separator ',' "$AWK_CODE_WEIGHT_SCORE_SUMMARY" <(echo "$SOURCE_1_FILE_SIZES"))"
+            SIZE_CHANGED="$(awk --field-separator ',' "$AWK_CODE_WEIGHT_SCORE_SUMMARY" <(echo "$(tail -n +2 "$METRIC_WEIGHT_SCORE_CHANGED_FILE")"))"
         else
             # artifact = single file
 
@@ -189,7 +240,7 @@ _EOF_
                 SIZE_CHANGED="$SIZE_ALL"
             fi
         fi
-        echo -n -e "${BASE_FILENAME},${SIZE_ALL},${SIZE_CHANGED}\n" >> "$SUMMARY_FILE"            
+        echo -n -e "${BASE_FILENAME},${SIZE_ALL},${SIZE_CHANGED},"$(bc <<< "scale=4; ${SIZE_CHANGED}/${SIZE_ALL}")"\n" >> "$SUMMARY_FILE"            
             
     done
 }
@@ -206,8 +257,8 @@ main() {
     # Navigate to diff dir
     cd "${DIFF_DIR}"
 
-    generateMetricChangeLines
-    generateMetricChangedFiles
+    generateMetricDiffScore
+    generateMetricWeightScore
 }
 
 main "$@"
