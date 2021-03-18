@@ -48,9 +48,11 @@ _EOF_
     local -r SUMMARY_FILE="summary.metric.change-lines.csv"
     local -r SUMMARY_MAJOR_FILE="summary-major.metric.change-lines.csv"
     rm -f "$SUMMARY_FILE" "$SUMMARY_MAJOR_FILE"
+    local -r SUMMARY_HEADER_LINE="ARTIFACT,CHANGE_LINES"
+    echo -e "${SUMMARY_HEADER_LINE}" > "$SUMMARY_FILE"
+    echo -e "${SUMMARY_HEADER_LINE}" > "$SUMMARY_MAJOR_FILE"
+
     local -r HEADER_LINE="FILENAME,CHANGE_LINES"
-    echo -e "${HEADER_LINE}" > "$SUMMARY_FILE"
-    echo -e "${HEADER_LINE}" > "$SUMMARY_MAJOR_FILE"
 
     local -a DIFFSTAT_CSV_FILES
     mapfile -t DIFFSTAT_CSV_FILES < <(find . -name '*.diffstat.csv' -type f | sort)
@@ -98,6 +100,101 @@ _EOF_
     done
 }
 
+generateMetricChangedFiles() {
+    # read considers an encountered EOF as error, but that's fine in our multiline usage here
+    set +o errexit # Disable early exit
+    read -r -d '' AWK_CODE_CHANGED_FILES_SUMMARY <<'_EOF_'
+    BEGIN {
+        files_size = 0
+    }
+
+    {
+        files_size += $2
+    }
+
+    END {
+        printf("%d", files_size)
+    }
+_EOF_
+    set -o errexit # Re-enable early exit
+
+    # Start summary file for the changed files metric
+    local -r SUMMARY_FILE="summary.metric.changed-files.csv"
+    rm -f "$SUMMARY_FILE"
+    local -r SUMMARY_HEADER_LINE="ARTIFACT,SIZE_ALL,SIZE_CHANGED"
+    echo -e "${SUMMARY_HEADER_LINE}" > "$SUMMARY_FILE"
+
+    local -r HEADER_LINE="FILENAME,SIZE"
+
+    local -a DIFFSTAT_CSV_FILES
+    mapfile -t DIFFSTAT_CSV_FILES < <(find . -name '*.diffstat.csv' -type f | sort)
+    declare -r DIFFSTAT_CSV_FILES
+    for DIFFSTAT_CSV_FILE in "${DIFFSTAT_CSV_FILES[@]}"; do
+        local BASE_FILENAME
+        BASE_FILENAME="$(dirname "${DIFFSTAT_CSV_FILE}")/$(basename -s '.diffstat.csv' "${DIFFSTAT_CSV_FILE}")"
+        local SOURCE_1_FILE_SIZES="${BASE_FILENAME}.diff.file-sizes-1.csv"
+        local DIFF_FILE="${BASE_FILENAME}.diff.json.flattened_clean.diff"     
+        local SIZE_ALL SIZE_CHANGED
+
+        if [[ -f "${SOURCE_1_FILE_SIZES}" ]]; then
+            # artifact has file sizes metadata about its members
+            unset CHANGED_FILES
+            local -a CHANGED_FILES
+            # Transform diffstat CSV to changd files list
+            mapfile -t CHANGED_FILES < <(tail -n +3 $DIFFSTAT_CSV_FILE \
+                | cut --delimiter=, --fields=4 \
+                | cut --delimiter=: --fields=1 \
+                | uniq \
+                | grep '.apex' -v \
+            )
+            # Extract list of deleted files from root file␣list entry in .diff
+            if grep -- '--- a/file␣list' $DIFF_FILE; then
+                echo "found file_list, old size: ${#CHANGED_FILES[@]}"
+                local FILE_LIST_START
+                FILE_LIST_START="$(awk '/^--- /{ if ( $2 ~ /a\/file␣list/ ) { print NR + 3 } }' $DIFF_FILE)"
+                local FILE_LIST_END
+                FILE_LIST_END="$(awk "BEGIN { passed_start = 0 }  /^--- /{ if ( passed_start) { print NR-1; exit } else if ( (NR+3) == $FILE_LIST_START ) { passed_start = 1 } }" $DIFF_FILE)"
+                mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <(sed -n "${FILE_LIST_START},${FILE_LIST_END}p" $DIFF_FILE \
+                    | grep '^-' \
+                    | sed -e 's/^-//g' \
+                )
+                echo "new size: ${#CHANGED_FILES[@]}"
+            fi
+
+            # Persist list of changed files with their size
+            local METRIC_CHANGED_FILES_FILE="${BASE_FILENAME}.metric.changed-files.csv"
+            echo -e "$HEADER_LINE" > "$METRIC_CHANGED_FILES_FILE"
+            while read -r LINE; do
+                local FILENAME FILENAME_REL SIZE
+                FILENAME_REL="${LINE%,*}"
+                FILENAME="${FILENAME_REL:2}"
+                SIZE="${LINE##*,}"
+                
+                if [[ " ${CHANGED_FILES[@]} " =~ " ${FILENAME} " ]]; then
+                    echo "${FILENAME_REL},${SIZE}" >> "$METRIC_CHANGED_FILES_FILE"
+                fi
+            done < <(grep -v '^ *#' < $SOURCE_1_FILE_SIZES)
+
+            # Prepare value for summary file
+            SIZE_ALL="$(awk --field-separator ',' "$AWK_CODE_CHANGED_FILES_SUMMARY" <(echo "$(tail -n +2 "$SOURCE_1_FILE_SIZES")"))"
+            SIZE_CHANGED="$(awk --field-separator ',' "$AWK_CODE_CHANGED_FILES_SUMMARY" <(echo "$(tail -n +2 "$METRIC_CHANGED_FILES_FILE")"))"
+        else
+            # artifact = single file
+
+            # Prepare value for summary file
+            SIZE_ALL="42" # TODO Get proper size for single file case
+            # SIZE_ALL="$(stat --printf="%s" "${SOURCE_1}")"
+            if [[ $(stat --printf="%s" $DIFF_FILE) -eq "1" ]]; then
+                SIZE_CHANGED="0"
+            else
+                SIZE_CHANGED="$SIZE_ALL"
+            fi
+        fi
+        echo -n -e "${BASE_FILENAME},${SIZE_ALL},${SIZE_CHANGED}\n" >> "$SUMMARY_FILE"            
+            
+    done
+}
+
 main() {
     # Argument sanity check
     if [[ "$#" -ne 1 ]]; then
@@ -111,6 +208,7 @@ main() {
     cd "${DIFF_DIR}"
 
     generateMetricChangeLines
+    generateMetricChangedFiles
 }
 
 main "$@"
