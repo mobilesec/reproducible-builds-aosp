@@ -59,7 +59,7 @@ function preProcessImage {
                 mapfile -t APEX_DIRS_UNZIPPED < <(find "${DIFF_IN_BASE}.apexes" -type d -iname '*.apex.unzip' | sort)
                 declare -r APEX_DIRS_UNZIPPED
                 for APEX_DIR_UNZIPPED in "${APEX_DIRS_UNZIPPED[@]}"; do
-                    local FILE_SIZES_FILE="${APEX_OUT_DIR}/$(basename -s '.unzip' "${APEX_DIR_UNZIPPED}").diff.file-sizes-1.csv"
+                    local FILE_SIZES_FILE="${APEX_OUT_DIR}/$(basename -s '.unzip' "${APEX_DIR_UNZIPPED}").source-1.file-sizes.csv"
                     echo -e "FILENAME,SIZE" > "$FILE_SIZES_FILE"
                     # Store file sizes for metric calculation later on
                     (cd "$APEX_DIR_UNZIPPED" && find . -exec stat --format="%n,%s" {} \+ | sort) >> "$FILE_SIZES_FILE"
@@ -133,7 +133,7 @@ function diffoscopeFile {
     local DIFF_IN_1="${IN_1}"
     local DIFF_IN_2="${IN_2}"
 
-    local -r APEX_OUT_DIR="$(dirname "$DIFF_OUT")/$(basename -s '.diff' "$DIFF_OUT").apexes"
+    local -r APEX_OUT_DIR="${DIFF_OUT}.apexes"
     preProcessImage "DIFF_IN_1" "true" "$APEX_OUT_DIR"
     preProcessImage "DIFF_IN_2" "false" "$APEX_OUT_DIR"
 
@@ -141,7 +141,7 @@ function diffoscopeFile {
     mkdir -p "$(dirname "${DIFF_OUT}")"
 
     if [[ "$DIFF_IN_1" = *".mount" ]] || [[ "$DIFF_IN_1" == *".unpack" ]]; then
-        local -r FILE_SIZES_FILE="${DIFF_OUT}.file-sizes-1.csv"
+        local -r FILE_SIZES_FILE="${DIFF_OUT}.source-1.file-sizes.csv"
         echo -e "FILENAME,SIZE" > "$FILE_SIZES_FILE"
         # Store file sizes for metric calculation later on
         (cd "$DIFF_IN_1" && find . -exec stat --format="%n,%s" {} \+ | sort) >> "$FILE_SIZES_FILE"
@@ -167,8 +167,8 @@ function diffoscopeFile {
     set +o errexit # Disable early exit
     # Due to a bug when using --max-diff-block-lines-saved and --html-dir at the same time, we call diffoscope twice
     "$(command -v diffoscope)" "${DIFFOSCOPE_ARGS[@]}" \
-        --json "${DIFF_OUT}.json" \
-        --html-dir "${DIFF_OUT}.html-dir" \
+        --json "${DIFF_OUT}.diffoscope.json" \
+        --html-dir "${DIFF_OUT}.diffoscope.html-dir" \
         "${DIFF_IN_1}" "${DIFF_IN_2}"
     set -o errexit # Re-enable early exit
 
@@ -217,7 +217,7 @@ main() {
         FILE="${FILES[$i]}"
         # Normalize concated paths (e.g "/path/to/./somewhere.img") to canonical ones (e.g. "/path/to/somewhere.img") via realpath
         diffoscopeFile "$(realpath "${IN_DIR_1}/${FILE}")" "$(realpath "${IN_DIR_2}/${FILE}")" \
-            "$(realpath -m "${OUT_DIR}/${FILE}.diff")"
+            "$(realpath -m "${OUT_DIR}/${FILE}")"
     done
 
     # Cleanup .apexes folder(s) in input directories

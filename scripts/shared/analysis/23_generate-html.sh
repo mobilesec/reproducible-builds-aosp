@@ -48,7 +48,7 @@ main() {
 
     # Generate diffoscope reports template string
     local -a DIFFOSCOPE_REPORTS
-    mapfile -t DIFFOSCOPE_REPORTS < <(find . -path '*.diff.html-dir/index.html' | sort)
+    mapfile -t DIFFOSCOPE_REPORTS < <(find . -path '*.diffoscope.html-dir/index.html' | sort)
     declare -r DIFFOSCOPE_REPORTS
     local DIFFOSCOPE_REPORTS_TEMPLATE=""
     for DIFFOSCOPE_REPORT in "${DIFFOSCOPE_REPORTS[@]}"; do
@@ -62,13 +62,13 @@ main() {
 
     # Generate Change visualisation reports + template string
     local -a CHANGE_VIS_CSV_FILES
-    mapfile -t CHANGE_VIS_CSV_FILES < <(find . -path '*.diff.json.adjusted.csv' | sort)
+    mapfile -t CHANGE_VIS_CSV_FILES < <(find . -path '*.diffstat.csv' | sort)
     declare -r CHANGE_VIS_CSV_FILES
     local CHANGE_VIS_REPORTS_TEMPLATE=""
     local CHANGE_VIS_REPORT
     local CHANGE_VIS_CSV_FILE_ESCAPED
     for CHANGE_VIS_CSV_FILE in "${CHANGE_VIS_CSV_FILES[@]}"; do
-        CHANGE_VIS_REPORT="$(basename --suffix '.diff.json.adjusted.csv' "$CHANGE_VIS_CSV_FILE").change-vis.html"
+        CHANGE_VIS_REPORT="$(basename --suffix '.diffstat.csv' "$CHANGE_VIS_CSV_FILE").change-vis.html"
         cp "$TEMPLATE_CHANGE_VIS" "$CHANGE_VIS_REPORT"
         # Make safe for sed replace, see https://stackoverflow.com/a/2705678
         CHANGE_VIS_CSV_FILE_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_CSV_FILE" | sed -e 's/[\/&]/\\&/g')

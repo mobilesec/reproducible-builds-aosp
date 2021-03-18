@@ -132,8 +132,8 @@ _EOF_
     for DIFFSTAT_CSV_FILE in "${DIFFSTAT_CSV_FILES[@]}"; do
         local BASE_FILENAME
         BASE_FILENAME="$(dirname "${DIFFSTAT_CSV_FILE}")/$(basename -s '.diffstat.csv' "${DIFFSTAT_CSV_FILE}")"
-        local SOURCE_1_FILE_SIZES="${BASE_FILENAME}.diff.file-sizes-1.csv"
-        local DIFF_FILE="${BASE_FILENAME}.diff.json.flattened_clean.diff"     
+        local SOURCE_1_FILE_SIZES="${BASE_FILENAME}.source-1.file-sizes.csv"
+        local DIFF_FILE="${BASE_FILENAME}.diffoscope.json.flattened_clean.diff"     
         local SIZE_ALL SIZE_CHANGED
 
         if [[ -f "${SOURCE_1_FILE_SIZES}" ]]; then

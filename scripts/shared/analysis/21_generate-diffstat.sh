@@ -105,7 +105,7 @@ _EOF_
     cd "${DIFF_DIR}"
 
     local -a DIFF_JSON_FILES
-    mapfile -t DIFF_JSON_FILES < <(find . -type f -name '*.diff.json' | sort)
+    mapfile -t DIFF_JSON_FILES < <(find . -type f -name '*.diffoscope.json' | sort)
     declare -r DIFF_JSON_FILES
     for DIFF_JSON_FILE in "${DIFF_JSON_FILES[@]}"; do
         # jq filters have a strong write-once smell if you never worked with them before. Thus a small breakdown
@@ -161,7 +161,7 @@ _EOF_
 
         # Run diffstat on cleaned flat diff file, create machine friendly CSV output, transform ␣ back into real spaces
         local BASE_FILENAME
-        BASE_FILENAME="$(dirname "${DIFF_JSON_FILE}")/$(basename -s '.diff.json' "${DIFF_JSON_FILE}")"
+        BASE_FILENAME="$(dirname "${DIFF_JSON_FILE}")/$(basename -s '.diffoscope.json' "${DIFF_JSON_FILE}")"
         local DIFFSTAT_RAW_CSV_FILE="${BASE_FILENAME}.diffstat.raw.csv"
         diffstat -p 1 -k -t "${DIFF_JSON_FILE}.flattened_clean.diff" \
             | sed -e 's/␣/ /g' > "${DIFFSTAT_RAW_CSV_FILE}"
