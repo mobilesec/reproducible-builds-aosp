@@ -19,6 +19,8 @@ set -o errexit -o nounset -o pipefail -o xtrace
 function preProcessImage {
     # Mutable diffoscope params
     local DIFF_IN_META="$1"
+    local -r CREATE_FILE_SIZES="$2"
+    local -r APEX_OUT_DIR="$3"
 
     local DIFF_IN_BASE
     DIFF_IN_BASE=$(eval echo \$"$DIFF_IN_META")
@@ -48,9 +50,25 @@ function preProcessImage {
             find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' \
                 -exec cp {} "${DIFF_IN_BASE}.apexes/" \;
             find "${DIFF_IN_BASE}.apexes" -type f -iname '*.apex' \
-                -exec unzip "{}" -d "{}.unzip" \; \
-                -exec mv "{}.unzip/apex_payload.img" "{}-apex_payload.img" \; \
-                -exec rm -rf "{}.unzip" "{}" \;
+                -exec unzip "{}" -d "{}.unzip" \;
+
+            if [ "$CREATE_FILE_SIZES" = true ] ; then
+                mkdir "${APEX_OUT_DIR}"
+
+                local -a APEX_DIRS_UNZIPPED
+                mapfile -t APEX_DIRS_UNZIPPED < <(find "${DIFF_IN_BASE}.apexes" -type d -iname '*.apex.unzip' | sort)
+                declare -r APEX_DIRS_UNZIPPED
+                for APEX_DIR_UNZIPPED in "${APEX_DIRS_UNZIPPED[@]}"; do
+                    local FILE_SIZES_FILE="${APEX_OUT_DIR}/$(basename -s '.unzip' "${APEX_DIR_UNZIPPED}").diff.file-sizes-1.csv"
+                    echo -e "FILENAME,SIZE" > "$FILE_SIZES_FILE"
+                    # Store file sizes for metric calculation later on
+                    (cd "$APEX_DIR_UNZIPPED" && find . -exec stat --format="%n,%s" {} \+ | sort) >> "$FILE_SIZES_FILE"
+                done
+            fi
+
+            find "${DIFF_IN_BASE}.apexes" -type f -iname '*.apex' \
+                -exec mv "{}.unzip/apex_payload.img" "{}-apex_payload.img" \;
+            (cd "${DIFF_IN_BASE}.apexes" && rm -rf *".apex.unpack")
             
             # Some production APEX files have the `com.google.android` prefix,
             # while GSI and aosp_* targets strictly use the `com.android` prefix
@@ -115,8 +133,9 @@ function diffoscopeFile {
     local DIFF_IN_1="${IN_1}"
     local DIFF_IN_2="${IN_2}"
 
-    preProcessImage "DIFF_IN_1"
-    preProcessImage "DIFF_IN_2"
+    local -r APEX_OUT_DIR="$(dirname "$DIFF_OUT")/$(basename -s '.diff' "$DIFF_OUT").apexes"
+    preProcessImage "DIFF_IN_1" "true" "$APEX_OUT_DIR"
+    preProcessImage "DIFF_IN_2" "false" "$APEX_OUT_DIR"
 
     # Ensure that parent directory exists
     mkdir -p "$(dirname "${DIFF_OUT}")"
