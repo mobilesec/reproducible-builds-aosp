@@ -150,6 +150,9 @@ function diffoscopeFile {
         echo -e "FILENAME,SIZE" > "$FILE_SIZES_FILE"
         # Store file sizes for metric calculation later on
         (cd "$DIFF_IN_1" && find . -exec stat --format="%n,%s" {} \+ | sort) >> "$FILE_SIZES_FILE"
+    else
+        local -r FILE_SIZE_FILE="${DIFF_OUT}.source-1.file-size.txt"
+        stat --format="%s" "$DIFF_IN_1" > "$FILE_SIZE_FILE"
     fi
 
     # Assembly lengthy list of diffoscope arguments

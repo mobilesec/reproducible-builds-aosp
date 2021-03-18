@@ -132,11 +132,11 @@ _EOF_
     for DIFFSTAT_CSV_FILE in "${DIFFSTAT_CSV_FILES[@]}"; do
         local BASE_FILENAME
         BASE_FILENAME="$(dirname "${DIFFSTAT_CSV_FILE}")/$(basename -s '.diffstat.csv' "${DIFFSTAT_CSV_FILE}")"
-        local SOURCE_1_FILE_SIZES="${BASE_FILENAME}.source-1.file-sizes.csv"
+        local SOURCE_1_FILE_SIZES_FILE="${BASE_FILENAME}.source-1.file-sizes.csv"
         local DIFF_FILE="${BASE_FILENAME}.diffoscope.json.flattened_clean.diff"     
         local SIZE_ALL SIZE_CHANGED
 
-        if [[ -f "${SOURCE_1_FILE_SIZES}" ]]; then
+        if [[ -f "${SOURCE_1_FILE_SIZES_FILE}" ]]; then
             # artifact has file sizes metadata about its members
             unset CHANGED_FILES
             local -a CHANGED_FILES
@@ -148,17 +148,15 @@ _EOF_
                 | grep '.apex' -v \
             )
             # Extract list of deleted files from root file␣list entry in .diff
+
             if grep -- '--- a/file␣list' $DIFF_FILE; then
-                echo "found file_list, old size: ${#CHANGED_FILES[@]}"
-                local FILE_LIST_START
+                local FILE_LIST_START FILE_LIST_END    
                 FILE_LIST_START="$(awk '/^--- /{ if ( $2 ~ /a\/file␣list/ ) { print NR + 3 } }' $DIFF_FILE)"
-                local FILE_LIST_END
                 FILE_LIST_END="$(awk "BEGIN { passed_start = 0 }  /^--- /{ if ( passed_start) { print NR-1; exit } else if ( (NR+3) == $FILE_LIST_START ) { passed_start = 1 } }" $DIFF_FILE)"
                 mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <(sed -n "${FILE_LIST_START},${FILE_LIST_END}p" $DIFF_FILE \
                     | grep '^-' \
                     | sed -e 's/^-//g' \
                 )
-                echo "new size: ${#CHANGED_FILES[@]}"
             fi
 
             # Persist list of changed files with their size
@@ -173,17 +171,18 @@ _EOF_
                 if [[ " ${CHANGED_FILES[@]} " =~ " ${FILENAME} " ]]; then
                     echo "${FILENAME_REL},${SIZE}" >> "$METRIC_CHANGED_FILES_FILE"
                 fi
-            done < <(grep -v '^ *#' < $SOURCE_1_FILE_SIZES)
+            done < <(grep -v '^ *#' < $SOURCE_1_FILE_SIZES_FILE)
 
             # Prepare value for summary file
-            SIZE_ALL="$(awk --field-separator ',' "$AWK_CODE_CHANGED_FILES_SUMMARY" <(echo "$(tail -n +2 "$SOURCE_1_FILE_SIZES")"))"
+            SIZE_ALL="$(awk --field-separator ',' "$AWK_CODE_CHANGED_FILES_SUMMARY" <(echo "$(tail -n +2 "$SOURCE_1_FILE_SIZES_FILE")"))"
             SIZE_CHANGED="$(awk --field-separator ',' "$AWK_CODE_CHANGED_FILES_SUMMARY" <(echo "$(tail -n +2 "$METRIC_CHANGED_FILES_FILE")"))"
         else
             # artifact = single file
 
             # Prepare value for summary file
-            SIZE_ALL="42" # TODO Get proper size for single file case
-            # SIZE_ALL="$(stat --printf="%s" "${SOURCE_1}")"
+            local SOURCE_1_FILE_SIZE_FILE="${BASE_FILENAME}.source-1.file-size.txt"
+
+            SIZE_ALL="$(cat "$SOURCE_1_FILE_SIZE_FILE")"
             if [[ $(stat --printf="%s" $DIFF_FILE) -eq "1" ]]; then
                 SIZE_CHANGED="0"
             else
