@@ -51,6 +51,7 @@ function preProcessImage {
                 -exec cp {} "${DIFF_IN_BASE}.apexes/" \;
             find "${DIFF_IN_BASE}.apexes" -type f -iname '*.apex' \
                 -exec unzip "{}" -d "{}.unzip" \;
+            # Currently for each APEX we have their original .apex and the .apex.unzip directory
 
             if [ "$CREATE_FILE_SIZES" = true ] ; then
                 mkdir "${APEX_OUT_DIR}"
@@ -68,7 +69,11 @@ function preProcessImage {
 
             find "${DIFF_IN_BASE}.apexes" -type f -iname '*.apex' \
                 -exec mv "{}.unzip/apex_payload.img" "{}-apex_payload.img" \;
-            (cd "${DIFF_IN_BASE}.apexes" && rm -rf *".apex.unpack")
+            find "${DIFF_IN_BASE}.apexes" -type d -iname '*.apex.unzip' \
+                -prune -exec rm -rf "{}" +
+            find "${DIFF_IN_BASE}.apexes" -type f -iname '*.apex' \
+                -prune -exec rm -rf "{}" +
+            # Now we should only have *.apex-apex_payload.img
             
             # Some production APEX files have the `com.google.android` prefix,
             # while GSI and aosp_* targets strictly use the `com.android` prefix
@@ -80,8 +85,8 @@ function preProcessImage {
             )
             # AFAIK the bash -c invokation is needed to make the sed subshell invocation lazily evaluated during find result iteration
 
-            # Have another look at the list of files in common, but only consider APEX related ones
-            local -r APEX_FOLDER_BASENAME="$(basename "${DIFF_IN_BASE}.apexes")"
+            # Have another look at the list of files in common in .apexes directory
+            local -r APEX_FOLDER_BASENAME="./$(basename "${DIFF_IN_BASE}.apexes")"
             local -a APEX_PAYLOAD_FILES
             mapfile -t APEX_PAYLOAD_FILES < <(comm -12 \
                 <(cd "${IN_DIR_1}" && find "${APEX_FOLDER_BASENAME}" -type 'f,l' | sort) \
