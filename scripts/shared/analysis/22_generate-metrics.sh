@@ -107,7 +107,7 @@ _EOF_
         # Special logic that only tracks major differences
         local MAJOR_ARTIFACT=true
         local MAJOR_METRIC_CONTENT
-        if [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
+        if [[ "$BUILD_FLOW" == "device" ]] && [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
             # Skip vendor
             MAJOR_ARTIFACT=false
             MAJOR_METRIC_CONTENT=""
@@ -308,7 +308,7 @@ _EOF_
         # Special logic that only tracks major differences
         local MAJOR_ARTIFACT=true
         local MAJOR_SIZE_CHANGED
-        if [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
+        if [[ "$BUILD_FLOW" == "device" ]] && [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
             # Skip vendor
             MAJOR_ARTIFACT=false
             MAJOR_SIZE_CHANGED=""
@@ -347,12 +347,17 @@ _EOF_
 
 main() {
     # Argument sanity check
-    if [[ "$#" -ne 1 ]]; then
-        echo "Usage: $0 <DIFF_DIR>"
+    if [[ "$#" -ne 2 ]]; then
+        echo "Usage: $0 <DIFF_DIR> <BUILD_FLOW>"
         echo "DIFF_DIR: Output directory CSV output"
+        echo "BUILD_FLOW: Either 'device' or 'generic', there are slight varations in the major variation of the metrics"
         exit 1
     fi
     local -r DIFF_DIR="$1"
+    local -r BUILD_FLOW="$2"
+    if [[ "$BUILD_FLOW" != "device" ]] && [[ "$BUILD_FLOW" != "generic" ]]; then
+        echo "Invalid BUILD_FLOW, expected either 'device' or 'generic'"
+    fi
 
     # Navigate to diff dir
     cd "${DIFF_DIR}"
