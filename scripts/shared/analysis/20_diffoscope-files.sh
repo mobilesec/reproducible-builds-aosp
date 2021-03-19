@@ -103,6 +103,7 @@ function preProcessImage {
         # Unpack into folder
         mkdir "${DIFF_IN_RESOLVED}.unpack"
         (cd "${DIFF_IN_RESOLVED}.unpack" && zcat "$DIFF_IN_RESOLVED" | bsdcpio --extract --make-directories --preserve-modification-time --verbose)
+        touch "--date=@0" "${DIFF_IN_RESOLVED}.unpack"
         eval "$DIFF_IN_META=${DIFF_IN_RESOLVED}.unpack"
     fi
 }
