@@ -41,8 +41,8 @@ main() {
     cd "${SRC_DIR}"
 
     # Set BUILD_DATETIME, BUILD_NUMBER, BUILD_USERNAME and BUILD_HOSTNAME
-    local SYSTEM_IMG="${RB_AOSP_BASE}/build/${BUILD_NUM}/${BUILD_TARGET}/Google/system.img"
-    setAdditionalBuildEnvironmentVars "SYSTEM_IMG"
+    local -r SYSTEM_IMG="${RB_AOSP_BASE}/build/${BUILD_NUM}/${BUILD_TARGET}/Google/system.img"
+    setAdditionalBuildEnvironmentVars "$SYSTEM_IMG"
 
     # Split into <BUILD> and <BUILDTYPE>
     local -r BUILD="${BUILD_TARGET%-*}"

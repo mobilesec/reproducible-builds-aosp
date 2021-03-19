@@ -49,8 +49,8 @@ main() {
     source ./build/envsetup.sh
 
     # Set BUILD_DATETIME, BUILD_NUMBER, BUILD_USERNAME and BUILD_HOSTNAME
-    local SYSTEM_IMG="${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/Google/system.img"
-    setAdditionalBuildEnvironmentVars "SYSTEM_IMG"
+    local -r SYSTEM_IMG="${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/Google/system.img"
+    setAdditionalBuildEnvironmentVars "$SYSTEM_IMG"
 
     lunch "${RB_BUILD_TARGET}"
     m -j "$(nproc)"
