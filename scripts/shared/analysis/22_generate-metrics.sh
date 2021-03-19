@@ -128,6 +128,18 @@ _EOF_
             awk --field-separator ',' "$AWK_CODE_DIFF_SCORE_SUMMARY" <(echo "$MAJOR_METRIC_CONTENT") >> "$SUMMARY_MAJOR_FILE"
         fi
     done
+
+    # Sum up system.img with APEX files. Update system.img with it, but append self only number for traceability
+    local SYSTEM_IMG_ONlY_SELF SYSTEM_IMG_SIZES
+    SYSTEM_IMG_ONlY_SELF="$(tail -n +2 $SUMMARY_FILE | grep 'system\.img,' | sed 's/system\.img/system.img (only self)/' )"
+    SYSTEM_IMG_DIFF_SCORE="$(awk --field-separator ',' "$AWK_CODE_DIFF_SCORE_SUMMARY" <(tail -n +2 $SUMMARY_FILE | grep 'system\.img') )"
+    sed --in-place --regexp-extended -e "s/system\.img,[0-9]+/system.img,${SYSTEM_IMG_DIFF_SCORE}/" "$SUMMARY_FILE"
+    echo -n -e "${SYSTEM_IMG_ONlY_SELF}\n" >> "$SUMMARY_FILE"
+
+    SYSTEM_IMG_ONlY_SELF="$(tail -n +2 $SUMMARY_MAJOR_FILE | grep 'system\.img,' | sed 's/system\.img/system.img (only self)/' )"
+    SYSTEM_IMG_DIFF_SCORE="$(awk --field-separator ',' "$AWK_CODE_DIFF_SCORE_SUMMARY" <(tail -n +2 $SUMMARY_MAJOR_FILE | grep 'system\.img') )"
+    sed --in-place --regexp-extended -e "s/system\.img,[0-9]+/system.img,${SYSTEM_IMG_DIFF_SCORE}/" "$SUMMARY_MAJOR_FILE"
+    echo -n -e "${SYSTEM_IMG_ONlY_SELF}\n" >> "$SUMMARY_MAJOR_FILE"
 }
 
 # weight score metric, i.e. sum of all files that have any difference in relation to overall size
@@ -147,6 +159,22 @@ generateMetricWeightScore() {
         printf("%d", files_size)
     }
 _EOF_
+
+    read -r -d '' AWK_CODE_WEIGHT_SCORE_SUMMARY_SUMMARY <<'_EOF_'
+    BEGIN {
+        size_all = 0
+        size_changed = 0
+    }
+
+    {
+        size_all += $2
+        size_changed += $3
+    }
+
+    END {
+        printf("%d,%d", size_all, size_changed)
+    }
+_EOF_
     set -o errexit # Re-enable early exit
 
     # Start summary files
@@ -158,6 +186,9 @@ _EOF_
     echo -e "${SUMMARY_HEADER_LINE}" > "$SUMMARY_MAJOR_FILE"
 
     local -r HEADER_LINE="FILENAME,SIZE"
+
+    local WEIGHT_SCORE
+    local -r WEIGHT_SCORE_SCALE="5"
 
     local -a DIFFSTAT_CSV_FILES
     mapfile -t DIFFSTAT_CSV_FILES < <(find . -name '*.diffstat.csv' -type f | sort)
@@ -271,7 +302,7 @@ _EOF_
                 SIZE_CHANGED="$SIZE_ALL"
             fi
         fi
-        local WEIGHT_SCORE="$(bc <<< "scale=4; ${SIZE_CHANGED}/${SIZE_ALL}")"
+        WEIGHT_SCORE="$(bc <<< "scale=${WEIGHT_SCORE_SCALE}; ${SIZE_CHANGED}/${SIZE_ALL}")"
         echo -n -e "${BASE_FILENAME},${SIZE_ALL},${SIZE_CHANGED},"${WEIGHT_SCORE}"\n" >> "$SUMMARY_FILE"            
         
         # Special logic that only tracks major differences
@@ -294,10 +325,24 @@ _EOF_
 
         if [[ "$MAJOR_ARTIFACT" == true ]]; then
             # Write major summary CSV entry
-            WEIGHT_SCORE="$(bc <<< "scale=4; ${MAJOR_SIZE_CHANGED}/${SIZE_ALL}")"
+            WEIGHT_SCORE="$(bc <<< "scale=${WEIGHT_SCORE_SCALE}; ${MAJOR_SIZE_CHANGED}/${SIZE_ALL}")"
             echo -n -e "${BASE_FILENAME},${SIZE_ALL},${MAJOR_SIZE_CHANGED},${WEIGHT_SCORE}\n" >> "$SUMMARY_MAJOR_FILE"
         fi
     done
+
+    # Sum up system.img with APEX files. Update system.img with it, but append self only number for traceability
+    local SYSTEM_IMG_ONlY_SELF SYSTEM_IMG_SIZES
+    SYSTEM_IMG_ONlY_SELF="$(tail -n +2 $SUMMARY_FILE | grep 'system\.img,' | sed 's/system\.img/system.img (only self)/' )"
+    SYSTEM_IMG_SIZES="$(awk --field-separator ',' "$AWK_CODE_WEIGHT_SCORE_SUMMARY_SUMMARY" <(tail -n +2 $SUMMARY_FILE | grep 'system\.img') )"
+    WEIGHT_SCORE="$(bc <<< "scale=${WEIGHT_SCORE_SCALE}; ${SYSTEM_IMG_SIZES#*,}/${SYSTEM_IMG_SIZES%,*}")"
+    sed --in-place --regexp-extended -e "s/system\.img,[0-9]+,[0-9]+,[0-9.]+/system.img,${SYSTEM_IMG_SIZES%,*},${SYSTEM_IMG_SIZES#*,},${WEIGHT_SCORE}/" "$SUMMARY_FILE"
+    echo -n -e "${SYSTEM_IMG_ONlY_SELF}\n" >> "$SUMMARY_FILE"
+
+    SYSTEM_IMG_ONlY_SELF="$(tail -n +2 $SUMMARY_MAJOR_FILE | grep 'system\.img,' | sed 's/system\.img/system.img (only self)/' )"
+    SYSTEM_IMG_SIZES="$(awk --field-separator ',' "$AWK_CODE_WEIGHT_SCORE_SUMMARY_SUMMARY" <(tail -n +2 $SUMMARY_MAJOR_FILE | grep 'system\.img') )"
+    WEIGHT_SCORE="$(bc <<< "scale=${WEIGHT_SCORE_SCALE}; ${SYSTEM_IMG_SIZES#*,}/${SYSTEM_IMG_SIZES%,*}")"
+    sed --in-place --regexp-extended -e "s/system\.img,[0-9]+,[0-9]+,[0-9.]+/system.img,${SYSTEM_IMG_SIZES%,*},${SYSTEM_IMG_SIZES#*,},${WEIGHT_SCORE}/" "$SUMMARY_MAJOR_FILE"
+    echo -n -e "${SYSTEM_IMG_ONlY_SELF}\n" >> "$SUMMARY_MAJOR_FILE"
 }
 
 main() {
