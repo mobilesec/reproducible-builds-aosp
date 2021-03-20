@@ -151,12 +151,12 @@ _EOF_
         # More recent version of diffoscope (changed somewhere between 137 and 151) emit for nearly every node
         # the full path (instead of just a single elemnt). This requires some post processing to clean up, specifically:
         # - Remove redundant paths (the second sed substitution greedily consumes nodes untill the last)
-        # - Convert paths on host to absolute path in image (grouping after \.img(\.raw)?\.mount\/ capture path in image) , e.g.
+        # - Convert paths on host to absolute path in image (grouping after \.img(\.raw)?\.(mount|unpack)\/ capture path in image) , e.g.
         #   /root/aosp/build/.../system.img.raw.mount/system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo -> system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo
         # - Since diffstat can't handle spaces (escaping doesn't help either), convert all spaces (from tool invocations) to ␣
         # - Finally, reassemble valid patch file markers by preprending '--- a/' and '+++ b/' (fourth substition)
-        sed -E -e '/^--- /{s/^--- //g;s/^.*\.img(\.raw)?\.mount\/(.*)$/\2/g;s/\s/␣/g;s/^/--- a\//g}' \
-            -e '/^\+\+\+ /{s/^\+\+\+ //g;s/^.*\.img(\.raw)?\.mount\/(.*)$/\2/g;s/\s/␣/g;s/^/+++ b\//g}' \
+        sed -E -e '/^--- /{s/^--- //g;s/^.*\.img(\.raw)?\.(mount|unpack)\/(.*)$/\2/g;s/\s/␣/g;s/^/--- a\//g}' \
+            -e '/^\+\+\+ /{s/^\+\+\+ //g;s/^.*\.img(\.raw)?\.(mount|unpack)\/(.*)$/\2/g;s/\s/␣/g;s/^/+++ b\//g}' \
             "${DIFF_JSON_FILE}.flattened.diff" > "${DIFF_JSON_FILE}.flattened_clean.diff"
 
         # Run diffstat on cleaned flat diff file, create machine friendly CSV output, transform ␣ back into real spaces
