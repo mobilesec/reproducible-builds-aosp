@@ -297,7 +297,7 @@ _EOF_
                     mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <( sed -n "${FILE_LIST_START},${FILE_LIST_END}p" "$DIFF_FILE" \
                         | grep '^-' \
                         | sed -e 's/^-//g' \
-                        | grep --invert-match 'Tests__auto_generated_rro_vendor\.apk' \
+                        | grep --invert-match --extended-regexp 'Tests?__auto_generated_rro_vendor\.apk' \
                     )
                 else
                     # Prefilter line range determined by start and end values, then extract deleted file names
