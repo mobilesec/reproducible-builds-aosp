@@ -1,5 +1,5 @@
---- system/apex/com.android.art.release.apex::zipinfo {}	Google
-+++ system/apex/com.android.art.release.apex::zipinfo {}	SOAP
+--- a/system/apex/com.android.art.release.apex::zipinfo␣{}
++++ b/system/apex/com.android.art.release.apex::zipinfo␣{}
 @@ -1,2 +1,2 @@
 -Zip·file·size:·83455840·bytes,·number·of·entries:·11
 +Zip·file·size:·83472161·bytes,·number·of·entries:·10
@@ -15,8 +15,8 @@
 +-rw----·····2.0·fat······644·bl·defN·09-Jan-01·00:00·META-INF/MANIFEST.MF
 -11·files,·83400744·bytes·uncompressed,·83399035·bytes·compressed:··0.0%
 +10·files,·83425238·bytes·uncompressed,·83423502·bytes·compressed:··0.0%
---- system/apex/com.android.art.release.apex::zipnote «TEMP»/diffoscope_<random>/tmp<random>.zip	Google
-+++ system/apex/com.android.art.release.apex::zipnote «TEMP»/diffoscope_<random>/tmp<random>.zip	SOAP
+--- a/system/apex/com.android.art.release.apex::zipnote␣«TEMP»/diffoscope_<random>/tmp<random>.zip
++++ b/system/apex/com.android.art.release.apex::zipnote␣«TEMP»/diffoscope_<random>/tmp<random>.zip
 @@ -14,8 +14,5 @@
  Filename:·AndroidManifest.xml
  Comment:·
@@ -26,8 +26,8 @@
 -
  Filename:·META-INF/CERT.SF
  Comment:·
---- system/apex/com.android.art.release.apex::META-INF/CERT.SF	Google
-+++ system/apex/com.android.art.release.apex::META-INF/CERT.SF	SOAP
+--- a/system/apex/com.android.art.release.apex::META-INF/CERT.SF
++++ b/system/apex/com.android.art.release.apex::META-INF/CERT.SF
 @@ -1,4 +1,4 @@
  Created-By:·1.0·(Android·SignApk)\xd
 -SHA-256-Digest-Manifest:·3HjymT3zR/0RdP+s5Gff38olvpZ2AnnxmnI+ztd3daE=\xd
@@ -49,8 +49,8 @@
 -Name:·stamp-cert-sha256\xd
 -SHA-256-Digest:·L0p4Bm/NGffFWX26fUKi8jlq3aKsfwyEBtSavY6F0c0=\xd
 -\xd
---- system/apex/com.android.art.release.apex::META-INF/MANIFEST.MF	Google
-+++ system/apex/com.android.art.release.apex::META-INF/MANIFEST.MF	SOAP
+--- a/system/apex/com.android.art.release.apex::META-INF/MANIFEST.MF
++++ b/system/apex/com.android.art.release.apex::META-INF/MANIFEST.MF
 @@ -12,6 +12,6 @@
  Name:·apex_payload.img\xd
 -SHA-256-Digest:·QE4wKmkAv6Gk/H8kP1Dptoe2ScwJiF8f8GsvNN0F8Wc=\xd
@@ -67,14 +67,14 @@
 -Name:·stamp-cert-sha256\xd
 -SHA-256-Digest:·L0p4Bm/NGffFWX26fUKi8jlq3aKsfwyEBtSavY6F0c0=\xd
 -\xd
---- system/apex/com.android.art.release.apex::stat {}	Google
-+++ system/apex/com.android.art.release.apex::stat {}	SOAP
+--- a/system/apex/com.android.art.release.apex::stat␣{}
++++ b/system/apex/com.android.art.release.apex::stat␣{}
 @@ -1,2 +1,2 @@
 -··Size:·83455840··»  Blocks:·162912·····IO·Block:·4096···regular·file
 +··Size:·83472161··»  Blocks:·162896·····IO·Block:·4096···regular·file
  Links:·1
---- system/app/BasicDreams/BasicDreams.apk::zipinfo {}	Google
-+++ system/app/BasicDreams/BasicDreams.apk::zipinfo {}	SOAP
+--- a/system/app/BasicDreams/BasicDreams.apk::zipinfo␣{}
++++ b/system/app/BasicDreams/BasicDreams.apk::zipinfo␣{}
 @@ -1,2 +1,2 @@
 -Zip·file·size:·49951·bytes,·number·of·entries:·11
 +Zip·file·size:·45792·bytes,·number·of·entries:·10
@@ -90,16 +90,16 @@
 +-rw----·····2.0·fat······718·bl·defN·09-Jan-01·00:00·META-INF/MANIFEST.MF
 -11·files,·47532·bytes·uncompressed,·38103·bytes·compressed:··19.8%
 +10·files,·47570·bytes·uncompressed,·37984·bytes·compressed:··20.2%
---- system/app/BasicDreams/BasicDreams.apk::APK metadata	Google
-+++ system/app/BasicDreams/BasicDreams.apk::APK metadata	SOAP
+--- a/system/app/BasicDreams/BasicDreams.apk::APK␣metadata
++++ b/system/app/BasicDreams/BasicDreams.apk::APK␣metadata
 @@ -12,4 +12,3 @@
  sparseResources:·false
 -unknownFiles:
 +unknownFiles:·{}
 -··stamp-cert-sha256:·'8'
  usesFramework:
---- system/app/BasicDreams/BasicDreams.apk::META-INF/MANIFEST.MF	Google
-+++ system/app/BasicDreams/BasicDreams.apk::META-INF/MANIFEST.MF	SOAP
+--- a/system/app/BasicDreams/BasicDreams.apk::META-INF/MANIFEST.MF
++++ b/system/app/BasicDreams/BasicDreams.apk::META-INF/MANIFEST.MF
 @@ -22,6 +22,3 @@
  Name:·resources.arsc\xd
  SHA-256-Digest:·ELZA+vF9g5PR+71+JzRMvx8VC2N6s252/BC/t/o0kgc=\xd
@@ -107,8 +107,8 @@
 -Name:·stamp-cert-sha256\xd
 -SHA-256-Digest:·HZwqAqk4Fv9ceuZPmq0Cwj3kncUUYg2xp61iTSqDZ5w=\xd
 -\xd
---- system/app/BasicDreams/BasicDreams.apk::META-INF/CERT.SF	Google
-+++ system/app/BasicDreams/BasicDreams.apk::META-INF/CERT.SF	SOAP
+--- a/system/app/BasicDreams/BasicDreams.apk::META-INF/CERT.SF
++++ b/system/app/BasicDreams/BasicDreams.apk::META-INF/CERT.SF
 @@ -1,4 +1,4 @@
  Created-By:·1.0·(Android·SignApk)\xd
 -SHA-256-Digest-Manifest:·pQXJOBKK72WrdgPIkz94yQpTZji6EJwM75f7pEcKiOE=\xd
@@ -121,14 +121,14 @@
 -Name:·stamp-cert-sha256\xd
 -SHA-256-Digest:·L0p4Bm/NGffFWX26fUKi8jlq3aKsfwyEBtSavY6F0c0=\xd
 -\xd
---- system/app/BasicDreams/BasicDreams.apk::stat {}	Google
-+++ system/app/BasicDreams/BasicDreams.apk::stat {}	SOAP
+--- a/system/app/BasicDreams/BasicDreams.apk::stat␣{}
++++ b/system/app/BasicDreams/BasicDreams.apk::stat␣{}
 @@ -1,2 +1,2 @@
 -··Size:·49951·····»     Blocks:·104········IO·Block:·4096···regular·file
 +··Size:·45792·····»     Blocks:·96·········IO·Block:·4096···regular·file
  Links:·1
---- system/etc/security/otacerts.zip::zipinfo {}	Google
-+++ system/etc/security/otacerts.zip::zipinfo {}	SOAP
+--- a/system/etc/security/otacerts.zip::zipinfo␣{}
++++ b/system/etc/security/otacerts.zip::zipinfo␣{}
 @@ -1,3 +1,3 @@
 -Zip·file·size:·1582·bytes,·number·of·entries:·1
 --rw-r--r--··2.0·unx·····1388·b-·stor·09-Jan-01·00:00·prod/device/nexus/crosshatch/releasekey.x509.pem
@@ -136,20 +136,20 @@
 +Zip·file·size:·1089·bytes,·number·of·entries:·1
 +-rw----·····2.0·fat·····1675·bl·defN·08-Jan-01·00:00·testkey.x509.pem
 +1·file,·1675·bytes·uncompressed,·943·bytes·compressed:··43.7%
---- system/etc/security/otacerts.zip::zipnote {}	Google
-+++ system/etc/security/otacerts.zip::zipnote {}	SOAP
+--- a/system/etc/security/otacerts.zip::zipnote␣{}
++++ b/system/etc/security/otacerts.zip::zipnote␣{}
 @@ -1,3 +1,3 @@
 -Filename:·prod/device/nexus/crosshatch/releasekey.x509.pem
 +Filename:·testkey.x509.pem
  Comment:·
---- system/etc/security/otacerts.zip::stat {}	Google
-+++ system/etc/security/otacerts.zip::stat {}	SOAP
+--- a/system/etc/security/otacerts.zip::stat␣{}
++++ b/system/etc/security/otacerts.zip::stat␣{}
 @@ -1,2 +1,2 @@
 -··Size:·1582······»      Blocks:·8··········IO·Block:·4096···regular·file
 +··Size:·1089······»      Blocks:·8··········IO·Block:·4096···regular·file
  Links:·1
---- system/etc/selinux/plat_mac_permissions.xml	Google
-+++ system/etc/selinux/plat_mac_permissions.xml	SOAP
+--- a/system/etc/selinux/plat_mac_permissions.xml
++++ b/system/etc/selinux/plat_mac_permissions.xml
 @@ -3,9 +3,9 @@
  <policy>
 -··<signer·signature="308203c7308202afa00302010202150098edaf0af868030edc381f6b8b6c898ccb648a4d300d06092a864886f70d01010b05003074310b3009060355040613025553311330110603550408130a43616c69666f726e6961311630140603550407130d4d6f756e7461696e205669657731143012060355040a130b476f6f676c6520496e632e3110300e060355040b1307416e64726f69643110300e06035504031307416e64726f6964301e170d3138303432343139323534355a170d3438303432343139323534355a3074310b3009060355040613025553311330110603550408130a43616c69666f726e6961311630140603550407130d4d6f756e7461696e205669657731143012060355040a130b476f6f676c6520496e632e3110300e060355040b1307416e64726f69643110300e06035504031307416e64726f696430820122300d06092a864886f70d01010105000382010f003082010a0282010100a971192b1f7dcbde59337fef9f08863759bedc31f8d70fffb60919f3b14e94d6771981632a62fb620e8c8f4d66e3fc08f561052c628202fdda177841d949f018048b895ee8bbe5ac4c7ea1996d6a12b2a8ace9e42bddfb85e26251e4dff073588b2aaccfa81d3ed7c79c9afc6e31e722ee581b6ba3551fc3e68bb123e6c3ab875640f92b3636e8b70bb040e642111d449d35e1ae479e7eaf84680788e558ea8c1abdf[·...·truncated·by·diffoscope;·len:·913,·SHA:·bd1cd578556cf44c30cb68114d7db4e71ebb87734f6e1ea5ca1e5ccb807e41f3·...·]">
@@ -163,10 +163,9 @@
 -··<signer·signature="308205c7308203afa0030201020215008ee750cc286c56f6e2f9a400e895ba76d5214e9f300d06092a864886f70d01010b05003074310b3009060355040613025553311330110603550408130a43616c69666f726e6961311630140603550407130d4d6f756e7461696e205669657731143012060355040a130b476f6f676c6520496e632e3110300e060355040b1307416e64726f69643110300e06035504031307416e64726f6964301e170d3139303230363231333335395a170d3439303230363231333335395a3074310b3009060355040613025553311330110603550408130a43616c69666f726e6961311630140603550407130d4d6f756e7461696e205669657731143012060355040a130b476f6f676c6520496e632e3110300e060355040b1307416e64726f69643110300e06035504031307416e64726f696430820222300d06092a864886f70d01010105000382020f003082020a0282020100a2be43e8ac6b4fd5ac7498c51e99233ee11c09f53b983426b21bb3d27d3168bf92d5bb62dddc09d7d226bc33be82d8a057fdba2fd3bc1fc2c389937a41cd6dc61871c1fc00d51d58a329df5825a6dcb1c5795a383a19dcf14b94a5d1c10a1f34b7c5dfc279b1b605aac9412d24423c3009b944fa5d6f7b69181bd2d13d03f6d6cb5f285b1286fae140af5cf0cf78f41acff328bfe823fc4211d4951d6ef6dd0b6b8602[·...·truncated·by·diffoscope;·len:·1936,·SHA:·40e7629a6979efcaa38ae3d5795b010886e6de95d56dcd925e2017509cecbb1d·...·]">
 +··<signer·signature="308205dc308203c4a003020102020900fc6cb0d8a6fdd168300d06092a864886f70d01010b0500308181310b30090603550406130255533113301106035504080c0a43616c69666f726e69613116301406035504070c0d4d6f756e7461696e20566965773110300e060355040a0c07416e64726f69643110300e060355040b0c07416e64726f69643121301f06035504030c18636f6d2e616e64726f69642e6e6574776f726b737461636b3020170d3139303231323031343632305a180f34373537303130383031343632305a308181310b30090603550406130255533113301106035504080c0a43616c69666f726e69613116301406035504070c0d4d6f756e7461696e20566965773110300e060355040a0c07416e64726f69643110300e060355040b0c07416e64726f69643121301f06035504030c18636f6d2e616e64726f69642e6e6574776f726b737461636b30820222300d06092a864886f70d01010105000382020f003082020a0282020100bb71f5137ff0b2d757acc2ca3d378e0f8de11090d5caf3d49e314d35c283b778b02d792d8eba440364ca970985441660f0bc00afbc63dd611b1bf51ad28a1edd21e0048f548b80f8bd113e25682822f57dab8273afaf12c64d19a0c6be238f3e66ddc79b10fd926931e3ee60a7bf618644da3c2c4fc428139d45d27beda7fe45e30075b493ead6ec01cdd55d931c0a657e[·...·truncated·by·diffoscope;·len:·1978,·SHA:·7532bc43577a7f8da8c9ed8a12f6f3f88727db4769ab16350c45e6114ca0d053·...·]">
  ····<seinfo·value="network_stack"/>
---- system/etc/selinux/plat_mac_permissions.xml::stat {}	Google
-+++ system/etc/selinux/plat_mac_permissions.xml::stat {}	SOAP
+--- a/system/etc/selinux/plat_mac_permissions.xml::stat␣{}
++++ b/system/etc/selinux/plat_mac_permissions.xml::stat␣{}
 @@ -1,2 +1,2 @@
 -··Size:·7121······»      Blocks:·16·········IO·Block:·4096···regular·file
 +··Size:·8063······»      Blocks:·16·········IO·Block:·4096···regular·file
  Links:·1
-

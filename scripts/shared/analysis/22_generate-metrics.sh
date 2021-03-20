@@ -73,7 +73,7 @@ _EOF_
         # Transform diffstat to diff score metric
         unset DIFFSTAT_CONTENT
         local DIFFSTAT_CONTENT=""
-        if [ "$IS_IMG_WITH_APEX_WITHIN" == true ]; then
+        if [[ "$IS_IMG_WITH_APEX_WITHIN" == true ]]; then
             DIFFSTAT_CONTENT+="$(tail --lines=+2 "$DIFFSTAT_CSV_FILE" \
                 | grep --invert-match '\.apex' || true \
             )"
@@ -245,7 +245,7 @@ _EOF_
             unset CHANGED_FILES CHANGED_FILES_APEX
             local -a CHANGED_FILES CHANGED_FILES_APEX
             # Transform diffstat to list of changed files
-            if [ "$IS_IMG_WITH_APEX_WITHIN" == true ]; then
+            if [[ "$IS_IMG_WITH_APEX_WITHIN" == true ]]; then
                 # Skip header, exclude file␣list entry, exclude all .apex files
                 mapfile -t CHANGED_FILES < <( tail --lines=+2 "$DIFFSTAT_CSV_FILE" \
                     | cut --delimiter=, --fields=4 \
@@ -292,17 +292,27 @@ _EOF_
                 local FILE_LIST_START FILE_LIST_END
                 FILE_LIST_START="$(awk "$AWK_CODE_FIND_FILE_LIST_START" "$DIFF_FILE")"
                 FILE_LIST_END="$(awk --assign file_list_start=${FILE_LIST_START} "$AWK_CODE_FIND_FILE_LIST_END" "$DIFF_FILE")"
-                # Prefilter line range determined by start and end values, then extract deleted file names
-                mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <( sed -n "${FILE_LIST_START},${FILE_LIST_END}p" "$DIFF_FILE" \
-                    | grep '^-' \
-                    | sed -e 's/^-//g' \
-                )
+                if [[ "$BUILD_FLOW" == "generic" ]] && [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
+                    # Prefilter line range determined by start and end values, then extract deleted file names
+                    mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <( sed -n "${FILE_LIST_START},${FILE_LIST_END}p" "$DIFF_FILE" \
+                        | grep '^-' \
+                        | sed -e 's/^-//g' \
+                        | grep --invert-match 'Tests__auto_generated_rro_vendor\.apk' \
+                    )
+                else
+                    # Prefilter line range determined by start and end values, then extract deleted file names
+                    # Exclude test relacted APKs from generic vendor.img
+                    mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <( sed -n "${FILE_LIST_START},${FILE_LIST_END}p" "$DIFF_FILE" \
+                        | grep '^-' \
+                        | sed -e 's/^-//g' \
+                    )
+                fi
             fi
 
             # Prepare file size information
             unset SOURCE_1_FILE_SIZES SOURCE_1_FILE_SIZES_APEX
             local -a SOURCE_1_FILE_SIZES SOURCE_1_FILE_SIZES_APEX
-            if [ "$IS_IMG_WITH_APEX_WITHIN" == true ]; then
+            if [[ "$IS_IMG_WITH_APEX_WITHIN" == true ]]; then
                 # Skip header, exclude root . directory entry, exclude APEX files
                 mapfile -t SOURCE_1_FILE_SIZES < <( tail --lines=+2 "$SOURCE_1_FILE_SIZES_FILE" \
                     | grep --invert-match '\.apex' \
