@@ -48,7 +48,7 @@ pipeline {
                 sh "${SCRIPT_DIR}/scripts/shared/analysis/21_generate-diffstat.sh \"${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\""
                 sh "${SCRIPT_DIR}/scripts/shared/analysis/22_generate-metrics.sh \"${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\" \"generic\""
                 sh "${SCRIPT_DIR}/scripts/shared/analysis/23_generate-visualization.sh \"${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\""
-                sh "${SCRIPT_DIR}/scripts/shared/analysis/24_generate-index-html.sh \"${RB_AOSP_BASE}/diff\""
+                sh "${SCRIPT_DIR}/scripts/shared/analysis/24_generate-report-overview-html.sh \"${RB_AOSP_BASE}/diff\""
             }
         }
     }
