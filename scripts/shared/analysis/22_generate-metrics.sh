@@ -409,7 +409,7 @@ _EOF_
         echo "${BASE_FILENAME},${SIZE_ALL},${SIZE_CHANGED},${WEIGHT_SCORE}" >> "$SUMMARY_FILE"            
         
         if [[ "$BUILD_FLOW" == "device" ]] && [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
-            rm "$METRIC_MAJOR_CHANGED_FILE"
+            rm -f "$METRIC_MAJOR_CHANGED_FILE"
             continue
         fi
 
