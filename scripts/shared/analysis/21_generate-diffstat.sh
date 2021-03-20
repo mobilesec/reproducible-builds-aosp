@@ -176,7 +176,6 @@ _EOF_
         # All diff file versions take considerable space, get rid of them
         rm "${DIFF_JSON_FILE}"
         rm "${DIFF_JSON_FILE}.flattened.diff"
-        rm "${DIFF_JSON_FILE}.flattened_clean.diff"
     done
 }
 
