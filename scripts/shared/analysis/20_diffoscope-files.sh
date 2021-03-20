@@ -209,13 +209,6 @@ main() {
     mkdir -p "${OUT_DIR}"
     rm -rf "${OUT_DIR:?}/"* # Clean up previous diff results
 
-    # apktool quirk workaround, see https://github.com/iBotPeaches/Apktool/issues/2048
-    sudo mkdir -p  "/root/.local/share/apktool/framework"
-
-    # Ubuntu does not permit reading the local kernel images by non-root users, see https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1673431
-    # guestfs requires that to provide a kernel for QEMU.
-    sudo chmod +r "/boot/vmlinuz-"*
-
     # Create list of files in common for both directories. Ignore super.img, we unpacked it previously
     local -a FILES
     mapfile -t FILES < <(comm -12 \
