@@ -66,7 +66,9 @@ main() {
 
     # Iterate all artifacts and download them
     local -a ARTIFACTS
-    mapfile -t ARTIFACTS < <(cat "artifacts_list")
+    mapfile -t ARTIFACTS < <(cat "artifacts_list" \
+        | grep --invert-match 'attempts/' \
+    )
     declare -r ARTIFACTS
     local -r BUILD="${BUILD_TARGET%-*}"
     for ARTIFACT in "${ARTIFACTS[@]}"; do
