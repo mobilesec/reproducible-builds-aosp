@@ -155,8 +155,8 @@ _EOF_
         #   /root/aosp/build/.../system.img.raw.mount/system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo -> system/priv-app/VpnDialogs/VpnDialogs.apk::zipinfo
         # - Since diffstat can't handle spaces (escaping doesn't help either), convert all spaces (from tool invocations) to ␣
         # - Finally, reassemble valid patch file markers by preprending '--- a/' and '+++ b/' (fourth substition)
-        sed -E -e '/^--- /{s/^--- //g;s/^.*\.img(\.raw)?\.(mount|unpack)\/(.*)$/\2/g;s/\s/␣/g;s/^/--- a\//g}' \
-            -e '/^\+\+\+ /{s/^\+\+\+ //g;s/^.*\.img(\.raw)?\.(mount|unpack)\/(.*)$/\2/g;s/\s/␣/g;s/^/+++ b\//g}' \
+        sed -E -e '/^--- /{s/^--- //g;s/^.*\.img(\.raw)?\.(mount|unpack)\/(.*)$/\3/g;s/\s/␣/g;s/^/--- a\//g}' \
+            -e '/^\+\+\+ /{s/^\+\+\+ //g;s/^.*\.img(\.raw)?\.(mount|unpack)\/(.*)$/\3/g;s/\s/␣/g;s/^/+++ b\//g}' \
             "${DIFF_JSON_FILE}.flattened.diff" > "${DIFF_JSON_FILE}.flattened_clean.diff"
 
         # Run diffstat on cleaned flat diff file, create machine friendly CSV output, transform ␣ back into real spaces
