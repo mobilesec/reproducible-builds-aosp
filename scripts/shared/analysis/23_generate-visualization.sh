@@ -16,6 +16,20 @@
 
 set -o errexit -o nounset -o pipefail -o xtrace
 
+generateVisualization() {
+    local -r CSV_INPUT_FILE="$1"
+
+    VISUALIZATION_REPORT_FILE="$(basename --suffix '.csv' "$CSV_INPUT_FILE").visualization.html"
+    cp "$TEMPLATE_VISUALIZATION" "$VISUALIZATION_REPORT_FILE"
+    # Make safe for sed replace, see https://stackoverflow.com/a/2705678
+    CSV_INPUT_FILE_ESCAPED=$(printf '%s\n' "$CSV_INPUT_FILE" | sed -e 's/[\/&]/\\&/g')
+    sed -E -i -e "s/\\\$CSV_INPUT_FILE/$CSV_INPUT_FILE_ESCAPED/" \
+        -e "s/\\\$SOAP_VERSION/$SOAP_VERSION/" \
+        -e "s/\\\$DATETIME/$DATETIME/" \
+        "$VISUALIZATION_REPORT_FILE"
+    ARTIFACT_REPORTS_TEMPLATE+="(<a href=\"${VISUALIZATION_REPORT_FILE}\">Hierarchical visualization report</a>)"
+}
+
 main() {
     # Argument sanity check
     if [[ "$#" -ne 1 ]]; then
@@ -36,7 +50,7 @@ main() {
     local -r LOCATION_IN_RB_AOSP="scripts/shared/analysis"
     local -r SCRIPT_BASE=${SCRIPT_LOCATION%"$LOCATION_IN_RB_AOSP"}
     # Templates
-    local -r TEMPLATE_CHANGE_VIS="${SCRIPT_BASE}html-template/change-vis.html"
+    local -r TEMPLATE_VISUALIZATION="${SCRIPT_BASE}html-template/visualization.html"
     local -r TEMPLATE_SUMMARY="${SCRIPT_BASE}html-template/summary.html"
     local -r SOAP_VERSION_FILE="${SCRIPT_BASE}.version"
     # Report Info
@@ -46,49 +60,85 @@ main() {
     # Navigate to diff dir
     cd "$DIFF_DIR"
 
-    # Generate diffoscope reports template string
-    local -a DIFFOSCOPE_REPORTS
-    mapfile -t DIFFOSCOPE_REPORTS < <(find . -path '*.diffoscope.html-dir/index.html' | sort)
-    declare -r DIFFOSCOPE_REPORTS
-    local DIFFOSCOPE_REPORTS_TEMPLATE=""
-    for DIFFOSCOPE_REPORT in "${DIFFOSCOPE_REPORTS[@]}"; do
+    # Iterate artifacts, use diffoscope HTML reports as starting point
+    local -a DIFFOSCOPE_HTML_REPORTS
+    mapfile -t DIFFOSCOPE_HTML_REPORTS < <(find . -path '*.diffoscope.html-dir/index.html' | sort)
+    declare -r DIFFOSCOPE_HTML_REPORTS
+    local ARTIFACT_REPORTS_TEMPLATE=$'<ul>'
+    for DIFFOSCOPE_HTML_REPORT in "${DIFFOSCOPE_HTML_REPORTS[@]}"; do
+        local BASE_FILENAME 
+        BASE_FILENAME="$(dirname "$(dirname "${DIFFOSCOPE_HTML_REPORT}")")/$(basename -s '.diffoscope.html-dir' "$(dirname "${DIFFOSCOPE_HTML_REPORT}")")"
+        if [[ "$BASE_FILENAME" == *"-apex_payload.img" ]]; then
+            BASE_FILENAME="$(dirname "${BASE_FILENAME}")/$(basename -s '-apex_payload.img' "${BASE_FILENAME}")"
+        fi
+
+        # Start artifact HTML template code
+        ARTIFACT_REPORTS_TEMPLATE+="<li>${BASE_FILENAME}"
+        local DS_CONTENT="$(tail --lines=+2 ${BASE_FILENAME}.metric.diff-score.csv)"
+        if [[ "$DS_CONTENT" == ",0" ]] || [[ "$DS_CONTENT" == $',0\n,0' ]]; then
+            ARTIFACT_REPORTS_TEMPLATE+=" (No Changes)"
+        fi
+        ARTIFACT_REPORTS_TEMPLATE+="<ul>"
+
         # Fix jQuery location from local to a CDN, specifically
         # src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"
         sed -i 's/src="jquery.js"/src="https:\/\/code.jquery.com\/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO\/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn\/6Z\/hRTt8+pR6L4N2" crossorigin="anonymous"/g' \
-            "$DIFFOSCOPE_REPORT"
+            "$DIFFOSCOPE_HTML_REPORT"
+        ARTIFACT_REPORTS_TEMPLATE+="<li><a href=\"${DIFFOSCOPE_HTML_REPORT}\">Detailed diffoscope HTML report</a></li>"
 
-        DIFFOSCOPE_REPORTS_TEMPLATE+="<a href=\"${DIFFOSCOPE_REPORT}\">${DIFFOSCOPE_REPORT}</a><br>"
-    done
+        # Generate DS links
+        local METRIC_DS_FILE="${BASE_FILENAME}.metric.diff-score.csv"
+        local METRIC_MDS_FILE="${BASE_FILENAME}.metric.major-diff-score.csv"
+        local DS_VISUALIZATION_GENERATED=false
+        if [[ -f "${METRIC_MDS_FILE}" ]]; then
+            ARTIFACT_REPORTS_TEMPLATE+="<li><a href=\"${METRIC_MDS_FILE}\">Major Diff-Score (MDS) CSV</a> "
+            generateVisualization "$METRIC_MDS_FILE"
+            DS_VISUALIZATION_GENERATED=true
+            ARTIFACT_REPORTS_TEMPLATE+=$'</li>'
+        fi
+        if [[ -f "${METRIC_DS_FILE}" ]]; then
+            ARTIFACT_REPORTS_TEMPLATE+="<li><a href=\"${METRIC_DS_FILE}\">Diff-Score (DS) CSV</a> "
+            if [[ "$DS_VISUALIZATION_GENERATED" == false ]]; then
+                generateVisualization "$METRIC_DS_FILE"
+            fi
+            ARTIFACT_REPORTS_TEMPLATE+=$'</li>'
+        fi
 
-    # Generate Change visualisation reports + template string
-    local -a CHANGE_VIS_CSV_FILES
-    mapfile -t CHANGE_VIS_CSV_FILES < <(find . -path '*.diffstat.csv' | sort)
-    declare -r CHANGE_VIS_CSV_FILES
-    local CHANGE_VIS_REPORTS_TEMPLATE=""
-    local CHANGE_VIS_REPORT
-    local CHANGE_VIS_CSV_FILE_ESCAPED
-    for CHANGE_VIS_CSV_FILE in "${CHANGE_VIS_CSV_FILES[@]}"; do
-        CHANGE_VIS_REPORT="$(basename --suffix '.diffstat.csv' "$CHANGE_VIS_CSV_FILE").change-vis.html"
-        cp "$TEMPLATE_CHANGE_VIS" "$CHANGE_VIS_REPORT"
-        # Make safe for sed replace, see https://stackoverflow.com/a/2705678
-        CHANGE_VIS_CSV_FILE_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_CSV_FILE" | sed -e 's/[\/&]/\\&/g')
-        sed -E -i -e "s/\\\$CHANGE_VIS_CSV_FILE/$CHANGE_VIS_CSV_FILE_ESCAPED/" \
-            -e "s/\\\$SOAP_VERSION/$SOAP_VERSION/" \
-            -e "s/\\\$DATETIME/$DATETIME/" \
-            "$CHANGE_VIS_REPORT"
-        CHANGE_VIS_REPORTS_TEMPLATE+="<a href=\"${CHANGE_VIS_REPORT}\">${CHANGE_VIS_REPORT}</a><br>"
+        # Generate WS links
+        local METRIC_WS_ALL_FILE="${BASE_FILENAME}.metric.weight-score.all.csv"
+        local METRIC_WS_CHANGED_FILE="${BASE_FILENAME}.metric.weight-score.changed.csv"
+        local METRIC_MWS_CHANGED_FILE="${BASE_FILENAME}.metric.major-weight-score.changed.csv"
+        local WS_VISUALIZATION_GENERATED=false
+        if [[ -f "${METRIC_MWS_CHANGED_FILE}" ]]; then
+            ARTIFACT_REPORTS_TEMPLATE+="<li>Major Weight-Score (MWS) "
+            ARTIFACT_REPORTS_TEMPLATE+="(<a href=\"${METRIC_MWS_CHANGED_FILE}\">Changed File Sizes CSV</a> "
+            generateVisualization "$METRIC_MWS_CHANGED_FILE"
+            WS_VISUALIZATION_GENERATED=true
+            ARTIFACT_REPORTS_TEMPLATE+=$')</li>'
+        fi
+        if [[ -f "${METRIC_WS_ALL_FILE}" ]] && [[ -f "${METRIC_WS_CHANGED_FILE}" ]]; then
+            ARTIFACT_REPORTS_TEMPLATE+="<li>Weight-Score (WS) "
+            ARTIFACT_REPORTS_TEMPLATE+="(<a href=\"${METRIC_WS_ALL_FILE}\">All File Sizes CSV</a>; "
+            ARTIFACT_REPORTS_TEMPLATE+="<a href=\"${METRIC_WS_CHANGED_FILE}\">Changed File Sizes CSV</a> "
+            if [[ "$WS_VISUALIZATION_GENERATED" == false ]]; then
+                generateVisualization "$METRIC_WS_CHANGED_FILE"
+            fi
+            ARTIFACT_REPORTS_TEMPLATE+=$')</li>'
+        fi
+
+        ARTIFACT_REPORTS_TEMPLATE+=$'</ul></li>'
+
     done
+    ARTIFACT_REPORTS_TEMPLATE+="</ul>"
 
     # Generate summary report
     local -r SUMMARY_REPORT="./summary.html"
     cp "$TEMPLATE_SUMMARY" "$SUMMARY_REPORT"
     # Make safe for sed replace, see https://stackoverflow.com/a/2705678
     local -r DIFF_DIR_ESCAPED=$(printf '%s\n' "$(basename "$DIFF_DIR")" | sed -e 's/[\/&]/\\&/g')
-    local -r DIFFOSCOPE_REPORTS_TEMPLATE_ESCAPED=$(printf '%s\n' "$DIFFOSCOPE_REPORTS_TEMPLATE" | sed -e 's/[\/&]/\\&/g')
-    local -r CHANGE_VIS_REPORTS_TEMPLATE_ESCAPED=$(printf '%s\n' "$CHANGE_VIS_REPORTS_TEMPLATE" | sed -e 's/[\/&]/\\&/g')
+    local -r ARTIFACT_REPORTS_TEMPLATE_ESCAPED=$(printf '%s\n' "$ARTIFACT_REPORTS_TEMPLATE" | sed -e 's/[\/&]/\\&/g')
     sed -E -i -e "s/\\\$DIFF_DIR/$DIFF_DIR_ESCAPED/" \
-        -e "s/\\\$DIFFOSCOPE_REPORTS_TEMPLATE/$DIFFOSCOPE_REPORTS_TEMPLATE_ESCAPED/" \
-        -e "s/\\\$CHANGE_VIS_REPORTS_TEMPLATE/$CHANGE_VIS_REPORTS_TEMPLATE_ESCAPED/" \
+        -e "s/\\\$ARTIFACT_REPORTS_TEMPLATE/$ARTIFACT_REPORTS_TEMPLATE_ESCAPED/" \
         -e "s/\\\$SOAP_VERSION/$SOAP_VERSION/" \
         -e "s/\\\$DATETIME/$DATETIME/" \
         "$SUMMARY_REPORT"

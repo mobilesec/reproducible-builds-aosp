@@ -2,7 +2,7 @@
 <!--
 Carrot Search FoamTree HTML5 (demo variant)
 v3.4.10, bugfix/3.4.x/b18f7427, build FOAMTREE-SOFTWARE4-DIST-78, Nov 29, 2019
-Integration code, adjustments for rb-aosp by Manuel Pöll (changes from example code subject to Apache 2, see below)
+Integration code, adjustments for reproducible-builds-aosp by Manuel Pöll (changes from example code subject to Apache 2, see below)
 -->
 <!--
 Copyright 2020 Manuel Pöll
@@ -22,7 +22,7 @@ limitations under the License.
 <html>
 
 <head>
-  <title>SOAP - Hierarchical Diff Visualization</title>
+  <title>SOAP - Hierarchical visualization report for $CSV_INPUT_FILE</title>
   <meta charset="utf-8" />
 
   <link href="../assets/css/common.css" rel="stylesheet" />
@@ -53,40 +53,42 @@ limitations under the License.
       });
     };
 
+    function extractMetric(diffFlat) {
+      if (diffFlat.hasOwnProperty('DIFF_SCORE')) {
+        return diffFlat.DIFF_SCORE;
+      } else if (diffFlat.hasOwnProperty('SIZE')) {
+        return diffFlat.SIZE;
+      } else {
+        return 0;
+      }
+    }
+
     // Tree traverse object and sum up leaf nodes into non-leaf nodes
     function traverseNode(node) {
       if (!node.hasOwnProperty('groups')) {
         // Handle empty root node
         if (!node.hasOwnProperty('value') || !node.hasOwnProperty('weight')) {
           return {
-            INSERTED: 0,
-            DELETED: 0,
-            MODIFIED: 0,
+            METRIC: 0,
             weight: 1
           };
         }
 
         return {
-          INSERTED: node.value.INSERTED,
-          DELETED: node.value.DELETED,
-          MODIFIED: node.value.MODIFIED,
+          METRIC: node.value.METRIC,
           weight: node.weight
         };
       }
 
       // let weightSum = 0;
       let valueSums = {
-        INSERTED: 0,
-        DELETED: 0,
-        MODIFIED: 0,
+        METRIC: 0,
         weight: 0,
       }
       for (const propName in node['groups']) {
         if (node['groups'].hasOwnProperty(propName)) {
           valueAdd = traverseNode(node['groups'][propName]);
-          valueSums.INSERTED += valueAdd.INSERTED;
-          valueSums.DELETED += valueAdd.DELETED;
-          valueSums.MODIFIED += valueAdd.MODIFIED;
+          valueSums.METRIC += valueAdd.METRIC;
           valueSums.weight += valueAdd.weight;
         }
       }
@@ -94,9 +96,7 @@ limitations under the License.
       node['groups'] = Object.values(node['groups']);
       node['weight'] = valueSums.weight;
       node['value'] = {
-        INSERTED: valueSums.INSERTED,
-        DELETED: valueSums.DELETED,
-        MODIFIED: valueSums.MODIFIED,
+        METRIC: valueSums.METRIC,
       };
 
       return valueSums;
@@ -123,10 +123,7 @@ limitations under the License.
           if (currentGroup && currentGroup.label) {
             // Set some example content on the tooltip.
             tip.content(
-              "Inserted: <strong>" + currentGroup.value.INSERTED + "</strong><br>" +
-              "Deleted: <strong>" + currentGroup.value.DELETED + "</strong><br>" +
-              "Modified: <strong>" + currentGroup.value.MODIFIED + "</strong><br>" +
-              "Average (i.e. weight): <strong>" + currentGroup.weight + "</strong><br>"
+              "Metric: <strong>" + currentGroup.value.METRIC + "</strong><br>"
             );
             tip.position(pageX, pageY);
             tip.show();
@@ -161,7 +158,7 @@ limitations under the License.
         };
       })();
 
-      const res = await fetch('$CHANGE_VIS_CSV_FILE');
+      const res = await fetch('$CSV_INPUT_FILE');
       const body = await res.text();
       const diffsFlat = convertCSVToJSON(body);
 
@@ -183,11 +180,9 @@ limitations under the License.
         currentPos['groups'] = currentPos['groups'] ? currentPos['groups'] : {}
         currentPos['groups'][lastPathSegment] = {
           label: lastPathSegment[0],
-          weight: (Number(diffFlat.INSERTED) + Number(diffFlat.DELETED) + Number(diffFlat.MODIFIED)) / 3,
+          weight: Number(extractMetric(diffFlat)),
           value: {
-            INSERTED: Number(diffFlat.INSERTED),
-            DELETED: Number(diffFlat.DELETED),
-            MODIFIED: Number(diffFlat.MODIFIED)
+            METRIC: Number(extractMetric(diffFlat)),
           }
         }
       }
