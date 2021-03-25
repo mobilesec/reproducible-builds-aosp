@@ -74,7 +74,8 @@ main() {
 
         # Start artifact HTML template code
         ARTIFACT_REPORTS_TEMPLATE+="<li>${BASE_FILENAME}"
-        local DS_CONTENT="$(tail --lines=+2 ${BASE_FILENAME}.metric.diff-score.csv)"
+        local DS_CONTENT
+        DS_CONTENT="$(tail --lines=+2 "${BASE_FILENAME}.metric.diff-score.csv")"
         if [[ "$DS_CONTENT" == ",0" ]] || [[ "$DS_CONTENT" == $',0\n,0' ]]; then
             ARTIFACT_REPORTS_TEMPLATE+=" (No Changes)"
         fi

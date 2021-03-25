@@ -34,7 +34,7 @@ fetchArtifactList() {
         <( curl "https://ci.android.com/builds/submitted/${BUILD_NUMBER}/${BUILD_TARGET}/latest" -L ) \
         | sed -E -e "s/^[ \t]+var[ \t]+JSVariables[ \t=]+//" -e "s/[ \t]*;[ \t]*$//" \
         | jq -r '."artifacts"[]."name"' \
-        > "artifacts_list"
+        > "$ARTIFACTS_LIST_FILE"
 }
 
 main() {
@@ -62,13 +62,12 @@ main() {
     rm -rf ./* # Clean up previously fetched files
 
     # Create artifact list
+    local -r ARTIFACTS_LIST_FILE="artifacts_list"
     fetchArtifactList
 
     # Iterate all artifacts and download them
     local -a ARTIFACTS
-    mapfile -t ARTIFACTS < <(cat "artifacts_list" \
-        | grep --invert-match 'attempts/' \
-    )
+    mapfile -t ARTIFACTS < <(grep --invert-match 'attempts/' "$ARTIFACTS_LIST_FILE" )
     declare -r ARTIFACTS
     local -r BUILD="${BUILD_TARGET%-*}"
     for ARTIFACT in "${ARTIFACTS[@]}"; do

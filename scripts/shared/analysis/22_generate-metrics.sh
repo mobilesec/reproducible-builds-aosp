@@ -154,20 +154,6 @@ _EOF_
 # weight score metric, i.e. sum of all files that have any difference in relation to overall size
 generateMetricWeightScore() {
     # read considers an encountered EOF as error, but that's fine in our multiline usage here, suppress via || true
-    read -r -d '' AWK_CODE_WEIGHT_SCORE_SUMMARY <<'_EOF_' || true
-    BEGIN {
-        files_size = 0
-    }
-
-    {
-        files_size += $2
-    }
-
-    END {
-        printf("%d", files_size)
-    }
-_EOF_
-
     read -r -d '' AWK_CODE_WEIGHT_SCORE_SUMMARY_SUMMARY <<'_EOF_' || true
     BEGIN {
         size_all = 0;
@@ -291,7 +277,7 @@ _EOF_
             if grep -- '--- a/file␣list' "$DIFF_FILE"; then
                 local FILE_LIST_START FILE_LIST_END
                 FILE_LIST_START="$(awk "$AWK_CODE_FIND_FILE_LIST_START" "$DIFF_FILE")"
-                FILE_LIST_END="$(awk --assign file_list_start=${FILE_LIST_START} "$AWK_CODE_FIND_FILE_LIST_END" "$DIFF_FILE")"
+                FILE_LIST_END="$(awk --assign file_list_start="${FILE_LIST_START}" "$AWK_CODE_FIND_FILE_LIST_END" "$DIFF_FILE")"
                 if [[ "$BUILD_FLOW" == "generic" ]] && [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
                     # Prefilter line range determined by start and end values, then extract deleted file names
                     mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <( sed -n "${FILE_LIST_START},${FILE_LIST_END}p" "$DIFF_FILE" \
