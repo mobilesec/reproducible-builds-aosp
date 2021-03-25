@@ -105,9 +105,7 @@ _EOF_
 
         # Determine major varation of diff score
         local MAJOR_METRIC_CONTENT
-        if [[ "$BUILD_FLOW" == "device" ]] && [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
-            continue
-        elif [[ "$BASE_FILENAME" == *"initrd.img" ]] || [[ "$BASE_FILENAME" == *"ramdisk.img" ]] || [[ "$BASE_FILENAME" == *"ramdisk-debug.img" ]]; then
+        if [[ "$BASE_FILENAME" == *"initrd.img" ]] || [[ "$BASE_FILENAME" == *"ramdisk.img" ]] || [[ "$BASE_FILENAME" == *"ramdisk-debug.img" ]]; then
             # Exclude res/images
             MAJOR_METRIC_CONTENT="$(echo "$METRIC_CONTENT" \
                 | grep --invert-match 'res/images' \
@@ -393,11 +391,6 @@ _EOF_
         # Write summary entry
         WEIGHT_SCORE="$(bc <<< "scale=${WEIGHT_SCORE_SCALE}; ${SIZE_CHANGED}/${SIZE_ALL}")"
         echo "${BASE_FILENAME},${SIZE_ALL},${SIZE_CHANGED},${WEIGHT_SCORE}" >> "$SUMMARY_FILE"            
-        
-        if [[ "$BUILD_FLOW" == "device" ]] && [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
-            rm -f "$METRIC_MAJOR_CHANGED_FILE"
-            continue
-        fi
 
         # Write major summary CSV entry
         WEIGHT_SCORE="$(bc <<< "scale=${WEIGHT_SCORE_SCALE}; ${MAJOR_SIZE_CHANGED}/${SIZE_ALL}")"
