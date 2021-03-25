@@ -1,4 +1,15 @@
 
+# 1.5.0
+
+- Complete rewrite of quantitative output, diffstat results are now further processed into 2 metrics: diff-score and weight-score
+- Incorporate four build parameters that mimic values from the Google build environment, reducing the number of differences in property files
+- Unpack `boot.img` into three separate files, the `bootcfg.txt`, `initrd.img` and `zImage`. This simplifies computation of the weight metric
+- Major rework of the HTML index page for a single run showing both diffoscope report and our quantitative ones
+- Small update the `README`
+  - Remove quirk handling from scripts, only address here as common issues
+- Renamed several scripts to be more semantic
+- Slight update to the APT dependency list based on testing on Debian 10
+
 # 1.4.0
 
 - Many Improvements based on ShellCheck
