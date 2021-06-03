@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2020 Manuel Pöll
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:stable AS builder
+set -o errexit -o nounset -o pipefail -o xtrace
 
-COPY "./scripts" "./scripts"
-RUN apt-get update \
-    && sh "./scripts/shared/setup/01_apt-installs.sh" \
-    && sh "./scripts/shared/setup/02_install-repo.sh" \
-    && sh "./scripts/shared/setup/03_config-git.sh" \
-    && sh "./scripts/shared/setup/04_config-profile-for-docker.sh" \
-    && rm -rf "/var/lib/apt/lists/*"
-
-CMD bash
+docker build \
+    --target builder \
+    --file=docker/Dockerfile \
+    --tag "mobilesec/rb-aosp:latest" \
+    --no-cache=true \
+    .

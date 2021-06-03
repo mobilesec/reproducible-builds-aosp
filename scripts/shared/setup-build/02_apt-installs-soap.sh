@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright 2020 Manuel Pöll
 # 
@@ -14,10 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -o errexit -o nounset -o pipefail -o xtrace
+set -o errexit -o nounset -o xtrace
 
-docker build \
-    --target builder \
-    --tag "mobilesec/rb-aosp:latest" \
-    --no-cache=true \
-    .
+main() {
+    # Required for reproducible build scripts
+    sudo apt-get --assume-yes install curl jq wget libguestfs-tools simg2img
+}
+
+main "$@"
+ 

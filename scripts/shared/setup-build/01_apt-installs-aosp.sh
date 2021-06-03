@@ -16,28 +16,6 @@
 
 set -o errexit -o nounset -o xtrace
 
-installDiffoscope() {
-    # Required to install more current version of diffoscope via pip
-    sudo apt-get --assume-yes install python3-pip
-
-    # Install temporarily to pull in all runtime dependencies
-    sudo apt-get --assume-yes install diffoscope
-    sudo apt-get --assume-yes remove diffoscope
-
-    # Install more current version via pip, pinned to 151 to ensure consistent behavior
-    pip3 install diffoscope==151
-    export PATH="${HOME}/.local/bin:${PATH}" # Fix PATH immediatly, avoids requirement for new login
-
-    # diffoscope has a feature to list missing deps, use this to install any deps we may have missed previously
-    APT_DEPS_BY_DIFFOSCOPE_FILE="$( mktemp /tmp/apt-deps-by-diffoscope.XXXXXX )"
-    diffoscope --list-missing-tools debian | grep 'Available-in-Debian-packages' | cut -d: -f2 | sed 's/,//g' > "$APT_DEPS_BY_DIFFOSCOPE_FILE"
-    sudo apt-get --assume-yes install $( cat "$APT_DEPS_BY_DIFFOSCOPE_FILE" )
-    rm "$APT_DEPS_BY_DIFFOSCOPE_FILE"
-    #pip3 install $(diffoscope --list-missing-tools debian | grep 'Missing-Python-Modules' | cut -d: -f2 | sed 's/,//g')
-    # The above command installs the rpm package via pip, but running diffoscope emits the following warning:
-    # UserWarning: The RPM Python bindings are not currently available via PyPI.
-}
-
 main() {
     # We want these scripts to work with a wide range of Debian based systems, thus all commands requiring elevated
     # privileges utilize sudo (to support Ubuntu based build system), event though it is a pointless noop in some
@@ -57,10 +35,6 @@ main() {
     sudo apt-get --assume-yes install python
     # While the above works for Ubuntu (tested on LTS 18.04), Debian (tested on 10) requires the following additional dependencies for building AOSP
     sudo apt-get --assume-yes install rsync libncurses5
-
-    # Required for reproducible build scripts
-    sudo apt-get --assume-yes install curl jq wget diffstat libguestfs-tools simg2img
-    installDiffoscope
 }
 
 main "$@"
