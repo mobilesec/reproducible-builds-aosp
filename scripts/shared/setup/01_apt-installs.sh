@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright 2020 Manuel Pöll
 # 
@@ -29,10 +29,10 @@ installDiffoscope() {
     export PATH="${HOME}/.local/bin:${PATH}" # Fix PATH immediatly, avoids requirement for new login
 
     # diffoscope has a feature to list missing deps, use this to install any deps we may have missed previously
-    local -a APT_DEPS_BY_DIFFOSCOPE
-    read -r -a APT_DEPS_BY_DIFFOSCOPE <<< "$(diffoscope --list-missing-tools debian | grep 'Available-in-Debian-packages' | cut -d: -f2 | sed 's/,//g')"
-    declare -r APT_DEPS_BY_DIFFOSCOPE
-    sudo apt-get --assume-yes install "${APT_DEPS_BY_DIFFOSCOPE[@]}"
+    APT_DEPS_BY_DIFFOSCOPE_FILE="$( mktemp /tmp/apt-deps-by-diffoscope.XXXXXX )"
+    diffoscope --list-missing-tools debian | grep 'Available-in-Debian-packages' | cut -d: -f2 | sed 's/,//g' > "$APT_DEPS_BY_DIFFOSCOPE_FILE"
+    sudo apt-get --assume-yes install $( cat "$APT_DEPS_BY_DIFFOSCOPE_FILE" )
+    rm "$APT_DEPS_BY_DIFFOSCOPE_FILE"
     #pip3 install $(diffoscope --list-missing-tools debian | grep 'Missing-Python-Modules' | cut -d: -f2 | sed 's/,//g')
     # The above command installs the rpm package via pip, but running diffoscope emits the following warning:
     # UserWarning: The RPM Python bindings are not currently available via PyPI.
