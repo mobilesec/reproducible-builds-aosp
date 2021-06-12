@@ -18,16 +18,18 @@ set -o errexit -o nounset -o pipefail -o xtrace
 
 main() {
     # Argument sanity check
-    if [[ "$#" -ne 3 ]]; then
-        echo "Usage: $0 <AOSP_REF> <DEVICE_CODENAME>"
+    if [[ "$#" -ne 4 ]]; then
+        echo "Usage: $0 <AOSP_REF> <DEVICE_CODENAME> <DEVICE_CODENAME_FACTORY_IMAGE>"
         echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
         echo "BUILD_ID: version of AOSP, corresponds to a tag, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
         echo "DEVICE_CODENAME: Internal code name for device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode for details."
+        echo "DEVICE_CODENAME_FACTORY_IMAGE: Alternative internal code name for device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode for details."
         exit 1
     fi
     local -r AOSP_REF="$1"
     local -r BUILD_ID="$2"
     local -r DEVICE_CODENAME="$3"
+    local -r DEVICE_CODENAME_FACTORY_IMAGE="$4"
     # Reproducible base directory
     if [[ -z "${RB_AOSP_BASE+x}" ]]; then
         # Use default location
@@ -43,7 +45,7 @@ main() {
     rm -rf ./* # Clean up previously fetched files
 
     # Download link via primitive web scrapping
-    grep -i "${DEVICE_CODENAME}-${BUILD_ID}" \
+    grep -i "${DEVICE_CODENAME_FACTORY_IMAGE}-${BUILD_ID}" \
         <( curl "https://developers.google.com/android/images" -H 'cookie: devsite_wall_acks=nexus-image-tos' ) \
         | sed -n "s/^.*href=\"\s*\(\S*\)\".*$/\1/p" > factory-image-link
     wget "$(cat factory-image-link)"

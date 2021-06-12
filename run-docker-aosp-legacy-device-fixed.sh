@@ -16,15 +16,15 @@
 
 set -o errexit -o nounset -o pipefail -o xtrace
 
-compose_cmds() {
+composeCommands() {
     cat <<EOF | tr '\n' '; '
-        ( cd "${HOME}/aosp/src/.repo/repo" && git checkout "v1.13.9.4" )
-        "./scripts/shared/build-device/10_fetch-extract-factory-images.sh" "$AOSP_REF" "$BUILD_ID" "$DEVICE_CODENAME" "$DEVICE_CODENAME_FACTORY_IMAGE"
-        "./scripts/shared/build-device/11_clone-src-device.sh" "$AOSP_REF"
-        "./scripts/shared/build-device/12_fetch-extract-vendor.sh" "$BUILD_ID" "$DEVICE_CODENAME"
-        "./scripts/shared/build-device/13_build-device.sh" "$AOSP_REF" "$RB_BUILD_TARGET" "$GOOGLE_BUILD_TARGET"
-        bash
-        ( cd "${HOME}/aosp/src/.repo/repo" && git checkout "default" )
+( cd "${HOME}/aosp/src/.repo/repo" && git checkout "v1.13.9.4" )
+"./scripts/shared/build-device/10_fetch-extract-factory-images.sh" "$AOSP_REF" "$BUILD_ID" "$DEVICE_CODENAME" "$DEVICE_CODENAME_FACTORY_IMAGE"
+"./scripts/shared/build-device/11_clone-src-device.sh" "$AOSP_REF"
+"./scripts/shared/build-device/12_fetch-extract-vendor.sh" "$BUILD_ID" "$DEVICE_CODENAME"
+"./scripts/shared/build-device/13_build-device.sh" "$AOSP_REF" "$RB_BUILD_TARGET" "$GOOGLE_BUILD_TARGET"
+bash
+( cd "${HOME}/aosp/src/.repo/repo" && git checkout "default" )
 EOF
 }
 

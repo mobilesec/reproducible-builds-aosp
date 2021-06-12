@@ -84,7 +84,7 @@ pipeline {
     stages {
         stage(&apos;Cloning&apos;) {
             steps {
-                sh &quot;${SCRIPT_DIR}/scripts/shared/build-device/10_fetch-extract-factory-images.sh \&quot;${AOSP_REF}\&quot; \&quot;${BUILD_ID}\&quot; \&quot;${DEVICE_CODENAME}\&quot;&quot;
+                sh &quot;${SCRIPT_DIR}/scripts/shared/build-device/10_fetch-extract-factory-images.sh \&quot;${AOSP_REF}\&quot; \&quot;${BUILD_ID}\&quot; \&quot;${DEVICE_CODENAME}\&quot; \&quot;${DEVICE_CODENAME}\&quot;&quot;
                 sh &quot;${SCRIPT_DIR}/scripts/shared/build-device/11_clone-src-device.sh \&quot;${AOSP_REF}\&quot;&quot;
                 sh &quot;${SCRIPT_DIR}/scripts/shared/build-device/12_fetch-extract-vendor.sh \&quot;${BUILD_ID}\&quot; \&quot;${DEVICE_CODENAME}\&quot;&quot;
             }

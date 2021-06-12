@@ -19,21 +19,22 @@ set -o errexit -o nounset -o pipefail -o xtrace
 # Source utils
 . "./scripts/common/utils.sh"
 
-compose_cmds() {
+composeCommands() {
     cat <<EOF | tr '\n' '; '
-        "./scripts/shared/build-generic/10_fetch-ci-artifacts.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
-        "./scripts/shared/build-generic/11_clone-src-via-manifest.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
-        "./scripts/shared/build-generic/12_build-generic.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}"
-        "./scripts/shared/analysis/18_build-lpunpack.sh" "${BUILD_TARGET}"
-        "./scripts/shared/analysis/19_preprocess-imgs.sh" "${BUILD_NUMBER}" "${BUILD_TARGET}" "${BUILD_TARGET}"
-        "./scripts/shared/analysis/20_diffoscope-files.sh" \
-            "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
-            "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/\$(lsb_release -si)\$(lsb_release -sr)" \
-            "${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
-        "./scripts/shared/analysis/21_generate-diffstat.sh" "${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
-        "./scripts/shared/analysis/22_generate-metrics.sh" "${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)" "generic"
-        "./scripts/shared/analysis/23_generate-visualization.sh" "${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
-        "./scripts/shared/analysis/24_generate-report-overview.sh" "${RB_AOSP_BASE}/diff"
+"./scripts/shared/build-generic/10_fetch-ci-artifacts.sh" "$BUILD_NUMBER" "$BUILD_TARGET"
+"./scripts/shared/build-generic/11_clone-src-via-manifest.sh" "$BUILD_NUMBER" "$BUILD_TARGET"
+"./scripts/shared/build-generic/12_build-generic.sh" "$BUILD_NUMBER" "$BUILD_TARGET"
+"./scripts/shared/analysis/18_build-lpunpack.sh" "$BUILD_TARGET"
+"./scripts/shared/analysis/19_preprocess-imgs.sh" "$BUILD_NUMBER" "$BUILD_TARGET" "$BUILD_TARGET"
+declare -r DIFF_DIR="${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
+"./scripts/shared/analysis/20_diffoscope-files.sh" \
+    "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
+    "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/\$(lsb_release -si)\$(lsb_release -sr)" \
+    "\$DIFF_DIR"
+"./scripts/shared/analysis/21_generate-diffstat.sh" "\$DIFF_DIR"
+"./scripts/shared/analysis/22_generate-metrics.sh" "\$DIFF_DIR" "generic"
+"./scripts/shared/analysis/23_generate-visualization.sh" "\$DIFF_DIR"
+"./scripts/shared/analysis/24_generate-report-overview.sh" "${RB_AOSP_BASE}/diff"
 EOF
 }
 
@@ -50,7 +51,7 @@ main() {
         --mount "type=bind,source=${HOME}/aosp/src/.repo/project.list,target=/root/aosp/src/.repo/project.list" \
         --mount "type=bind,source=${HOME}/aosp/src/.repo/projects,target=/root/aosp/src/.repo/projects" \
         --mount "type=bind,source=${HOME}/aosp/diff,target=/root/aosp/diff" \
-        "mobilesec/rb-aosp:latest" /bin/bash -l -c "$(compose_cmds)"
+        "mobilesec/rb-aosp:latest" /bin/bash -l -c "$(composeCommands)"
 }
 
 main "$@"
