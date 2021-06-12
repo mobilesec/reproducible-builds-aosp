@@ -38,12 +38,17 @@ main() {
     #local -r RB_AOSP_BASE="${HOME}/aosp"
     local -r RB_BUILD_TARGET="aosp_${DEVICE_CODENAME}-user"
     local -r RB_BUILD_ENV="docker"
+    local -r CONTAINER_NAME="${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV}"
 
     docker run --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
-        --name "${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV}" \
+        --name "$CONTAINER_NAME" \
         --mount "type=bind,source=${HOME}/aosp/src,target=${HOME}/aosp/src" \
+        --mount "type=bind,source=/boot,target=/boot" \
+        --mount "type=bind,source=/lib/modules,target=/lib/modules" \
         --entrypoint /bin/bash \
-        "mobilesec/rb-aosp-legacy:latest" -l -c "$(compose_cmds)"
+        "mobilesec/rb-aosp-legacy:latest" -l -c "$(composeCommands)"
+
+    # docker rm "$CONTAINER_NAME"
 }
 
 main "$@"

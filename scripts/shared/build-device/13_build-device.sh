@@ -46,13 +46,18 @@ main() {
     # Unfortunately envsetup doesn't work with nounset flag, specifically fails with:
     # ./build/envsetup.sh: line 361: ZSH_VERSION: unbound variable
     set +o nounset
-    source ./build/envsetup.sh
+    source "./build/envsetup.sh"
+
+    # Build libsparse to ensure we have a simg2img tool available in the host tools
+    rm -rf "./out"
+    ( cd "./system/core/libsparse" && mma )
 
     # Set BUILD_DATETIME, BUILD_NUMBER, BUILD_USERNAME and BUILD_HOSTNAME
     local -r SYSTEM_IMG="${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/Google/system.img"
     setAdditionalBuildEnvironmentVars "$SYSTEM_IMG"
 
     lunch "${RB_BUILD_TARGET}"
+    rm -rf "./out"
     m -j "$(nproc)"
     set -o nounset
 

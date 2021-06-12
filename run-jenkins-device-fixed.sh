@@ -37,7 +37,7 @@ main() {
 
     # Perform request
     local -r BUILD_URL="http://localhost:8080/job/rb-aosp_device/buildWithParameters"
-    curl -X POST "${BUILD_URL}" \
+    curl -X POST "$BUILD_URL" \
         --user "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
         -H "${JENKINS_CRUMB_HEADER}:${JENKINS_CRUMB}" \
         --data-urlencode "AOSP_REF=${AOSP_REF}" \

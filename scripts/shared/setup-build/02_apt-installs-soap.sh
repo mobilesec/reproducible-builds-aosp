@@ -17,9 +17,11 @@
 set -o errexit -o nounset -o xtrace
 
 main() {
+    # Ensure package installations does not prompt the user
+    export DEBIAN_FRONTEND="noninteractive"
+    sudo sed --in-place 's/env_reset/env_keep += "DEBIAN_FRONTEND"/g' "/etc/sudoers"
     # Required for reproducible build scripts
-    sudo apt-get --assume-yes install curl jq wget libguestfs-tools simg2img
+    sudo apt-get --assume-yes install curl jq wget libguestfs-tools
 }
 
 main "$@"
- 

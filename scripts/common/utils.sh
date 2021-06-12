@@ -27,10 +27,13 @@ getLatestCIBuildNumber() {
 setAdditionalBuildEnvironmentVars() {
     local SYSTEM_IMG="$1"
 
+    # General location of host binaries
+    local -r AOSP_HOST_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin"
+
     # Detect sparse images
     if file "${SYSTEM_IMG}" | grep 'Android sparse image'; then
         # Deomcpress into raw ext2/3/4 partition image
-        simg2img "${SYSTEM_IMG}" "${SYSTEM_IMG}.raw"
+        "${AOSP_HOST_BIN}/simg2img" "${SYSTEM_IMG}" "${SYSTEM_IMG}.raw"
         SYSTEM_IMG="${SYSTEM_IMG}.raw"
     fi
 
