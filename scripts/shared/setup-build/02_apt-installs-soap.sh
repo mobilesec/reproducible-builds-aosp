@@ -22,6 +22,8 @@ main() {
     sudo sed --in-place 's/env_reset/env_keep += "DEBIAN_FRONTEND"/g' "/etc/sudoers"
     # Required for reproducible build scripts
     sudo apt-get --assume-yes install curl jq wget libguestfs-tools
+
+    sudo update-guestfs-appliance
 }
 
 main "$@"

@@ -26,9 +26,9 @@ function preProcessImage {
     DIFF_IN_BASE=$(eval echo \$"$DIFF_IN_META")
     local DIFF_IN_RESOLVED=$DIFF_IN_BASE
     # Sanity check that we are dealing with a disk image
-    if file "${DIFF_IN_RESOLVED}" | grep -P '(ext2)|(ext3)|(ext4)|(Android sparse image)'; then
-        # Detect sparse images
-        if file "${DIFF_IN_RESOLVED}" | grep 'Android sparse image'; then
+    if file "${DIFF_IN_RESOLVED}" | grep -P '(ext2)|(ext3)|(ext4)|(data)'; then
+        # Detect sparse images, AOSP integrated tool should print something like `system.img: Total of 167424 4096-byte output blocks in 1258 input chunks.`
+        if "${AOSP_HOST_BIN}/simg_dump.py" "${DIFF_IN_RESOLVED}" | grep 'Total of'; then
             # Deomcpress into raw ext2/3/4 partition image
             "${AOSP_HOST_BIN}/simg2img" "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.raw"
             eval "$DIFF_IN_META=${DIFF_IN_RESOLVED}.raw"

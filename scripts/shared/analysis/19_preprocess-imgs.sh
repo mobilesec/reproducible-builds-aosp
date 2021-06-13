@@ -25,8 +25,8 @@ unpackSuper() {
     if [[ -f "${TARGET_DIR}/super.img" ]]; then
         local SUPER_IMG="${TARGET_DIR}/super.img"
 
-        # Detect sparse image
-        if file "${SUPER_IMG}" | grep 'Android sparse image'; then
+        # Detect sparse image, AOSP integrated tool should print something like `system.img: Total of 167424 4096-byte output blocks in 1258 input chunks.`
+        if "${AOSP_HOST_BIN}/simg_dump.py" "${SUPER_IMG}" | grep 'Total of'; then
             # Decompress into raw image
             "${AOSP_HOST_BIN}/simg2img" "${TARGET_DIR}/super.img" "${TARGET_DIR}/super.img.raw"
             SUPER_IMG="${TARGET_DIR}/super.img.raw"
