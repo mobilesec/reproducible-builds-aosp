@@ -17,8 +17,7 @@
 set -o errexit -o nounset -o pipefail -o xtrace
 
 docker build \
-    --target build \
-    --file=docker-aosp-legacy/Dockerfile \
-    --tag "mobilesec/rb-aosp-legacy:latest" \
+    --file=docker/analysis/Dockerfile \
+    --tag "mobilesec/rb-aosp-analysis:latest" \
     --no-cache=true \
     .

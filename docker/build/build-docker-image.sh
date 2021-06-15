@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2020 Manuel Pöll
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:18.04 AS build-and-analysis
+set -o errexit -o nounset -o pipefail -o xtrace
 
-COPY "./scripts" "./scripts"
-RUN apt-get update \
-    && sh "./scripts/shared/setup-build/01_apt-installs-aosp.sh" \
-    && sh "./scripts/shared/setup-build/02_apt-installs-soap.sh" \
-    && sh "./scripts/shared/setup-build/03_install-repo.sh" \
-    && sh "./scripts/shared/setup-build/04_config-git.sh" \
-    && sh "./scripts/shared/setup-analysis/01_apt-installs.sh" \
-    && sh "./scripts/docker/setup/01_config-profile.sh" \
-    && rm -rf "/var/lib/apt/lists/*"
-
-CMD bash
+docker build \
+    --file=docker/build/Dockerfile \
+    --tag "mobilesec/rb-aosp-build:latest" \
+    --no-cache=true \
+    .

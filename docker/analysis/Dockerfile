@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM android-build-trusty AS build
+FROM ubuntu:18.04
 
-COPY "./scripts" "./scripts"
-# Run the same installation steps for repo as in official Dockerfile, but with legacy version repo 1
-# that should run on Ubuntu 14.04, see https://source.android.com/setup/develop#old-repo-python2
-RUN curl -o /usr/local/bin/repo https://storage.googleapis.com/git-repo-downloads/repo-1 \
-    && echo "b5caa4be6496419057c5e1b1cdff1e4bdd3c1845eec87bd89ecb2e463a3ee62c  /usr/local/bin/repo" | sha256sum --strict -c - \
-    && chmod a+x /usr/local/bin/repo
+COPY "./scripts" "/scripts"
+COPY "./html-template" "/html-template"
 RUN apt-get update \
-    && sh "./scripts/shared/setup-build/02_apt-installs-soap.sh" \
+    && sh "./scripts/shared/setup-analysis/01_apt-installs.sh" \
+    && sh "./scripts/docker/setup/01_config-profile.sh" \
     && rm -rf "/var/lib/apt/lists/*"
 
-# TODO second stage for analysis
+CMD bash
