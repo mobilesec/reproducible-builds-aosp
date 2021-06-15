@@ -39,7 +39,9 @@ main() {
     # Navigate to src dir and init build
     local -r SRC_DIR="${RB_AOSP_BASE}/src"
     cd "${SRC_DIR}"
+    rm -rf "./out" # Clean
 
+    # Keep sourcing of envsetup in subshell since we use soong_ui.bash invocation from Android CI directly
     (
         # Unfortunately envsetup doesn't work with nounset flag, specifically fails with:
         # ./build/envsetup.sh: line 361: ZSH_VERSION: unbound variable
@@ -47,7 +49,6 @@ main() {
         source "./build/envsetup.sh"
 
         # Build libsparse to ensure we have a simg2img tool available in the host tools
-        rm -rf "./out"
         ( cd "./system/core/libsparse" && mma )
         set -o nounset
     )
@@ -56,10 +57,10 @@ main() {
     local -r SYSTEM_IMG="${RB_AOSP_BASE}/build/${BUILD_NUM}/${BUILD_TARGET}/Google/system.img"
     setAdditionalBuildEnvironmentVars "$SYSTEM_IMG"
 
+    rm -rf "./out" # Clean
     # Split into <BUILD> and <BUILDTYPE>
     local -r BUILD="${BUILD_TARGET%-*}"
     local -r BUILDTYPE="${BUILD_TARGET##*-}"
-    rm -rf "./out"
     # Run the same build instruction as the Android CI
     FORCE_BUILD_LLVM_COMPONENTS="true" build/soong/soong_ui.bash \
         "--make-mode" "TARGET_PRODUCT=${BUILD}" "TARGET_BUILD_VARIANT=${BUILDTYPE}" \

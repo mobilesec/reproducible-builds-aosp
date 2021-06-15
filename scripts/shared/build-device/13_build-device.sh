@@ -40,24 +40,24 @@ main() {
 
     # Navigate to src dir and init build
     local -r SRC_DIR="${RB_AOSP_BASE}/src"
-    # Communicate custom build dir to soong build system.
-    #export OUT_DIR_COMMON_BASE="${BUILD_DIR}" # Deactivated on purpose (Shared build dir leeds to build artifact caching)
     cd "${SRC_DIR}"
+    rm -rf "./out" # Clean
+
     # Unfortunately envsetup doesn't work with nounset flag, specifically fails with:
     # ./build/envsetup.sh: line 361: ZSH_VERSION: unbound variable
     set +o nounset
     source "./build/envsetup.sh"
 
     # Build libsparse to ensure we have a simg2img tool available in the host tools
-    rm -rf "./out"
     ( cd "./system/core/libsparse" && mma )
 
     # Set BUILD_DATETIME, BUILD_NUMBER, BUILD_USERNAME and BUILD_HOSTNAME
     local -r SYSTEM_IMG="${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/Google/system.img"
     setAdditionalBuildEnvironmentVars "$SYSTEM_IMG"
 
+    rm -rf "./out" # Clean
+    # Set build target and build, based on instruction from https://source.android.com
     lunch "${RB_BUILD_TARGET}"
-    rm -rf "./out"
     m -j "$(nproc)"
     set -o nounset
 
