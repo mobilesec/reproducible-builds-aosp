@@ -18,12 +18,10 @@ set -o errexit -o nounset -o pipefail -o xtrace
 
 main() {
     # Argument sanity check
-    if [[ "$#" -ne 1 ]]; then
-        echo "Usage: $0 <BUILD_TARGET>"
-        echo "BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details."
+    if [[ "$#" -ne 0 ]]; then
+        echo "Usage: $0"
         exit 1
     fi
-    local -r BUILD_TARGET="$1"
     # Reproducible base directory
     if [[ -z "${RB_AOSP_BASE+x}" ]]; then
         # Use default location
@@ -38,9 +36,16 @@ main() {
     # Unfortunately envsetup doesn't work with nounset flag, specifically fails with:
     # ./build/envsetup.sh: line 361: ZSH_VERSION: unbound variable
     set +o nounset
-    source ./build/envsetup.sh
-    lunch "${BUILD_TARGET}" # Might not be needed (see sample from https://android.googlesource.com/platform/system/extras/+/1f0277a%5E%21/)
+    source "./build/envsetup.sh"
+
+    # Build lpunpack, used to decompose super.img into separate images
+    # See sample from https://android.googlesource.com/platform/system/extras/+/1f0277a%5E%21/
+    #lunch "${BUILD_TARGET}"
     mm -j "$(nproc)" lpunpack
+
+    # Build libsparse to ensure we have a simg2img tool available in the host tools
+    ( cd "./system/core/libsparse" && mma )
+
     set -o nounset
 }
 

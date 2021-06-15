@@ -25,23 +25,27 @@ function preProcessImage {
     local DIFF_IN_BASE
     DIFF_IN_BASE=$(eval echo \$"$DIFF_IN_META")
     local DIFF_IN_RESOLVED=$DIFF_IN_BASE
+    # Detect sparse images, AOSP integrated tool should print something like `system.img: Total of 167424 4096-byte output blocks in 1258 input chunks.`
+    if "${AOSP_HOST_BIN}/simg_dump.py" "${DIFF_IN_RESOLVED}" | grep 'Total of'; then
+        # Deomcpress into raw ext2/3/4 partition image
+        "${AOSP_HOST_BIN}/simg2img" "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.raw"
+        eval "$DIFF_IN_META=${DIFF_IN_RESOLVED}.raw"
+    fi
+    DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
     # Sanity check that we are dealing with a disk image
-    if file "${DIFF_IN_RESOLVED}" | grep -P '(ext2)|(ext3)|(ext4)|(data)'; then
-        # Detect sparse images, AOSP integrated tool should print something like `system.img: Total of 167424 4096-byte output blocks in 1258 input chunks.`
-        if "${AOSP_HOST_BIN}/simg_dump.py" "${DIFF_IN_RESOLVED}" | grep 'Total of'; then
-            # Deomcpress into raw ext2/3/4 partition image
-            "${AOSP_HOST_BIN}/simg2img" "${DIFF_IN_RESOLVED}" "${DIFF_IN_RESOLVED}.raw"
-            eval "$DIFF_IN_META=${DIFF_IN_RESOLVED}.raw"
-        fi
-
-        local DIFF_IN_RESOLVED
-        DIFF_IN_RESOLVED=$(eval echo \$"$DIFF_IN_META")
+    if file "${DIFF_IN_RESOLVED}" | grep -P '(ext2)|(ext3)|(ext4)'; then
         # Mount image to ensure stable file iteration order
         mkdir -p "${DIFF_IN_RESOLVED}.mount"
         # guestfs allows working with complex file systems images (e.g. LVM volume groups with multiple LVs) and thus requires
         # us to be explicit about what part of image we want to mount. Running `virt-filesystems -a system.img.raw` returns the
         # name of the "virtual" device and can be directly fed to guestmount (usually this is /dev/sda)
-        guestmount -o "uid=$(id -u)" -o "gid=$(id -g)" -a "${DIFF_IN_RESOLVED}" -m "$(virt-filesystems -a "${DIFF_IN_RESOLVED}")" --ro "${DIFF_IN_RESOLVED}.mount"
+        local DEVICE_IN_IMAGE
+        DEVICE_IN_IMAGE="$(virt-filesystems -a "${DIFF_IN_RESOLVED}")"
+        if [[ "$DEVICE_IN_IMAGE" == "" ]]; then
+            # Fallback for Ubuntu 14.04, where virt-filesystems does not work
+            DEVICE_IN_IMAGE="/dev/sda"
+        fi
+        guestmount -o "uid=$(id -u)" -o "gid=$(id -g)" -a "${DIFF_IN_RESOLVED}" -m "$DEVICE_IN_IMAGE" --ro "${DIFF_IN_RESOLVED}.mount"
         eval "$DIFF_IN_META=${DIFF_IN_RESOLVED}.mount"
 
         # Extract apex_payload.img from APEX archives for separate diffoscope run
