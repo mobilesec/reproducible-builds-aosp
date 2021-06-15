@@ -24,7 +24,7 @@ composeCommands() {
 "./scripts/shared/build-generic/10_fetch-ci-artifacts.sh" "$BUILD_NUMBER" "$BUILD_TARGET"
 "./scripts/shared/build-generic/11_clone-src-via-manifest.sh" "$BUILD_NUMBER" "$BUILD_TARGET"
 "./scripts/shared/build-generic/12_build-generic.sh" "$BUILD_NUMBER" "$BUILD_TARGET"
-"./scripts/shared/analysis/18_build-lpunpack.sh" "$BUILD_TARGET"
+"./scripts/shared/analysis/18_build-tools.sh"
 "./scripts/shared/analysis/19_preprocess-imgs.sh" "$BUILD_NUMBER" "$BUILD_TARGET" "$BUILD_TARGET"
 declare -r DIFF_DIR="${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_\$(lsb_release -si)\$(lsb_release -sr)"
 "./scripts/shared/analysis/20_diffoscope-files.sh" \

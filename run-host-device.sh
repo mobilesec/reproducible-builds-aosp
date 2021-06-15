@@ -49,7 +49,7 @@ main() {
     "./scripts/shared/build-device/11_clone-src-device.sh" "$AOSP_REF"
     "./scripts/shared/build-device/12_fetch-extract-vendor.sh" "$BUILD_ID" "$DEVICE_CODENAME"
     "./scripts/shared/build-device/13_build-device.sh" "$AOSP_REF" "$RB_BUILD_TARGET" "$GOOGLE_BUILD_TARGET"
-    "./scripts/shared/analysis/18_build-lpunpack.sh" "$RB_BUILD_TARGET"
+    "./scripts/shared/analysis/18_build-tools.sh"
     "./scripts/shared/analysis/19_preprocess-imgs.sh" "$AOSP_REF" "$GOOGLE_BUILD_TARGET" "$RB_BUILD_TARGET"
     "./scripts/shared/analysis/20_diffoscope-files.sh" \
         "${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
