@@ -26,3 +26,5 @@ docker build \
     --tag "mobilesec/rb-aosp-build:latest" \
     --no-cache=true \
     .
+
+rm "gitconfig"
