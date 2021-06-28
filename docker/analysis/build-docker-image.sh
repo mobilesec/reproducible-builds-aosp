@@ -16,7 +16,12 @@
 
 set -o errexit -o nounset -o pipefail -o xtrace
 
+cp "$HOME/.gitconfig" "gitconfig"
+
 docker build \
+    --build-arg userid=$(id -u) \
+    --build-arg groupid=$(id -g) \
+    --build-arg username=$(id -un) \
     --file=docker/analysis/Dockerfile \
     --tag "mobilesec/rb-aosp-analysis:latest" \
     --no-cache=true \

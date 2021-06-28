@@ -12,26 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:18.04
-ARG userid
-ARG groupid
+FROM android-build-trusty
 ARG username
 
 COPY "./scripts" "/scripts"
+# Run the same installation steps for repo as in official Dockerfile, but with legacy version repo 1
+# that should run on Ubuntu 14.04, see https://source.android.com/setup/develop#old-repo-python2
+RUN curl -o /usr/local/bin/repo https://storage.googleapis.com/git-repo-downloads/repo-1 \
+    && echo "b5caa4be6496419057c5e1b1cdff1e4bdd3c1845eec87bd89ecb2e463a3ee62c  /usr/local/bin/repo" | sha256sum --strict -c - \
+    && chmod a+x /usr/local/bin/repo
 RUN apt-get update \
-    && sh "./scripts/shared/setup-build/01_apt-installs-aosp.sh" \
     && sh "./scripts/shared/setup-build/02_apt-installs-soap.sh" \
     && rm -rf "/var/lib/apt/lists/*"
-RUN curl -o "/usr/local/bin/repo" "https://storage.googleapis.com/git-repo-downloads/repo" \
-    && chmod a+x "/usr/local/bin/repo"
-
-# user setup, inspired from AOSP Dockerfile (see https://android.googlesource.com/platform/build/+/master/tools/docker/Dockerfile ) 
-RUN groupadd --gid $groupid $username \
-    && useradd --create-home --uid $userid --gid $groupid $username \
-    && echo $username > /root/docker-runtime-username \
-    && sudo -u $username mkdir /home/$username/aosp
-COPY gitconfig /home/$username/.gitconfig
-ENV HOME=/home/$username
-ENV USER=$username
+RUN sudo -u $username mkdir /home/$username/aosp
 
 CMD /bin/bash -l

@@ -18,11 +18,13 @@ set -o errexit -o nounset -o pipefail -o xtrace
 
 composeCommandsBuild() {
     cat <<EOF | tr '\n' '; '
-"./scripts/shared/build-device/10_fetch-extract-factory-images.sh" "$AOSP_REF" "$BUILD_ID" "$DEVICE_CODENAME" "$DEVICE_CODENAME"
+( cd "${RB_AOSP_BASE}/src/.repo/repo" && git checkout "v1.13.9.4" )
+"./scripts/shared/build-device/10_fetch-extract-factory-images.sh" "$AOSP_REF" "$BUILD_ID" "$DEVICE_CODENAME" "$DEVICE_CODENAME_FACTORY_IMAGE"
 "./scripts/shared/build-device/11_clone-src-device.sh" "$AOSP_REF"
 "./scripts/shared/build-device/12_fetch-extract-vendor.sh" "$BUILD_ID" "$DEVICE_CODENAME"
 "./scripts/shared/build-device/13_build-device.sh" "$AOSP_REF" "$RB_BUILD_TARGET" "$GOOGLE_BUILD_TARGET"
 "./scripts/shared/analysis/18_build-tools.sh"
+( cd "${RB_AOSP_BASE}/src/.repo/repo" && git checkout "default" )
 EOF
 }
 
@@ -42,13 +44,14 @@ EOF
 main() {
     local -r RB_AOSP_BASE="${HOME}/aosp"
 
-    local -r AOSP_REF="android-10.0.0_r30"
-    local -r BUILD_ID="QQ2A.200305.002"
-    local -r DEVICE_CODENAME="crosshatch"
+    local -r AOSP_REF="android-5.1.1_r37"
+    local -r BUILD_ID="LMY49J"
+    local -r DEVICE_CODENAME="manta"
+    local -r DEVICE_CODENAME_FACTORY_IMAGE="mantaray"
     local -r GOOGLE_BUILD_TARGET="${DEVICE_CODENAME}-user"
     local -r GOOGLE_BUILD_ENV="Google"
     local -r RB_BUILD_TARGET="aosp_${DEVICE_CODENAME}-user"
-    local -r RB_BUILD_ENV="Ubuntu18.04"
+    local -r RB_BUILD_ENV="Ubuntu14.04"
     local -r RB_BUILD_ENV_DOCKER="docker-${RB_BUILD_ENV}"
 
     local -r DIFF_DIR="${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
@@ -57,14 +60,14 @@ main() {
     local -r CONTAINER_NAME_BUILD="${DIFF_DIR}--build"
     local -r CONTAINER_NAME_ANALYSIS="${DIFF_DIR}--analysis"
 
-    # Perform AOSP build in docker container
+    # Perform legacy AOSP build in docker container
     docker run --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
         --name "$CONTAINER_NAME_BUILD" \
         --user=$(id -un) \
         --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
         --mount "type=bind,source=/boot,target=/boot" \
         --mount "type=bind,source=/lib/modules,target=/lib/modules" \
-        "mobilesec/rb-aosp-build:latest" "/bin/bash" -l -c "$(composeCommandsBuild)"
+        --entrypoint "/bin/bash" "mobilesec/rb-aosp-build-legacy:latest" -l -c "$(composeCommandsBuild)"
     # Copy reference and RB build output to host
     mkdir -p "${RB_AOSP_BASE}/build/${AOSP_REF}"
     docker cp "${CONTAINER_NAME_BUILD}:${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}" "${RB_AOSP_BASE}/build/${AOSP_REF}/"

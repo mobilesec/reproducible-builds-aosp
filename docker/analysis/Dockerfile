@@ -13,12 +13,24 @@
 # limitations under the License.
 
 FROM ubuntu:18.04
+ARG userid
+ARG groupid
+ARG username
 
 COPY "./scripts" "/scripts"
 COPY "./html-template" "/html-template"
+COPY "./.version" "/.version"
 RUN apt-get update \
     && sh "./scripts/shared/setup-analysis/01_apt-installs.sh" \
-    && sh "./scripts/docker/setup/01_config-profile.sh" \
     && rm -rf "/var/lib/apt/lists/*"
 
-CMD bash
+# user setup, inspired from AOSP Dockerfile (see https://android.googlesource.com/platform/build/+/master/tools/docker/Dockerfile ) 
+RUN groupadd --gid $groupid $username \
+    && useradd --create-home --uid $userid --gid $groupid $username \
+    && echo $username > /root/docker-runtime-username \
+    && sudo -u $username mkdir /home/$username/aosp
+COPY gitconfig /home/$username/.gitconfig
+ENV HOME=/home/$username
+ENV USER=$username
+
+CMD /bin/bash -l

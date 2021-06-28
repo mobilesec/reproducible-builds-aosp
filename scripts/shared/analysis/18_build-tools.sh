@@ -38,13 +38,13 @@ main() {
     set +o nounset
     source "./build/envsetup.sh"
 
+    # Build libsparse to ensure we have a simg2img tool available in the host tools
+    ( cd "./system/core/libsparse" && mma )
+
     # Build lpunpack, used to decompose super.img into separate images
     # See sample from https://android.googlesource.com/platform/system/extras/+/1f0277a%5E%21/
     #lunch "${BUILD_TARGET}"
     mm -j "$(nproc)" lpunpack
-
-    # Build libsparse to ensure we have a simg2img tool available in the host tools
-    ( cd "./system/core/libsparse" && mma )
 
     set -o nounset
 }

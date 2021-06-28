@@ -22,6 +22,7 @@ main() {
     sudo sed --in-place 's/env_reset/env_keep += "DEBIAN_FRONTEND"/g' "/etc/sudoers"
     # Required for reproducible build scripts
     sudo apt-get --assume-yes install curl jq wget libguestfs-tools
+
     # Update guestfs appliance, needed for Ubuntu 14.04
     if command -v "update-guestfs-appliance" ; then
         sudo update-guestfs-appliance
