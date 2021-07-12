@@ -35,6 +35,10 @@ main() {
     sudo apt-get --assume-yes install python
     # While the above works for Ubuntu (tested on LTS 18.04), Debian (tested on 10) requires the following additional dependencies for building AOSP
     sudo apt-get --assume-yes install rsync libncurses5
+    # Minimal docker installation of Ubuntu 18.04 has no JDK installed
+    sudo apt-get --assume-yes install openjdk-8-jdk
+    # Fix issue with JACK that occurs for Android 7 during build, see https://stackoverflow.com/a/67426405
+    sudo sed --in-place -e 's/jdk.tls.disabledAlgorithms=SSLv3, TLSv1, TLSv1.1, RC4, DES, MD5withRSA, \\/jdk.tls.disabledAlgorithms=SSLv3, RC4, DES, MD5withRSA, \\/' '/etc/java-8-openjdk/security/java.security'
 }
 
 main "$@"

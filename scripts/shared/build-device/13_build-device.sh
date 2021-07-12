@@ -58,6 +58,7 @@ main() {
     rm -rf "./out" # Clean
     # Set build target and build, based on instruction from https://source.android.com
     lunch "${RB_BUILD_TARGET}"
+    m -j "$(nproc)" otatools # Regular m fails for Android 7 build, see https://groups.google.com/g/android-building/c/u3b4fIC4DYU
     m -j "$(nproc)"
     set -o nounset
 

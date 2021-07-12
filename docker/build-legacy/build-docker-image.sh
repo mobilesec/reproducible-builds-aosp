@@ -19,6 +19,8 @@ set -o errexit -o nounset -o pipefail -o xtrace
 cp "$HOME/.gitconfig" "gitconfig"
 
 docker build \
+    --build-arg userid=$(id -u) \
+    --build-arg groupid=$(id -g) \
     --build-arg username=$(id -un) \
     --file=docker/build-legacy/Dockerfile \
     --tag "mobilesec/rb-aosp-build-legacy:latest" \

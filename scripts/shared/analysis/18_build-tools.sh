@@ -41,10 +41,12 @@ main() {
     # Build libsparse to ensure we have a simg2img tool available in the host tools
     ( cd "./system/core/libsparse" && mma )
 
-    # Build lpunpack, used to decompose super.img into separate images
-    # See sample from https://android.googlesource.com/platform/system/extras/+/1f0277a%5E%21/
-    #lunch "${BUILD_TARGET}"
-    mm -j "$(nproc)" lpunpack
+    if [[ -f "./system/extras/partition_tools/lpunpack.cc" ]]; then
+        # Build lpunpack, used to decompose super.img into separate images
+        # See sample from https://android.googlesource.com/platform/system/extras/+/1f0277a%5E%21/
+        #lunch "${BUILD_TARGET}"
+        mm -j "$(nproc)" lpunpack
+    fi
 
     set -o nounset
 }

@@ -40,12 +40,37 @@ unpackBoot() {
     local -r BUILD_TARGET="$1"
     local -r BUILD_ENV="$2"
     local -r TARGET_DIR="${RB_AOSP_BASE}/build/${AOSP_REF_OR_BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
+    cd "${TARGET_DIR}"
 
-    # If boot exists, decompose it into bootimg.cfg, initrd.img and zImage
-    if [[ -f "${TARGET_DIR}/boot.img" ]]; then
-        (cd "${TARGET_DIR}" && abootimg -x "boot.img")
-        rm "${TARGET_DIR}/boot.img"
-    fi
+    local -a IMG_FILES
+    mapfile -t IMG_FILES < <( find . -name '*.img' -type f | sort )
+    declare -r IMG_FILES
+
+    # For all android boot images: Unpack into components and move them to top directory
+    for IMG_FILE in "${IMG_FILES[@]}"; do
+        if file "$IMG_FILE" | grep 'Android bootimg'; then
+            if [[ -f "${SRC_DIR}/system/core/mkbootimg/unpack_bootimg" ]]; then
+                # Use custom unpack_bootimg binary from AOSP
+                local UNPACK_BOOT_DIR="${IMG_FILE}.unpack-boot"
+                mkdir "$UNPACK_BOOT_DIR"
+                "${SRC_DIR}/system/core/mkbootimg/unpack_bootimg" --boot_img "$IMG_FILE" --out "$UNPACK_BOOT_DIR" > "${IMG_FILE}.unpack_bootimg.output"
+                if [[ -f "${UNPACK_BOOT_DIR}/kernel" ]]; then
+                    mv "${UNPACK_BOOT_DIR}/kernel" "${IMG_FILE}.kernel.img"
+                fi
+                if [[ -f "${UNPACK_BOOT_DIR}/ramdisk" ]]; then
+                    mv "${UNPACK_BOOT_DIR}/ramdisk" "${IMG_FILE}.ramdisk.img"
+                fi
+                if [[ -f "${UNPACK_BOOT_DIR}/second" ]]; then
+                    mv "${UNPACK_BOOT_DIR}/second" "${IMG_FILE}.second.img"
+                fi
+                rm -rf "./${UNPACK_BOOT_DIR}"
+            else
+                # Fallback to abootimg, a small helper tool to handle Android boot images, previously installed via apt
+                abootimg -x "$IMG_FILE" "${IMG_FILE}.bootimg.cfg" "${IMG_FILE}.kernel.img" "${IMG_FILE}.ramdisk.img" "${IMG_FILE}.second.img"
+            fi
+            rm "$IMG_FILE"
+        fi
+    done
 }
 
 main() {
@@ -68,6 +93,7 @@ main() {
     fi
 
     # General location of host binaries
+    local -r SRC_DIR="${RB_AOSP_BASE}/src"
     local -r AOSP_HOST_BIN="${RB_AOSP_BASE}/src/out/host/linux-x86/bin"
     # Environment names used for build paths
     local -r GOOGLE_BUILD_ENV="Google"
