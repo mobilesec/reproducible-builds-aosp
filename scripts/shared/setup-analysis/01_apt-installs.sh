@@ -25,7 +25,7 @@ installDiffoscope() {
     sudo apt-get --assume-yes remove diffoscope
 
     # Install more current version via pip, pinned to 151 to ensure consistent behavior
-    sudo pip3 install diffoscope==151
+    sudo pip3 install diffoscope==178
     # root user causes installation in /usr/local/bin instead of $HOME/.local/bin
 
     # diffoscope has a feature to list missing deps, use this to install any deps we may have missed previously
