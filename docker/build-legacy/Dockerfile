@@ -26,7 +26,7 @@ RUN curl -o jdk8.tgz https://android.googlesource.com/platform/prebuilts/jdk/jdk
     && mv linux-x86 /usr/lib/jvm/java-8-openjdk-amd64 \
     && rm -rf jdk8.tgz
 RUN apt-get update \
-    && sh "./scripts/shared/setup-build/02_apt-installs-soap.sh" \
+    && sh "./scripts/setup-build/02_apt-installs-soap.sh" \
     && rm -rf "/var/lib/apt/lists/*"
 
 # Run the same installation steps for repo as in official Dockerfile, but with legacy version repo 1

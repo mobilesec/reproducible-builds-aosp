@@ -19,8 +19,8 @@ ARG username
 
 COPY "./scripts" "/scripts"
 RUN apt-get update \
-    && sh "./scripts/shared/setup-build/01_apt-installs-aosp.sh" \
-    && sh "./scripts/shared/setup-build/02_apt-installs-soap.sh" \
+    && sh "./scripts/setup-build/01_apt-installs-aosp.sh" \
+    && sh "./scripts/setup-build/02_apt-installs-soap.sh" \
     && rm -rf "/var/lib/apt/lists/*"
 RUN curl -o "/usr/local/bin/repo" "https://storage.googleapis.com/git-repo-downloads/repo" \
     && chmod a+x "/usr/local/bin/repo"

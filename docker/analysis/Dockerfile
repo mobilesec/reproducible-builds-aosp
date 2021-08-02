@@ -21,7 +21,7 @@ COPY "./scripts" "/scripts"
 COPY "./html-template" "/html-template"
 COPY "./.version" "/.version"
 RUN apt-get update \
-    && sh "./scripts/shared/setup-analysis/01_apt-installs.sh" \
+    && sh "./scripts/setup-analysis/01_apt-installs.sh" \
     && rm -rf "/var/lib/apt/lists/*"
 
 # user setup, inspired from AOSP Dockerfile (see https://android.googlesource.com/platform/build/+/master/tools/docker/Dockerfile ) 

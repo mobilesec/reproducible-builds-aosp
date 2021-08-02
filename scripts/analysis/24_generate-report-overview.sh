@@ -33,7 +33,7 @@ main() {
 
     # Template directory
     local -r SCRIPT_LOCATION="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-    local -r LOCATION_IN_RB_AOSP="scripts/shared/analysis"
+    local -r LOCATION_IN_RB_AOSP="scripts/analysis"
     local -r SCRIPT_BASE=${SCRIPT_LOCATION%"$LOCATION_IN_RB_AOSP"}
     # Templates
     local -r TEMPLATE_REPORT_OVERVIEW="${SCRIPT_BASE}html-template/report-overview.html"
