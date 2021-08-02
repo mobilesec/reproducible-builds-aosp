@@ -1,41 +1,36 @@
 <?xml version='1.1' encoding='UTF-8'?>
-<flow-definition plugin="workflow-job@2.39">
+<flow-definition plugin="workflow-job@2.40">
   <actions>
-    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.7.0"/>
-    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.7.0">
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.8.4"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.8.4">
       <jobProperties/>
       <triggers/>
       <parameters/>
       <options/>
     </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
   </actions>
-  <description>rb-aosp build for generic images from ci.android.com</description>
+  <description>Reproducible Builds AOSP build for generic with tooling via Docker.</description>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <org.jenkinsci.plugins.authorizeproject.AuthorizeProjectProperty plugin="authorize-project@1.3.0">
-      <strategy class="org.jenkinsci.plugins.authorizeproject.strategy.SpecificUsersAuthorizationStrategy">
-        <userid>dev</userid>
-        <dontRestrictJobConfiguration>false</dontRestrictJobConfiguration>
-      </strategy>
-    </org.jenkinsci.plugins.authorizeproject.AuthorizeProjectProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>
           <name>BUILD_NUMBER</name>
-          <description>Google internal incremental build number that identifies each build, see https://android.googlesource.com/platform/build/+/master/Changes.md#BUILD_NUMBER&quot;</description>
-          <defaultValue>6226587</defaultValue>
+          <description>Google internal incremental build number that identifies each build, see https://android.googlesource.com/platform/build/+/master/Changes.md#BUILD_NUMBER</description>
+          <defaultValue>7580809</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>BUILD_TARGET</name>
-          <description>Build target as choosen in lunch (consist of &lt;TARGET_PRODUCT&gt;-&lt;TARGET_BUILD_VARIANT&gt;&quot;</description>
-          <defaultValue>aosp_x86_64-eng</defaultValue>
+          <description>Build target as choosen in lunch (consist of &lt;TARGET_PRODUCT&gt;-&lt;TARGET_BUILD_VARIANT&gt;</description>
+          <defaultValue>aosp_x86_64-userdebug</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.81">
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.92">
     <script>/*
 Copyright 2020 Manuel Pöll
 
@@ -52,41 +47,68 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 pipeline {
-    agent any
+    agent none
 
     environment {
-        PATH=&quot;$PATH:/home/dev/bin:/home/dev/.local/bin&quot;
-        SCRIPT_DIR=&quot;/home/dev/reproducible-builds-aosp&quot;
-        RB_AOSP_BASE=&quot;/var/lib/jenkins/aosp&quot;
+        RB_AOSP_BASE=&quot;/home/dev/aosp&quot;
+
         GOOGLE_BUILD_ENV=&quot;Google&quot;
-        RB_BUILD_ENV=&quot;\$(lsb_release -si)\$(lsb_release -sr)&quot;
+        RB_BUILD_ENV=&quot;Ubuntu18.04&quot;
+        RB_BUILD_ENV_DOCKER=&quot;docker-${RB_BUILD_ENV}&quot;
+
+        DIFF_DIR=&quot;${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}&quot;
+        DIFF_PATH=&quot;${RB_AOSP_BASE}/diff/${DIFF_DIR}&quot;
+
+        CONTAINER_NAME_BUILD=&quot;${DIFF_DIR}--build&quot;
+        CONTAINER_NAME_ANALYSIS=&quot;${DIFF_DIR}--analysis&quot;
     }
 
     stages {
-        stage(&apos;Fetch Reference&apos;) {
-            steps {
-                sh &quot;${SCRIPT_DIR}/scripts/shared/build-generic/10_fetch-ci-artifacts.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
+        stage(&apos;Build&apos;) {
+            agent {
+                docker {
+                    image &apos;mobilesec/rb-aosp-build:latest&apos;
+                    args &quot;&quot;&quot; --device &quot;/dev/fuse&quot; --cap-add &quot;SYS_ADMIN&quot; --security-opt &quot;apparmor:unconfined&quot; \
+                        --name &quot;$CONTAINER_NAME_BUILD&quot; \
+                        --mount &quot;type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src&quot; \
+                        --mount &quot;type=bind,source=${RB_AOSP_BASE}/build,target=${RB_AOSP_BASE}/build&quot; \
+                        --mount &quot;type=bind,source=/boot,target=/boot&quot; \
+                        --mount &quot;type=bind,source=/lib/modules,target=/lib/modules&quot;
+                    &quot;&quot;&quot;
+                }
             }
-        }
-        stage(&apos;Cloning&apos;) {
             steps {
-                sh &quot;${SCRIPT_DIR}/scripts/shared/build-generic/11_clone-src-via-manifest.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
-            }
-        }
-        stage(&apos;Building&apos;) {
-            steps {
-                sh &quot;${SCRIPT_DIR}/scripts/shared/build-generic/12_build-generic.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
+                sh &quot;/scripts/build-generic/10_fetch-ci-artifacts.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
+                sh &quot;/scripts/build-generic/11_clone-src-via-manifest.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
+                sh &quot;/scripts/build-generic/12_build-generic.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot;&quot;
+                sh &quot;/scripts/analysis/18_build-tools.sh&quot;
             }
         }
         stage(&apos;Analysis&apos;) {
+            agent {
+                docker {
+                    image &apos;mobilesec/rb-aosp-analysis:latest&apos;
+                    args &quot;&quot;&quot; --device &quot;/dev/fuse&quot; --cap-add &quot;SYS_ADMIN&quot; --security-opt &quot;apparmor:unconfined&quot; \
+                        --name &quot;$CONTAINER_NAME_ANALYSIS&quot; \
+                        --mount &quot;type=bind,source=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET},target=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}&quot; \
+                        --mount &quot;type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src&quot; \
+                        --mount &quot;type=bind,source=${RB_AOSP_BASE}/diff,target=${RB_AOSP_BASE}/diff&quot; \
+                        --mount &quot;type=bind,source=/boot,target=/boot&quot; \
+                        --mount &quot;type=bind,source=/lib/modules,target=/lib/modules&quot;
+                    &quot;&quot;&quot;
+                }
+            }
             steps {
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/18_build-tools.sh&quot;
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/19_preprocess-imgs.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot; \&quot;${BUILD_TARGET}\&quot; \&quot;${RB_BUILD_ENV}\&quot;&quot;
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/20_diffoscope-files.sh \&quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}\&quot; \&quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}\&quot; \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/21_generate-diffstat.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/22_generate-metrics.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot; \&quot;generic\&quot;&quot;
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/23_generate-visualization.sh \&quot;${RB_AOSP_BASE}/diff/${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV}\&quot;&quot;
-                sh &quot;${SCRIPT_DIR}/scripts/shared/analysis/24_generate-report-overview.sh \&quot;${RB_AOSP_BASE}/diff\&quot;&quot;
+                sh &quot;/scripts/analysis/19_preprocess-imgs.sh \&quot;${BUILD_NUMBER}\&quot; \&quot;${BUILD_TARGET}\&quot; \&quot;${BUILD_TARGET}\&quot; \&quot;${RB_BUILD_ENV}\&quot;&quot;
+                sh &quot;&quot;&quot;
+                    &quot;/scripts/analysis/20_diffoscope-files.sh&quot; \
+                        &quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}&quot; \
+                        &quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}&quot; \
+                        &quot;${DIFF_PATH}&quot;
+                &quot;&quot;&quot;
+                sh &quot;/scripts/analysis/21_generate-diffstat.sh \&quot;${DIFF_PATH}\&quot;&quot;
+                sh &quot;/scripts/analysis/22_generate-metrics.sh \&quot;${DIFF_PATH}\&quot; \&quot;generic\&quot;&quot;
+                sh &quot;/scripts/analysis/23_generate-visualization.sh \&quot;${DIFF_PATH}\&quot;&quot;
             }
         }
     }

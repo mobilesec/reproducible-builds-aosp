@@ -22,7 +22,7 @@ main() {
     local -r JENKINS_API_TOKEN="YOUR_API_TOKEN_HERE"
 
     # Create Jenkins Pipeline jobs based on config files
-    local -ar PIPELINE_NAMES=("rb-aosp_device" "rb-aosp_generic")
+    local -ar PIPELINE_NAMES=("rb-aosp_device" "rb-aosp_device-legacy" "rb-aosp_generic")
     for PIPELINE_NAME in "${PIPELINE_NAMES[@]}"; do
         local PIPELINE_FILE="jenkins/config_${PIPELINE_NAME}.xml"
         local BUILD_URL="http://localhost:8080/createItem?name=${PIPELINE_NAME}"

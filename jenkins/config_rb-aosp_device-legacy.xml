@@ -9,7 +9,7 @@
       <options/>
     </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
   </actions>
-  <description>Reproducible Builds AOSP build for device via Docker.</description>
+  <description>Reproducible Builds AOSP build for device with legacy tooling via Docker.</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
@@ -18,31 +18,37 @@
         <hudson.model.StringParameterDefinition>
           <name>AOSP_REF</name>
           <description>Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds</description>
-          <defaultValue>android-7.1.2_r33</defaultValue>
+          <defaultValue>android-5.1.1_r37</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>BUILD_ID</name>
           <description>version of AOSP, corresponds to a tag, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds</description>
-          <defaultValue>NZH54D</defaultValue>
+          <defaultValue>LMY49J</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>DEVICE_CODENAME</name>
           <description>Internal code name for device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode for details.</description>
-          <defaultValue>marlin</defaultValue>
+          <defaultValue>manta</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>DEVICE_CODENAME_FACTORY_IMAGE</name>
+          <description>Alternative internal code name for device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode for details.</description>
+          <defaultValue>mantaray</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>GOOGLE_BUILD_TARGET</name>
           <description>Google build target as choosen in lunch (consist of &lt;TARGET_PRODUCT&gt;-&lt;TARGET_BUILD_VARIANT&gt;</description>
-          <defaultValue>marlin-user</defaultValue>
+          <defaultValue>manta-user</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>RB_BUILD_TARGET</name>
           <description>Our build target as choosen in lunch (consist of &lt;TARGET_PRODUCT&gt;-&lt;TARGET_BUILD_VARIANT&gt;</description>
-          <defaultValue>aosp_marlin-user</defaultValue>
+          <defaultValue>aosp_manta-user</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
@@ -71,7 +77,7 @@ pipeline {
         RB_AOSP_BASE=&quot;/home/dev/aosp&quot;
 
         GOOGLE_BUILD_ENV=&quot;Google&quot;
-        RB_BUILD_ENV=&quot;Ubuntu18.04&quot;
+        RB_BUILD_ENV=&quot;Ubuntu14.04&quot;
         RB_BUILD_ENV_DOCKER=&quot;docker-${RB_BUILD_ENV}&quot;
 
         DIFF_DIR=&quot;${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}&quot;
@@ -85,22 +91,24 @@ pipeline {
         stage(&apos;Build&apos;) {
             agent {
                 docker {
-                    image &apos;mobilesec/rb-aosp-build:latest&apos;
+                    image &apos;mobilesec/rb-aosp-build-legacy:latest&apos;
                     args &quot;&quot;&quot; --device &quot;/dev/fuse&quot; --cap-add &quot;SYS_ADMIN&quot; --security-opt &quot;apparmor:unconfined&quot; \
                         --name &quot;$CONTAINER_NAME_BUILD&quot; \
                         --mount &quot;type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src&quot; \
                         --mount &quot;type=bind,source=${RB_AOSP_BASE}/build,target=${RB_AOSP_BASE}/build&quot; \
                         --mount &quot;type=bind,source=/boot,target=/boot&quot; \
-                        --mount &quot;type=bind,source=/lib/modules,target=/lib/modules&quot;
+                        --mount &quot;type=bind,source=/lib/modules,target=/lib/modules&quot; \
                     &quot;&quot;&quot;
                 }
             }
             steps {
-                sh &quot;/scripts/build-device/10_fetch-extract-factory-images.sh \&quot;${AOSP_REF}\&quot; \&quot;${BUILD_ID}\&quot; \&quot;${DEVICE_CODENAME}\&quot; \&quot;${DEVICE_CODENAME}\&quot;&quot;
+                sh &quot;( cd \&quot;${RB_AOSP_BASE}/src/.repo/repo\&quot; &amp;&amp; git checkout \&quot;v1.13.9.4\&quot; )&quot;
+                sh &quot;/scripts/build-device/10_fetch-extract-factory-images.sh \&quot;${AOSP_REF}\&quot; \&quot;${BUILD_ID}\&quot; \&quot;${DEVICE_CODENAME}\&quot; \&quot;${DEVICE_CODENAME_FACTORY_IMAGE}\&quot;&quot;
                 sh &quot;/scripts/build-device/11_clone-src-device.sh \&quot;${AOSP_REF}\&quot;&quot;
                 sh &quot;/scripts/build-device/12_fetch-extract-vendor.sh \&quot;${BUILD_ID}\&quot; \&quot;${DEVICE_CODENAME}\&quot;&quot;
                 sh &quot;/scripts/build-device/13_build-device.sh \&quot;${AOSP_REF}\&quot; \&quot;${RB_BUILD_TARGET}\&quot; \&quot;${GOOGLE_BUILD_TARGET}\&quot;&quot;
                 sh &quot;/scripts/analysis/18_build-tools.sh&quot;
+                sh &quot;( cd \&quot;${RB_AOSP_BASE}/src/.repo/repo\&quot; &amp;&amp; git checkout \&quot;default\&quot; )&quot;
             }
         }
         stage(&apos;Analysis&apos;) {

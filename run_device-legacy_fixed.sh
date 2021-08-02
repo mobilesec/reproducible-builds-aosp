@@ -19,25 +19,25 @@ set -o errexit -o nounset -o pipefail -o xtrace
 composeCommandsBuild() {
     cat <<EOF | tr '\n' '; '
 ( cd "${RB_AOSP_BASE}/src/.repo/repo" && git checkout "v1.13.9.4" )
-"./scripts/shared/build-device/10_fetch-extract-factory-images.sh" "$AOSP_REF" "$BUILD_ID" "$DEVICE_CODENAME" "$DEVICE_CODENAME_FACTORY_IMAGE"
-"./scripts/shared/build-device/11_clone-src-device.sh" "$AOSP_REF"
-"./scripts/shared/build-device/12_fetch-extract-vendor.sh" "$BUILD_ID" "$DEVICE_CODENAME"
-"./scripts/shared/build-device/13_build-device.sh" "$AOSP_REF" "$RB_BUILD_TARGET" "$GOOGLE_BUILD_TARGET"
-"./scripts/shared/analysis/18_build-tools.sh"
+"./scripts/build-device/10_fetch-extract-factory-images.sh" "$AOSP_REF" "$BUILD_ID" "$DEVICE_CODENAME" "$DEVICE_CODENAME_FACTORY_IMAGE"
+"./scripts/build-device/11_clone-src-device.sh" "$AOSP_REF"
+"./scripts/build-device/12_fetch-extract-vendor.sh" "$BUILD_ID" "$DEVICE_CODENAME"
+"./scripts/build-device/13_build-device.sh" "$AOSP_REF" "$RB_BUILD_TARGET" "$GOOGLE_BUILD_TARGET"
+"./scripts/analysis/18_build-tools.sh"
 ( cd "${RB_AOSP_BASE}/src/.repo/repo" && git checkout "default" )
 EOF
 }
 
 composeCommandsAnalysis() {
     cat <<EOF | tr '\n' '; '
-"./scripts/shared/analysis/19_preprocess-imgs.sh" "$AOSP_REF" "$GOOGLE_BUILD_TARGET" "$RB_BUILD_TARGET" "$RB_BUILD_ENV"
-"./scripts/shared/analysis/20_diffoscope-files.sh" \
+"./scripts/analysis/19_preprocess-imgs.sh" "$AOSP_REF" "$GOOGLE_BUILD_TARGET" "$RB_BUILD_TARGET" "$RB_BUILD_ENV"
+"./scripts/analysis/20_diffoscope-files.sh" \
     "${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
     "${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}" \
     "$DIFF_PATH"
-"./scripts/shared/analysis/21_generate-diffstat.sh" "$DIFF_PATH"
-"./scripts/shared/analysis/22_generate-metrics.sh" "$DIFF_PATH" "device"
-"./scripts/shared/analysis/23_generate-visualization.sh" "$DIFF_PATH"
+"./scripts/analysis/21_generate-diffstat.sh" "$DIFF_PATH"
+"./scripts/analysis/22_generate-metrics.sh" "$DIFF_PATH" "device"
+"./scripts/analysis/23_generate-visualization.sh" "$DIFF_PATH"
 EOF
 }
 
@@ -85,7 +85,7 @@ main() {
     docker rm "$CONTAINER_NAME_ANALYSIS"
 
     # Generate report overview on the host
-    "./scripts/shared/analysis/24_generate-report-overview.sh" "${RB_AOSP_BASE}/diff"
+    "./scripts/analysis/24_generate-report-overview.sh" "${RB_AOSP_BASE}/diff"
 }
 
 main "$@"

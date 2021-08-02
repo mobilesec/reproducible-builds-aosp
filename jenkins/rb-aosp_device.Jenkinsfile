@@ -45,11 +45,11 @@ pipeline {
                 }
             }
             steps {
-                sh "/scripts/shared/build-device/10_fetch-extract-factory-images.sh \"${AOSP_REF}\" \"${BUILD_ID}\" \"${DEVICE_CODENAME}\" \"${DEVICE_CODENAME}\""
-                sh "/scripts/shared/build-device/11_clone-src-device.sh \"${AOSP_REF}\""
-                sh "/scripts/shared/build-device/12_fetch-extract-vendor.sh \"${BUILD_ID}\" \"${DEVICE_CODENAME}\""
-                sh "/scripts/shared/build-device/13_build-device.sh \"${AOSP_REF}\" \"${RB_BUILD_TARGET}\" \"${GOOGLE_BUILD_TARGET}\""
-                sh "/scripts/shared/analysis/18_build-tools.sh"
+                sh "/scripts/build-device/10_fetch-extract-factory-images.sh \"${AOSP_REF}\" \"${BUILD_ID}\" \"${DEVICE_CODENAME}\" \"${DEVICE_CODENAME}\""
+                sh "/scripts/build-device/11_clone-src-device.sh \"${AOSP_REF}\""
+                sh "/scripts/build-device/12_fetch-extract-vendor.sh \"${BUILD_ID}\" \"${DEVICE_CODENAME}\""
+                sh "/scripts/build-device/13_build-device.sh \"${AOSP_REF}\" \"${RB_BUILD_TARGET}\" \"${GOOGLE_BUILD_TARGET}\""
+                sh "/scripts/analysis/18_build-tools.sh"
             }
         }
         stage('Analysis') {
@@ -68,16 +68,16 @@ pipeline {
                 }
             }
             steps {
-                sh "/scripts/shared/analysis/19_preprocess-imgs.sh \"${AOSP_REF}\" \"${GOOGLE_BUILD_TARGET}\" \"${RB_BUILD_TARGET}\" \"${RB_BUILD_ENV}\""
+                sh "/scripts/analysis/19_preprocess-imgs.sh \"${AOSP_REF}\" \"${GOOGLE_BUILD_TARGET}\" \"${RB_BUILD_TARGET}\" \"${RB_BUILD_ENV}\""
                 sh """
-                    "/scripts/shared/analysis/20_diffoscope-files.sh" \
+                    "/scripts/analysis/20_diffoscope-files.sh" \
                         "${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
                         "${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}" \
                         "${DIFF_PATH}"
                 """
-                sh "/scripts/shared/analysis/21_generate-diffstat.sh \"${DIFF_PATH}\""
-                sh "/scripts/shared/analysis/22_generate-metrics.sh \"${DIFF_PATH}\" \"device\""
-                sh "/scripts/shared/analysis/23_generate-visualization.sh \"${DIFF_PATH}\""
+                sh "/scripts/analysis/21_generate-diffstat.sh \"${DIFF_PATH}\""
+                sh "/scripts/analysis/22_generate-metrics.sh \"${DIFF_PATH}\" \"device\""
+                sh "/scripts/analysis/23_generate-visualization.sh \"${DIFF_PATH}\""
             }
         }
     }
