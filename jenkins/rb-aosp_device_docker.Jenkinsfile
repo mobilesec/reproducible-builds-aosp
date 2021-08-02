@@ -60,7 +60,7 @@ pipeline {
                         --name "$CONTAINER_NAME_ANALYSIS" \
                         --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}" \
                         --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}" \
-                        --mount "type=bind,source=${RB_AOSP_BASE}/src/out/host/linux-x86,target=${RB_AOSP_BASE}/src/out/host/linux-x86" \
+                        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
                         --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${RB_AOSP_BASE}/diff" \
                         --mount "type=bind,source=/boot,target=/boot" \
                         --mount "type=bind,source=/lib/modules,target=/lib/modules"

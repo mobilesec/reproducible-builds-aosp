@@ -49,7 +49,25 @@ unpackBoot() {
     # For all android boot images: Unpack into components and move them to top directory
     for IMG_FILE in "${IMG_FILES[@]}"; do
         if file "$IMG_FILE" | grep 'Android bootimg'; then
-            if [[ -f "${SRC_DIR}/system/core/mkbootimg/unpack_bootimg" ]]; then
+            if [[ -f "${SRC_DIR}/system/tools/mkbootimg/unpack_bootimg.py" ]]; then
+                # Use custom unpack_bootimg python script from AOSP
+                local UNPACK_BOOT_DIR="${IMG_FILE}.unpack-boot"
+                mkdir "$UNPACK_BOOT_DIR"
+                "${SRC_DIR}/system/tools/mkbootimg/unpack_bootimg.py" --boot_img "$IMG_FILE" --out "$UNPACK_BOOT_DIR" > "${IMG_FILE}.unpack_bootimg.py.output"
+                if [[ -f "${UNPACK_BOOT_DIR}/kernel" ]]; then
+                    mv "${UNPACK_BOOT_DIR}/kernel" "${IMG_FILE}.kernel.img"
+                fi
+                if [[ -f "${UNPACK_BOOT_DIR}/ramdisk" ]]; then
+                    mv "${UNPACK_BOOT_DIR}/ramdisk" "${IMG_FILE}.ramdisk.img"
+                fi
+                if [[ -f "${UNPACK_BOOT_DIR}/boot_signature" ]]; then
+                    mv "${UNPACK_BOOT_DIR}/boot_signature" "${IMG_FILE}.boot_signature.img"
+                fi
+                if [[ -f "${UNPACK_BOOT_DIR}/second" ]]; then
+                    mv "${UNPACK_BOOT_DIR}/second" "${IMG_FILE}.second.img"
+                fi
+                rm -rf "./${UNPACK_BOOT_DIR}"
+            elif [[ -f "${SRC_DIR}/system/core/mkbootimg/unpack_bootimg" ]]; then
                 # Use custom unpack_bootimg binary from AOSP
                 local UNPACK_BOOT_DIR="${IMG_FILE}.unpack-boot"
                 mkdir "$UNPACK_BOOT_DIR"

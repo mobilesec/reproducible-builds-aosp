@@ -61,12 +61,10 @@ main() {
         --name "$CONTAINER_NAME_BUILD" \
         --user=$(id -un) \
         --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/build,target=${RB_AOSP_BASE}/build" \
         --mount "type=bind,source=/boot,target=/boot" \
         --mount "type=bind,source=/lib/modules,target=/lib/modules" \
         "mobilesec/rb-aosp-build:latest" "/bin/bash" -l -c "$(composeCommandsBuild)"
-    # Copy reference and RB build output to host
-    mkdir -p "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}"
-    docker cp "${CONTAINER_NAME_BUILD}:${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}" "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/"
     docker rm "$CONTAINER_NAME_BUILD"
 
     # Run SOAP analysis via new container based on dedicated image
@@ -74,16 +72,14 @@ main() {
         --name "$CONTAINER_NAME_ANALYSIS" \
         --user=$(id -un) \
         --mount "type=bind,source=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET},target=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}" \
-        --mount "type=bind,source=${RB_AOSP_BASE}/src/out/host/linux-x86,target=${RB_AOSP_BASE}/src/out/host/linux-x86" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${RB_AOSP_BASE}/diff" \
         --mount "type=bind,source=/boot,target=/boot" \
         --mount "type=bind,source=/lib/modules,target=/lib/modules" \
         "mobilesec/rb-aosp-analysis:latest" "/bin/bash" -l -c "$(composeCommandsAnalysis)"
-    # Copy SOAP analysis from container
-    mkdir -p "${RB_AOSP_BASE}/diff"
-    docker cp "${CONTAINER_NAME_ANALYSIS}:${DIFF_PATH}" "${RB_AOSP_BASE}/diff/"
     docker rm "$CONTAINER_NAME_ANALYSIS"
 
-    # Container never sees the full list of report directories, thus the report overview needs to be generated on the host
+    # Generate report overview on the host
     "./scripts/shared/analysis/24_generate-report-overview.sh" "${RB_AOSP_BASE}/diff"
 }
 

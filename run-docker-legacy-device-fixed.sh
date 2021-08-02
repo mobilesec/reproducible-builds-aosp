@@ -77,14 +77,14 @@ main() {
         --user=$(id -un) \
         --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}" \
         --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}" \
-        --mount "type=bind,source=${RB_AOSP_BASE}/src/out/host/linux-x86,target=${RB_AOSP_BASE}/src/out/host/linux-x86" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
         --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${RB_AOSP_BASE}/diff" \
         --mount "type=bind,source=/boot,target=/boot" \
         --mount "type=bind,source=/lib/modules,target=/lib/modules" \
         "mobilesec/rb-aosp-analysis:latest" "/bin/bash" -l -c "$(composeCommandsAnalysis)"
     docker rm "$CONTAINER_NAME_ANALYSIS"
 
-    # Container never sees the full list of report directories, thus the report overview needs to be generated on the host
+    # Generate report overview on the host
     "./scripts/shared/analysis/24_generate-report-overview.sh" "${RB_AOSP_BASE}/diff"
 }
 

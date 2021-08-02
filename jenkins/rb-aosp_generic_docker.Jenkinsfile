@@ -20,10 +20,10 @@ pipeline {
         RB_AOSP_BASE="/home/dev/aosp"
 
         GOOGLE_BUILD_ENV="Google"
-        RB_BUILD_ENV="Ubuntu14.04"
+        RB_BUILD_ENV="Ubuntu18.04"
         RB_BUILD_ENV_DOCKER="docker-${RB_BUILD_ENV}"
 
-        DIFF_DIR="${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
+        DIFF_DIR="${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
         DIFF_PATH="${RB_AOSP_BASE}/diff/${DIFF_DIR}"
 
         CONTAINER_NAME_BUILD="${DIFF_DIR}--build"
@@ -34,24 +34,21 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'mobilesec/rb-aosp-build-legacy:latest'
+                    image 'mobilesec/rb-aosp-build:latest'
                     args """ --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
                         --name "$CONTAINER_NAME_BUILD" \
                         --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
                         --mount "type=bind,source=${RB_AOSP_BASE}/build,target=${RB_AOSP_BASE}/build" \
                         --mount "type=bind,source=/boot,target=/boot" \
-                        --mount "type=bind,source=/lib/modules,target=/lib/modules" \
+                        --mount "type=bind,source=/lib/modules,target=/lib/modules"
                     """
                 }
             }
             steps {
-                sh "( cd \"${RB_AOSP_BASE}/src/.repo/repo\" && git checkout \"v1.13.9.4\" )"
-                sh "/scripts/shared/build-device/10_fetch-extract-factory-images.sh \"${AOSP_REF}\" \"${BUILD_ID}\" \"${DEVICE_CODENAME}\" \"${DEVICE_CODENAME_FACTORY_IMAGE}\""
-                sh "/scripts/shared/build-device/11_clone-src-device.sh \"${AOSP_REF}\""
-                sh "/scripts/shared/build-device/12_fetch-extract-vendor.sh \"${BUILD_ID}\" \"${DEVICE_CODENAME}\""
-                sh "/scripts/shared/build-device/13_build-device.sh \"${AOSP_REF}\" \"${RB_BUILD_TARGET}\" \"${GOOGLE_BUILD_TARGET}\""
+                sh "/scripts/shared/build-generic/10_fetch-ci-artifacts.sh \"${BUILD_NUMBER}\" \"${BUILD_TARGET}\""
+                sh "/scripts/shared/build-generic/11_clone-src-via-manifest.sh \"${BUILD_NUMBER}\" \"${BUILD_TARGET}\""
+                sh "/scripts/shared/build-generic/12_build-generic.sh \"${BUILD_NUMBER}\" \"${BUILD_TARGET}\""
                 sh "/scripts/shared/analysis/18_build-tools.sh"
-                sh "( cd \"${RB_AOSP_BASE}/src/.repo/repo\" && git checkout \"default\" )"
             }
         }
         stage('Analysis') {
@@ -60,8 +57,7 @@ pipeline {
                     image 'mobilesec/rb-aosp-analysis:latest'
                     args """ --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
                         --name "$CONTAINER_NAME_ANALYSIS" \
-                        --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}" \
-                        --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}" \
+                        --mount "type=bind,source=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET},target=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}" \
                         --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
                         --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${RB_AOSP_BASE}/diff" \
                         --mount "type=bind,source=/boot,target=/boot" \
@@ -70,15 +66,15 @@ pipeline {
                 }
             }
             steps {
-                sh "/scripts/shared/analysis/19_preprocess-imgs.sh \"${AOSP_REF}\" \"${GOOGLE_BUILD_TARGET}\" \"${RB_BUILD_TARGET}\" \"${RB_BUILD_ENV}\""
+                sh "/scripts/shared/analysis/19_preprocess-imgs.sh \"${BUILD_NUMBER}\" \"${BUILD_TARGET}\" \"${BUILD_TARGET}\" \"${RB_BUILD_ENV}\""
                 sh """
                     "/scripts/shared/analysis/20_diffoscope-files.sh" \
-                        "${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
-                        "${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}" \
+                        "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
+                        "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}" \
                         "${DIFF_PATH}"
                 """
                 sh "/scripts/shared/analysis/21_generate-diffstat.sh \"${DIFF_PATH}\""
-                sh "/scripts/shared/analysis/22_generate-metrics.sh \"${DIFF_PATH}\" \"device\""
+                sh "/scripts/shared/analysis/22_generate-metrics.sh \"${DIFF_PATH}\" \"generic\""
                 sh "/scripts/shared/analysis/23_generate-visualization.sh \"${DIFF_PATH}\""
             }
         }
