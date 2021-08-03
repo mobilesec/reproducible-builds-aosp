@@ -35,7 +35,7 @@
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>DEVICE_CODENAME_FACTORY_IMAGE</name>
-          <description>Alternative internal code name for device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode for details.</description>
+          <description>Alternative internal code name for device, see https://developers.google.com/android/images for details.</description>
           <defaultValue>mantaray</defaultValue>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>

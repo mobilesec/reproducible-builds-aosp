@@ -11,44 +11,37 @@ This project enables the broader Android community, as well as any interested th
 
 ## Usage Instructions
 
-Depending on your preferred runtime environment, the following setup instructions and associated run-instructions need to be performed. In all cases, make sure you acquire a copy of [this repository](https://github.com/mobilesec/reproducible-builds-aosp).
+SOAP uses Docker to ensure a consistent environment for the build and analysis of AOSP artifacts and enables support for a wide range of Android versions. Depending on you preference, you may either
+* invoke master shell scripts directly, resulting in the execution of SOAP in your terminal, or
+* you may setup a Jenkins server which facilitates easier monitoring. We provide files in this repository that help your setup of SOAP pipelines in Jenkins.
 
-### Direct Script Invocation
+In all cases, make sure you perform the following shared setup:
 
-1. Start with an Ubuntu LTS-based environment (Debian-based systems in general should be fine as well, we tested Ubuntu 18.04 and Debian 10) running on a x86 architecture.
-2. Prepare a build environment by executing all scripts under `scripts/shared/setup`, except `04_config-profile-for-docker.sh`, in proper sequence. The order is indicated by the number in the first two characters of the file name and none of the scripts require parameters. Note that the executing user needs permission to install new APT packages.
+1. Your host environment requires a working Docker installation, refer to the [official install instructions](https://docs.docker.com/engine/install/) for guidance.
+2. Acquire a copy of [this repository](https://github.com/mobilesec/reproducible-builds-aosp)
+3. Build the docker images by invoking all `build-docker-image.sh` shell scripts found in the `docker` directory in this repository. (However, the working directory needs to be the root of the repository).
 
-Setup is now finished. You can now invoke one of the following master scripts performing the AOSP build and SOAP analysis process:
+### Master Script Invocation
 
-- `run-host-device.sh`: Build a AOSP device target and compare against the matching Google factory image. Parameters need to be set via environment variables.
+Setup for direct master script invocation is already finished. You can now invoke one of the following master scripts performing the AOSP build and SOAP analysis process:
 
-### Docker Container
-
-1. Start with any x86-based environment capable of running Docker containers.
-2. Follow the [official install instructions](https://docs.docker.com/engine/install/) for Docker.
-3. Build the Docker container by executing `build-docker-image.sh`
-
-Setup is now finished. You can now invoke one of the following master scripts performing the AOSP build and SOAP analysis process:
-
-- `run-docker-device-fixed.sh`: Build a AOSP device target and compare against the matching Google factory image. Parameters are hardcoded in the script, change as needed.
-- `run-docker-generic-latest.sh`: Build a AOSP generic system images (GSI) and compare against the GSI build from Google. The `BUILD_NUMBER` parameter is the latest valid build from the Android CI dashboard, all other parameters are hardcoded.
+- `run_device_fixed.sh`: Build a AOSP (Android 7+) device target and compare against the matching Google factory image. Parameters are hardcoded in the script, change as needed.
+- `run_device-legacy_fixed.sh`: Build a AOSP (Android 5-6) device target and compare against the matching Google factory image. Parameters are hardcoded in the script, change as needed.
+- `run_generic_latest.sh`: Build a AOSP generic system images (GSI) and compare against the GSI build from Google. The `BUILD_NUMBER` parameter is the latest valid build from the Android CI dashboard, all other other parameters are hardcoded.
 
 ### Jenkins Server
 
-1. Start with a Ubuntu LTS-based environment (Debian-based systems in general should be fine as well) running on a x86 architecture.
-2. Prepare a build environment by executing all scripts under `scripts/shared/setup`, except `04_config-profile-for-docker.sh`, in proper sequence. The order is indicated by the number in the first two characters of the file name and none of the scripts require parameters. Note that the executing user needs permission to install new APT packages.
-3. Follow the [official install instructions](https://www.jenkins.io/doc/book/installing/#debianubuntu) for Jenkins.
-4. Invoke `jenkins/setup/01_create_pipelines.sh` to import the two Jenkins pipelines found in `jenkins`. As an alternative, one may create the parameterized pipelines via the GUI, refer to the `.Jenkinsfile` files for the build scripts and be sure to create all parameters required for them.
-5. Adjust the imported pipeline scripts for both `rb-aosp_device`  and `rb-aosp_generic`. Specifically, in the environment section perform the following changes
-   - Change the `PATH` to reflect the user that invoked setup scripts in step one, i.e. such that `/home/${USER}/bin` and `/home/${USER}/.local/bin` point to the installed `repo` and `diffoscope` instances
-   - Change `SCRIPT_DIR` to point to the cloned repository, ensure that the `jenkins` user has read/execute access to it.
-   - Ensure that `RB_AOSP_BASE` points to a location with sufficient space (see [Hardware requirements](https://source.android.com/setup/build/requirements\#hardware-requirements)) and write access for the `jenkins` user
+4. Follow the [official install instructions](https://www.jenkins.io/doc/book/installing/#debianubuntu) for Jenkins.
+5. Invoke `jenkins/setup/01_create_pipelines.sh` to import the Jenkins pipelines found in the `jenkins` directory. As an alternative, one may create the parameterized pipelines via the GUI, refer to the `.Jenkinsfile` files for the build scripts and be sure to create all parameters required for them.
+6. Adjust the imported pipeline scripts. Specifically, in the environment section perform the following changes
+   - Ensure that `RB_AOSP_BASE` points to a location with sufficient space (see [Hardware requirements](https://source.android.com/setup/build/requirements\#hardware-requirements)
 
 Setup is now finished. You can now invoke one of the following master scripts performing the AOSP build and SOAP analysis process:
 
-- `run-jenkins-device-fixed.sh`: Build a AOSP device target and compare against the matching Google factory image. Parameters are hardcoded in the script, change as needed.
-- `run-jenkins-generic-latest.sh`: Build a AOSP generic system images (GSI) and compare against the GSI build from Google. The `BUILD_NUMBER` parameter is the latest valid build from the Android CI dashboard, all other other parameters are hardcoded.
-- `run-jenkins-generic-fixed.sh`: Build a AOSP generic system images (GSI) and compare against the GSI build from Google. Parameters are hardcoded in the script, change as needed.
+- `run_device_jenkins_fixed.sh`: Build a AOSP (Android 7+) device target and compare against the matching Google factory image. Parameters are hardcoded in the script, change as needed.
+- `run_device-legacy_jenkins_fixed.sh`: Build a AOSP (Android 5-6) device target and compare against the matching Google factory image. Parameters are hardcoded in the script, change as needed.
+- `run_generic_jenkins_latest.sh`: Build a AOSP generic system images (GSI) and compare against the GSI build from Google. The `BUILD_NUMBER` parameter is the latest valid build from the Android CI dashboard, all other other parameters are hardcoded.
+- `run_generic_jenkins_fixed.sh`: Build a AOSP generic system images (GSI) and compare against the GSI build from Google. Parameters are hardcoded in the script, change as needed.
 
 ## Parameters
 
@@ -57,6 +50,7 @@ Setup is now finished. You can now invoke one of the following master scripts pe
 - `AOSP_REF`: Branch or tag in the AOSP codebase, refer to [Source code tags and builds](https://source.android.com/setup/start/build-numbers\#source-code-tags-and-builds) for a list. Specifically refer to the `Tag` column, e.g. `android-10.0.0_r40`.
 - `BUILD_ID`: Specific version of AOSP, corresponds to a certain tag. Refer to the `Build` column in the same [Source code tags and builds](https://source.android.com/setup/start/build-numbers\#source-code-tags-and-builds) table, e.g. `QQ3A.200705.002`.
 - `DEVICE_CODENAME`: Internal code name for the device, see the [Fastboot instructions](https://source.android.com/setup/build/running\#booting-into-fastboot-mode) for a list mapping branding names to the codenames. For example, the `Pixel 3 XL` branding name has the codename `crosshatch`.
+- `DEVICE_CODENAME_FACTORY_IMAGE`: Alternative internal code name for device used in factory image list, see the [Google factory images](https://developers.google.com/android/images) for a list. E.g. the `Nexus 10` has the `DEVICE_CODENAME` `manta` in the build tooling (e.g `lunch`), but the `DEVICE_CODENAME_FACTORY_IMAGE` is `mantaray`.
 - `RB_BUILD_TARGET`: Our build target as chosen in `lunch` (a helper function of AOSP), consisting of a tuple (`TARGET_PRODUCT` and `TARGET_BUILD_VARIANT`) combined via a dash. The [Choose a target](https://source.android.com/setup/build/building\#choose-a-target) section provides documentation for these. AOSP offers `TARGET_PRODUCT` values for each device with an `aosp\_` prefix. E.g a release build of the previously mentioned `Pixel 3 XL` device would be defined as `aosp_crosshatch-user`.
 - `GOOGLE_BUILD_TARGET`: Very similar to `RB_BUILD_TARGET`, except that this represents Google's build target. Note that factory images provided by Google use a non-AOSP `TARGET_PRODUCT` variable. E.g a release build by Google for our running example would be defined as `crosshatch-user`.
 

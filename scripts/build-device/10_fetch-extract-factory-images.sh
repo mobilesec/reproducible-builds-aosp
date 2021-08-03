@@ -23,7 +23,7 @@ main() {
         echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
         echo "BUILD_ID: version of AOSP, corresponds to a tag, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds"
         echo "DEVICE_CODENAME: Internal code name for device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode for details."
-        echo "DEVICE_CODENAME_FACTORY_IMAGE: Alternative internal code name for device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode for details."
+        echo "DEVICE_CODENAME_FACTORY_IMAGE: Alternative internal code name for device, see https://developers.google.com/android/images for details."
         exit 1
     fi
     local -r AOSP_REF="$1"
