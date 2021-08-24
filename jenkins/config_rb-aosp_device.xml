@@ -111,7 +111,7 @@ pipeline {
                         --name &quot;$CONTAINER_NAME_ANALYSIS&quot; \
                         --mount &quot;type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}&quot; \
                         --mount &quot;type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}&quot; \
-                        --mount &quot;type=bind,source=${RB_AOSP_BASE}/src/out/host/linux-x86,target=${RB_AOSP_BASE}/src/out/host/linux-x86&quot; \
+                        --mount &quot;type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src&quot; \
                         --mount &quot;type=bind,source=${RB_AOSP_BASE}/diff,target=${RB_AOSP_BASE}/diff&quot; \
                         --mount &quot;type=bind,source=/boot,target=/boot&quot; \
                         --mount &quot;type=bind,source=/lib/modules,target=/lib/modules&quot;

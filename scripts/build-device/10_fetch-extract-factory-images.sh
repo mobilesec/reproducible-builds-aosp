@@ -45,7 +45,7 @@ main() {
     rm -rf ./* # Clean up previously fetched files
 
     # Download link via primitive web scrapping
-    grep -i "${DEVICE_CODENAME_FACTORY_IMAGE}-${BUILD_ID}" \
+    grep -i "${DEVICE_CODENAME_FACTORY_IMAGE}-${BUILD_ID}-factory" \
         <( curl "https://developers.google.com/android/images" -H 'cookie: devsite_wall_acks=nexus-image-tos' ) \
         | sed -n "s/^.*href=\"\s*\(\S*\)\".*$/\1/p" > factory-image-link
     wget "$(cat factory-image-link)"
