@@ -78,11 +78,23 @@ Problem:
 libguestfs: error: /usr/bin/supermin exited with error status 1.
 ```
 
-Solution:
-Provide world read access to kernel via `sudo chmod +r "/boot/vmlinuz-"*`
+Permanent Solution (taken and slightly adjusted from bug report):
+A permanent fix is the creation of following hook under `/etc/kernel/postinst.d/statoverride`:
+```shell
+#!/bin/sh
+version="$1"
+# passing the kernel version is required
+[ -z "${version}" ] && exit 0
+dpkg-statoverride --update --add root root 0644 "/boot/vmlinuz-${version}"
+```
+
+Temporary Solution:
+Provide world read access to kernel via `sudo chmod +r "/boot/vmlinuz-"*`.
 
 Background:
-Our scripts use `libguestfs` (just like diffoscope internally) to access ext4 file system images without requiring root permissions. Internally libguestfs boots a small QEMU VM, which requires world read access to the currently active kernel image in `/boot/`. Ubuntu does not permit reading the local kernel images by non-root users, see [this bug](https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1673431). 
+Our scripts use `libguestfs` (just like diffoscope internally) to access ext4 file system images without requiring root permissions. Internally libguestfs boots a small QEMU VM, which requires world read access to the currently active kernel image in `/boot/`. Ubuntu does not permit reading the local kernel images by non-root users, see [this bug](https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1673431).
+
+In general it is strongly advised that you use the permanent solution, otherwise you'll have to fix the kernel permissions after each kernel update.
 
 ### APKtool doesn't run
 
