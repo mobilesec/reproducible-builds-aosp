@@ -17,16 +17,17 @@
 set -o errexit -o nounset -o pipefail -o xtrace
 
 fetchFromAndroidCI() {
-    local -r FILE="$1"
+    local -r REMOTE_FILE="$1"
+    local -r LOCAL_FILE="${REMOTE_FILE##*/}" # Don't preserve directories locally
 
     # The actual file content does not have a public link, only a Artifact viewer link is available. Retrieve raw file via some simple web scrapping
     # Actual file link is stored in JS object. Extract JSON literal from JS source via sed, then extract property via jq
-    grep "/${FILE}?" \
-        <( curl "https://ci.android.com/builds/submitted/${BUILD_NUMBER}/${BUILD_TARGET}/latest/view/${FILE}" -L ) \
+    grep "/${REMOTE_FILE}?" \
+        <( curl "https://ci.android.com/builds/submitted/${BUILD_NUMBER}/${BUILD_TARGET}/latest/view/${REMOTE_FILE}" -L ) \
         | sed -E -e "s/^[ \t]+var[ \t]+JSVariables[ \t=]+//" -e "s/[ \t]*;[ \t]*$//" \
         | jq -r '."artifactUrl"' \
-        > "${FILE}.link"
-    curl "$(cat "${FILE}.link")" -L > "${FILE}" # Fetch actual ${FILE}
+        > "${LOCAL_FILE}.link"
+    curl "$(cat "${LOCAL_FILE}.link")" -L > "${LOCAL_FILE}" # Fetch actual file
 }
 
 fetchArtifactList() {
@@ -68,15 +69,22 @@ main() {
     # Iterate all artifacts and download them
     local -a ARTIFACTS
     mapfile -t ARTIFACTS < <(grep --invert-match 'attempts/' "$ARTIFACTS_LIST_FILE" )
+    # Some builds of the Android CI take multiple attempts, detect latest attempt
+    local -r ARTIFACT_PREFIX="$(cat "$ARTIFACTS_LIST_FILE" \
+        | grep --extended-regexp 'attempts/[0-9]+/' \
+        | sort \
+        | tail --lines=1 \
+        | cut --delimiter=/ --fields=1-2 \
+        | xargs -I '%' echo '%/' \
+    )"
+    mapfile -t -O "${#ARTIFACTS[@]}" ARTIFACTS < <(grep "$ARTIFACT_PREFIX" "$ARTIFACTS_LIST_FILE" )
     declare -r ARTIFACTS
     local -r BUILD="${BUILD_TARGET%-*}"
     for ARTIFACT in "${ARTIFACTS[@]}"; do
-        # Only fetch files that can be meaningfully compared to local build
-        if [[ "${ARTIFACT}" == "manifest_"*".xml" ]] || [[ "${ARTIFACT}" == "${BUILD}-img-${BUILD_NUMBER}.zip" ]] || [[ "${ARTIFACT}" == *".img" ]]; then
-            if [[ "${ARTIFACT}" == *"/"* ]]; then
-                local DIR="${ARTIFACT%%/*}"
-                mkdir -p "${DIR}"
-            fi
+        # Only fetch files that can be meaningfully compared to local build (+ manifest)
+        if [[ "${ARTIFACT}" == "${BUILD}-img-${BUILD_NUMBER}.zip" \
+            || "${ARTIFACT}" == "${ARTIFACT_PREFIX}manifest_${BUILD_NUMBER}.xml" \
+            || "${ARTIFACT}" == *".img" ]]; then
 
             echo "${ARTIFACT}"
             fetchFromAndroidCI "${ARTIFACT}"
