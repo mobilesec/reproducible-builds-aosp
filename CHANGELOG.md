@@ -1,4 +1,11 @@
 
+# 2.0.1
+
+- Handle multi-attempts builds, i.e. those builds that produce an `attempts` folder (e.g. https://ci.android.com/builds/submitted/6174880/aosp_x86_64-eng/latest ) correctly by only considering the builds output from last attempt (in addition to the root folder artifacts)
+- Improved fix for kernel permission issue
+- Small improvement to webscrapping by providing an anchor at the end, ensures that overlapping build ids don't cause an error
+- Fixed too finely grained bind mounts (were not properly synced from Jenkinsfile)
+
 # 2.0.0
 
 - Major rework of the Docker environment
