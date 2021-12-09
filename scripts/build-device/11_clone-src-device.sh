@@ -38,8 +38,8 @@ main() {
     rm -rf ./* # Clean up previously checked out files
 
     # Init repo for a named AOSP Ref, i.e. a branch or Tag
-    repo init -u "https://android.googlesource.com/platform/manifest" -b "${AOSP_REF}"
-    repo sync -j "$(nproc)"
+    repo init -u "https://android.googlesource.com/platform/manifest" -b "${AOSP_REF}" --depth=1
+    repo sync -c -j "$(nproc)"
 }
 
 main "$@"

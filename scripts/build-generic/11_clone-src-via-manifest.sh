@@ -49,8 +49,8 @@ main() {
     cp "${IMAGE_DIR}/${CUSTOM_MANIFEST}" "${MANIFESTS_DIR}/"
 
     # Inform repo about custom manifest and sync it
-    repo init -m "${CUSTOM_MANIFEST}"
-    repo sync -j "$(nproc)"
+    repo init -m "${CUSTOM_MANIFEST}" --depth=1
+    repo sync -c -j "$(nproc)"
 }
 
 main "$@"
