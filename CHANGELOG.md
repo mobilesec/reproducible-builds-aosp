@@ -1,4 +1,10 @@
 
+# 2.0.2
+
+- Fix corner case where manifest file was not in the expected place (see build `7963114` on `aosp-android12-gsi` branch)
+- Add missing tool to the build docker image, needed by some versions of AOSP
+- Reduce the required disk space and download size by limiting the cloned source code to the exact version that is required for the build
+
 # 2.0.1
 
 - Handle multi-attempts builds, i.e. those builds that produce an `attempts` folder (e.g. https://ci.android.com/builds/submitted/6174880/aosp_x86_64-eng/latest ) correctly by only considering the builds output from last attempt (in addition to the root folder artifacts)
