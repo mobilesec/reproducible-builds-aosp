@@ -70,13 +70,18 @@ main() {
     local -a ARTIFACTS
     mapfile -t ARTIFACTS < <(grep --invert-match 'attempts/' "$ARTIFACTS_LIST_FILE" )
     # Some builds of the Android CI take multiple attempts, detect latest attempt
-    local -r ARTIFACT_PREFIX="$(cat "$ARTIFACTS_LIST_FILE" \
+    local ARTIFACT_PREFIX="$(cat "$ARTIFACTS_LIST_FILE" \
         | grep --extended-regexp 'attempts/[0-9]+/' \
         | sort \
         | tail --lines=1 \
         | cut --delimiter=/ --fields=1-2 \
         | xargs -I '%' echo '%/' \
     )"
+    # As an exception to the above, an existing attempt may not have the required manifest file, sanitch check for this
+    if ! grep "${ARTIFACT_PREFIX}manifest_${BUILD_NUMBER}.xml" "$ARTIFACTS_LIST_FILE"; then
+        local ARTIFACT_PREFIX=""
+    fi
+
     mapfile -t -O "${#ARTIFACTS[@]}" ARTIFACTS < <(grep "$ARTIFACT_PREFIX" "$ARTIFACTS_LIST_FILE" )
     declare -r ARTIFACTS
     local -r BUILD="${BUILD_TARGET%-*}"
