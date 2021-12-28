@@ -1,4 +1,10 @@
 
+# 2.1.0
+
+- Improved support for new Android versions (11 and 12)
+  - Handle compressed APEX files (found in Android 12) correctly
+  - Handle LZ4 compressed ramdisks properly (starting with Android 11)
+
 # 2.0.2
 
 - Fix corner case where manifest file was not in the expected place (see build `7963114` on `aosp-android12-gsi` branch)
