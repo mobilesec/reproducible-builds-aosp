@@ -51,12 +51,26 @@ function preProcessImage {
         # Extract apex_payload.img from APEX archives for separate diffoscope run
         if [[ "$(find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' | wc -l)" -ne 0 ]]; then
             mkdir -p "${DIFF_IN_BASE}.apexes"
+
+            # Handle compressed APEX files (= JAR files = ZIP files) by decompressing them
+            find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.capex' \
+                -exec cp {} "${DIFF_IN_BASE}.apexes/" \;
+            local -a CAPEX_FILES
+            mapfile -t CAPEX_FILES < <(find "${DIFF_IN_BASE}.apexes" -type f -iname '*.capex' | sort)
+            declare -r CAPEX_FILES
+            for CAPEX_FILE in "${CAPEX_FILES[@]}"; do
+                local APEX_BASENAME="$( basename -s '.capex' "$CAPEX_FILE" )"
+                unzip "$CAPEX_FILE" -d "${CAPEX_FILE}.unzip"
+                cp "${CAPEX_FILE}.unzip/original_apex" "${DIFF_IN_BASE}.apexes/${APEX_BASENAME}.apex"
+                rm -rf "$CAPEX_FILE" "${CAPEX_FILE}.unzip"
+            done
+
+            # Handle APEX files (= JAR files = ZIP files) by decompressing them
             find "${DIFF_IN_RESOLVED}.mount" -type f -iname '*.apex' \
                 -exec cp {} "${DIFF_IN_BASE}.apexes/" \;
             find "${DIFF_IN_BASE}.apexes" -type f -iname '*.apex' \
                 -exec unzip "{}" -d "{}.unzip" \;
             # Currently for each APEX we have their original .apex and the .apex.unzip directory
-
             if [ "$CREATE_FILE_SIZES" = true ] ; then
                 mkdir "${APEX_OUT_DIR}"
 
