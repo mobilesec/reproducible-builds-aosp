@@ -1,4 +1,9 @@
 
+# 2.1.1
+
+- Fixed major issue where recent versions of diffstat generate quotation-escaping for file paths and break subsequent weight score computation
+- Improve handling of compressed APEX files by properly excluding them from the outer image metrics
+
 # 2.1.0
 
 - Improved support for new Android versions (11 and 12)
