@@ -164,7 +164,7 @@ _EOF_
         BASE_FILENAME="$(dirname "${DIFF_JSON_FILE}")/$(basename -s '.diffoscope.json' "${DIFF_JSON_FILE}")"
         local DIFFSTAT_RAW_CSV_FILE="${BASE_FILENAME}.diffstat.raw.csv"
         diffstat -p 1 -k -t "${DIFF_JSON_FILE}.flattened_clean.diff" \
-            | sed -e 's/␣/ /g' > "${DIFFSTAT_RAW_CSV_FILE}"
+            | sed -e 's/␣/ /g' -e 's/"//g' > "${DIFFSTAT_RAW_CSV_FILE}"
 
         # Diffstat CSV adjustments
         local CSV_CONTENT
