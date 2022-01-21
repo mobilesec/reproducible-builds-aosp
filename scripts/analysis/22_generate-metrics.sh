@@ -235,7 +235,7 @@ _EOF_
                     | cut --delimiter=, --fields=4 \
                     | grep --invert-match 'file list' \
                     | cut --delimiter=: --fields=1 \
-                    | uniq \
+                    | sort --unique \
                     | grep --invert-match --extended-regexp '\.c?apex' \
                 )
             elif [[ "$IS_APEX" == true ]]; then
@@ -252,7 +252,7 @@ _EOF_
                     | grep --invert-match 'file list' \
                     | cut --delimiter=: --fields=3 \
                     | grep --invert-match --extended-regexp '(zipinfo )|(zipnote )' \
-                    | uniq \
+                    | sort --unique \
                 )
 
                 # Skip header, exclude file␣list entry
@@ -260,7 +260,7 @@ _EOF_
                     | cut --delimiter=, --fields=4 \
                     | grep --invert-match 'file list' \
                     | cut --delimiter=: --fields=1 \
-                    | uniq \
+                    | sort --unique \
                 )
             else
                 # Skip header, exclude file␣list entry
@@ -268,7 +268,7 @@ _EOF_
                     | cut --delimiter=, --fields=4 \
                     | grep --invert-match 'file list' \
                     | cut --delimiter=: --fields=1 \
-                    | uniq \
+                    | sort --unique \
                 )
             fi
             # Append all files that exist only in source 1 by inspecting root file␣list entry in .diff
