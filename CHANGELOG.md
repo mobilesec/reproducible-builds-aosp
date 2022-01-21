@@ -1,4 +1,8 @@
 
+# 2.1.2
+
+- Proper elimination of duplicate lines via sort ensures that non-adjacent entries are not erroneously repeated and counted multiple times
+
 # 2.1.1
 
 - Fixed major issue where recent versions of diffstat generate quotation-escaping for file paths and break subsequent weight score computation
