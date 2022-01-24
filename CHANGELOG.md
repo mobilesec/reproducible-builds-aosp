@@ -1,4 +1,8 @@
 
+# 2.1.3
+
+- Improve elimination of duplicate lines by moving the sorting and/duplicate elimination from the the two data sources (which can overlap in rare cases) to a combined process step for all changed files
+
 # 2.1.2
 
 - Proper elimination of duplicate lines via sort ensures that non-adjacent entries are not erroneously repeated and counted multiple times
