@@ -235,7 +235,6 @@ _EOF_
                     | cut --delimiter=, --fields=4 \
                     | grep --invert-match 'file list' \
                     | cut --delimiter=: --fields=1 \
-                    | sort --unique \
                     | grep --invert-match --extended-regexp '\.c?apex' \
                 )
             elif [[ "$IS_APEX" == true ]]; then
@@ -260,7 +259,6 @@ _EOF_
                     | cut --delimiter=, --fields=4 \
                     | grep --invert-match 'file list' \
                     | cut --delimiter=: --fields=1 \
-                    | sort --unique \
                 )
             else
                 # Skip header, exclude file␣list entry
@@ -268,7 +266,6 @@ _EOF_
                     | cut --delimiter=, --fields=4 \
                     | grep --invert-match 'file list' \
                     | cut --delimiter=: --fields=1 \
-                    | sort --unique \
                 )
             fi
             # Append all files that exist only in source 1 by inspecting root file␣list entry in .diff
@@ -278,6 +275,7 @@ _EOF_
                 FILE_LIST_END="$(awk --assign file_list_start="${FILE_LIST_START}" "$AWK_CODE_FIND_FILE_LIST_END" "$DIFF_FILE")"
                 if [[ "$BUILD_FLOW" == "generic" ]] && [[ "$BASE_FILENAME" == *"vendor.img" ]]; then
                     # Prefilter line range determined by start and end values, then extract deleted file names
+                    # Exclude test related APKs from generic vendor.img
                     mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <( sed -n "${FILE_LIST_START},${FILE_LIST_END}p" "$DIFF_FILE" \
                         | grep '^-' \
                         | sed -e 's/^-//g' \
@@ -285,13 +283,17 @@ _EOF_
                     )
                 else
                     # Prefilter line range determined by start and end values, then extract deleted file names
-                    # Exclude test relacted APKs from generic vendor.img
                     mapfile -t -O "${#CHANGED_FILES[@]}" CHANGED_FILES < <( sed -n "${FILE_LIST_START},${FILE_LIST_END}p" "$DIFF_FILE" \
                         | grep '^-' \
                         | sed -e 's/^-//g' \
                     )
                 fi
             fi
+            # Sort and eliminate duplicates from full list of changed files
+            mapfile -t CHANGED_FILES < <( echo "${CHANGED_FILES[@]}" \
+                | tr ' ' '\n' \
+                | sort --unique \
+            )
 
             # Prepare file size information
             unset SOURCE_1_FILE_SIZES SOURCE_1_FILE_SIZES_APEX
