@@ -1,4 +1,9 @@
 
+# 2.2.0
+
+- Stop applying the signing adjustments to generic builds, instead simply use the raw diffstat CSV file
+- Fix a bug where folders with the `.apex` string in them are incorrectly detected as APEX files
+
 # 2.1.3
 
 - Improve elimination of duplicate lines by moving the sorting and/duplicate elimination from the the two data sources (which can overlap in rare cases) to a combined process step for all changed files
