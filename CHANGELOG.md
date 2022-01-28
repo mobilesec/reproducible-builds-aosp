@@ -1,4 +1,8 @@
 
+# 2.2.1
+
+- Bug fix for the improved APEX detection
+
 # 2.2.0
 
 - Stop applying the signing adjustments to generic builds, instead simply use the raw diffstat CSV file
