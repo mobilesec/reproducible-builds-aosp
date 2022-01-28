@@ -75,7 +75,7 @@ pipeline {
                         "${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}" \
                         "${DIFF_PATH}"
                 """
-                sh "/scripts/analysis/21_generate-diffstat.sh \"${DIFF_PATH}\""
+                sh "/scripts/analysis/21_generate-diffstat.sh \"${DIFF_PATH}\" \"device\""
                 sh "/scripts/analysis/22_generate-metrics.sh \"${DIFF_PATH}\" \"device\""
                 sh "/scripts/analysis/23_generate-visualization.sh \"${DIFF_PATH}\""
             }

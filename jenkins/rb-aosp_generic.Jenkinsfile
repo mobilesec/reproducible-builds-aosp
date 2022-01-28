@@ -73,7 +73,7 @@ pipeline {
                         "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}" \
                         "${DIFF_PATH}"
                 """
-                sh "/scripts/analysis/21_generate-diffstat.sh \"${DIFF_PATH}\""
+                sh "/scripts/analysis/21_generate-diffstat.sh \"${DIFF_PATH}\" \"generic\""
                 sh "/scripts/analysis/22_generate-metrics.sh \"${DIFF_PATH}\" \"generic\""
                 sh "/scripts/analysis/23_generate-visualization.sh \"${DIFF_PATH}\""
             }

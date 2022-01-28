@@ -106,7 +106,7 @@ pipeline {
                         &quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}&quot; \
                         &quot;${DIFF_PATH}&quot;
                 &quot;&quot;&quot;
-                sh &quot;/scripts/analysis/21_generate-diffstat.sh \&quot;${DIFF_PATH}\&quot;&quot;
+                sh &quot;/scripts/analysis/21_generate-diffstat.sh \&quot;${DIFF_PATH}\&quot; \&quot;generic\&quot;&quot;
                 sh &quot;/scripts/analysis/22_generate-metrics.sh \&quot;${DIFF_PATH}\&quot; \&quot;generic\&quot;&quot;
                 sh &quot;/scripts/analysis/23_generate-visualization.sh \&quot;${DIFF_PATH}\&quot;&quot;
             }

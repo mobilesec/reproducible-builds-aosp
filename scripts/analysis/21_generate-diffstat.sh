@@ -18,12 +18,17 @@ set -o errexit -o nounset -o pipefail -o xtrace
 
 main() {
     # Argument sanity check
-    if [[ "$#" -ne 1 ]]; then
-        echo "Usage: $0 <DIFF_DIR>"
+    if [[ "$#" -ne 2 ]]; then
+        echo "Usage: $0 <DIFF_DIR> <BUILD_FLOW>"
         echo "DIFF_DIR: Output directory diffoscope output"
+        echo "BUILD_FLOW: Either 'device' or 'generic', there are slight varations in the major variation of the metrics"
         exit 1
     fi
     local -r DIFF_DIR="$1"
+    local -r BUILD_FLOW="$2"
+    if [[ "$BUILD_FLOW" != "device" ]] && [[ "$BUILD_FLOW" != "generic" ]]; then
+        echo "Invalid BUILD_FLOW, expected either 'device' or 'generic'"
+    fi
     # Reproducible base directory
     if [[ -z "${RB_AOSP_BASE+x}" ]]; then
         # Use default location
@@ -167,11 +172,16 @@ _EOF_
             | sed -e 's/␣/ /g' -e 's/"//g' > "${DIFFSTAT_RAW_CSV_FILE}"
 
         # Diffstat CSV adjustments
-        local CSV_CONTENT
-        CSV_CONTENT="$(tail -n +2 "$DIFFSTAT_RAW_CSV_FILE")"
         local DIFFSTAT_CSV_FILE="${BASE_FILENAME}.diffstat.csv"
-        echo -e "$(head -n 1 "${DIFFSTAT_RAW_CSV_FILE}")" > "$DIFFSTAT_CSV_FILE"
-        awk --field-separator ',' "$AWK_CODE_CSV_ADJUSTMENTS" <(echo "$CSV_CONTENT") >> "$DIFFSTAT_CSV_FILE"
+        if [[ "$BUILD_FLOW" == "device" ]]; then
+            # Different signing keys are only expected on device builds => Only perform adjustments there
+            local CSV_CONTENT
+            CSV_CONTENT="$(tail -n +2 "$DIFFSTAT_RAW_CSV_FILE")"
+            echo -e "$(head -n 1 "${DIFFSTAT_RAW_CSV_FILE}")" > "$DIFFSTAT_CSV_FILE"
+            awk --field-separator ',' "$AWK_CODE_CSV_ADJUSTMENTS" <(echo "$CSV_CONTENT") >> "$DIFFSTAT_CSV_FILE"
+        else
+            cp "$DIFFSTAT_RAW_CSV_FILE" "$DIFFSTAT_CSV_FILE"
+        fi
 
         # All diff file versions take considerable space, get rid of them
         rm "${DIFF_JSON_FILE}"

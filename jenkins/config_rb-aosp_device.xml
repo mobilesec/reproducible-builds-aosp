@@ -126,7 +126,7 @@ pipeline {
                         &quot;${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}&quot; \
                         &quot;${DIFF_PATH}&quot;
                 &quot;&quot;&quot;
-                sh &quot;/scripts/analysis/21_generate-diffstat.sh \&quot;${DIFF_PATH}\&quot;&quot;
+                sh &quot;/scripts/analysis/21_generate-diffstat.sh \&quot;${DIFF_PATH}\&quot; \&quot;device\&quot;&quot;
                 sh &quot;/scripts/analysis/22_generate-metrics.sh \&quot;${DIFF_PATH}\&quot; \&quot;device\&quot;&quot;
                 sh &quot;/scripts/analysis/23_generate-visualization.sh \&quot;${DIFF_PATH}\&quot;&quot;
             }
