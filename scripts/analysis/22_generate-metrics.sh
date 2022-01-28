@@ -75,7 +75,7 @@ _EOF_
         local DIFFSTAT_CONTENT=""
         if [[ "$IS_IMG_WITH_APEX_WITHIN" == true ]]; then
             DIFFSTAT_CONTENT+="$(tail --lines=+2 "$DIFFSTAT_CSV_FILE" \
-                | grep --invert-match --extended-regexp '\.c?apex' || true \
+                | grep --invert-match --extended-regexp '\.c?apex::' || true \
             )"
         elif [[ "$IS_APEX" == true ]]; then
             # Extract diffstat lines from parent image for outer full APEX file
@@ -84,7 +84,7 @@ _EOF_
             PARENT_IMG_BASENAME="$(dirname "$(dirname "$BASE_FILENAME")")/$(basename -s '.apexes' "$(dirname "$BASE_FILENAME")")"
             local PARENT_IMG_DIFFSTAT_CSV_FILE="${PARENT_IMG_BASENAME}.diffstat.csv"
             DIFFSTAT_CONTENT+="$(tail --lines=+2 "$PARENT_IMG_DIFFSTAT_CSV_FILE" \
-                | grep "${APEX_NAME}\.apex" || true \
+                | grep "${APEX_NAME}\.apex::" || true \
             )"
             DIFFSTAT_CONTENT+=$'\n'
             DIFFSTAT_CONTENT+="$(tail --lines=+2 "$DIFFSTAT_CSV_FILE")"
@@ -235,7 +235,7 @@ _EOF_
                     | cut --delimiter=, --fields=4 \
                     | grep --invert-match 'file list' \
                     | cut --delimiter=: --fields=1 \
-                    | grep --invert-match --extended-regexp '\.c?apex' \
+                    | grep --invert-match --extended-regexp '\.c?apex::' \
                 )
             elif [[ "$IS_APEX" == true ]]; then
                 # Extract diffstat lines from parent image for outer full APEX file
@@ -246,7 +246,7 @@ _EOF_
                 # Skip header, exclude file␣list entry, only entries related to ${APEX_NAME}.apex files
                 # Subselect filename within container after :: via --fields=3, discard all known tool invocations
                 mapfile -t CHANGED_FILES_APEX < <( tail --lines=+2 "$PARENT_IMG_DIFFSTAT_CSV_FILE" \
-                    | grep "${APEX_NAME}\.apex" \
+                    | grep "${APEX_NAME}\.apex::" \
                     | cut --delimiter=, --fields=4 \
                     | grep --invert-match 'file list' \
                     | cut --delimiter=: --fields=3 \
@@ -301,7 +301,7 @@ _EOF_
             if [[ "$IS_IMG_WITH_APEX_WITHIN" == true ]]; then
                 # Skip header, exclude root . directory entry, exclude APEX files
                 mapfile -t SOURCE_1_FILE_SIZES < <( tail --lines=+2 "$SOURCE_1_FILE_SIZES_FILE" \
-                    | grep --invert-match --extended-regexp '\.c?apex' \
+                    | grep --invert-match --extended-regexp '\.c?apex::' \
                 )
             elif [[ "$IS_APEX" == true ]]; then
                 local SOURCE_1_APEX_FILE_SIZES_FILE="${BASE_FILENAME}.source-1.file-sizes.csv"
