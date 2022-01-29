@@ -290,7 +290,7 @@ _EOF_
                 fi
             fi
             # Sort and eliminate duplicates from full list of changed files
-            mapfile -t CHANGED_FILES < <( echo "${CHANGED_FILES[@]}" \
+            mapfile -t CHANGED_FILES < <( echo -n "${CHANGED_FILES[@]}" \
                 | tr ' ' '\n' \
                 | sort --unique \
             )
