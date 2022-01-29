@@ -1,4 +1,8 @@
 
+# 2.2.2
+
+- Fix issue where empty list of changed files erroneously creates a empty entry
+
 # 2.2.1
 
 - Bug fix for the improved APEX detection
