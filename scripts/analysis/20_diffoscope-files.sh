@@ -193,12 +193,16 @@ function diffoscopeFile {
     DIFFOSCOPE_ARGS+=( --exclude-command '^readelf.*\s--hex-dump=' --exclude-command '^readelf.*\s--debug-dump=' --exclude-command '^readelf.*\s--string-dump=' --exclude-command '^strings\s' )
     # Don't inspect disassembly for code sections
     DIFFOSCOPE_ARGS+=( --exclude-command '^objdump.*\s--disassemble' )
-    # APKs embed certificates
-    DIFFOSCOPE_ARGS+=( --exclude 'original/META-INF/CERT.RSA' )
-    # APEX files embed a certificates and a separate public key. Furthermore ignore APEX payload images, treated in separate step
-    DIFFOSCOPE_ARGS+=( --exclude 'META-INF/CERT.RSA' --exclude 'apex_pubkey' --exclude 'apex_payload.img' )
-    # Certificates used by OTA updates
-    DIFFOSCOPE_ARGS+=( --exclude 'system/etc/update_engine/update-payload-key.pub.pem' --exclude 'releasekey.x509.pem' --exclude 'testkey.x509.pem' )
+    # Ignore APEX payload images, treated in separate step
+    DIFFOSCOPE_ARGS+=( --exclude 'apex_payload.img' )
+    if [[ "$BUILD_FLOW" == "device" ]]; then
+        # APKs embed certificates
+        DIFFOSCOPE_ARGS+=( --exclude 'original/META-INF/CERT.RSA' )
+        # APEX files embed a certificates and a separate public key
+        DIFFOSCOPE_ARGS+=( --exclude 'META-INF/CERT.RSA' --exclude 'apex_pubkey' )
+        # Certificates used by OTA updates
+        DIFFOSCOPE_ARGS+=( --exclude 'system/etc/update_engine/update-payload-key.pub.pem' --exclude 'releasekey.x509.pem' --exclude 'testkey.x509.pem' )
+    fi
 
     set +o errexit # Disable early exit
     # Due to a bug when using --max-diff-block-lines-saved and --html-dir at the same time, we call diffoscope twice
@@ -214,15 +218,20 @@ function diffoscopeFile {
 
 main() {
     # Argument sanity check
-    if [[ "$#" -ne 3 ]]; then
-        echo "Usage: $0 <IN_DIR_1> <IN_DIR_2> <OUT_DIR>"
+    if [[ "$#" -ne 4 ]]; then
+        echo "Usage: $0 <IN_DIR_1> <IN_DIR_2> <OUT_DIR> <BUILD_FLOW>"
         echo "IN_DIR_1, IN_DIR_2: Directory with files that should be compared (Only files in both dirs will be compared)"
         echo "OUT_DIR: Output directory diffoscope output"
+        echo "BUILD_FLOW: Either 'device' or 'generic', there are slight varations in the major variation of the metrics"
         exit 1
     fi
     local -r IN_DIR_1="$1"
     local -r IN_DIR_2="$2"
     local -r OUT_DIR="$3"
+    local -r BUILD_FLOW="$4"
+    if [[ "$BUILD_FLOW" != "device" ]] && [[ "$BUILD_FLOW" != "generic" ]]; then
+        echo "Invalid BUILD_FLOW, expected either 'device' or 'generic'"
+    fi
     # Reproducible base directory
     if [[ -z "${RB_AOSP_BASE+x}" ]]; then
         # Use default location

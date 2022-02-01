@@ -34,7 +34,7 @@ composeCommandsAnalysis() {
 "./scripts/analysis/20_diffoscope-files.sh" \
     "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
     "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}" \
-    "$DIFF_PATH"
+    "$DIFF_PATH" "generic"
 "./scripts/analysis/21_generate-diffstat.sh" "$DIFF_PATH" "generic"
 "./scripts/analysis/22_generate-metrics.sh" "$DIFF_PATH" "generic"
 "./scripts/analysis/23_generate-visualization.sh" "$DIFF_PATH"

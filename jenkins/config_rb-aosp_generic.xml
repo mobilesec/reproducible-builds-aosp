@@ -104,7 +104,7 @@ pipeline {
                     &quot;/scripts/analysis/20_diffoscope-files.sh&quot; \
                         &quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}&quot; \
                         &quot;${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}&quot; \
-                        &quot;${DIFF_PATH}&quot;
+                        &quot;${DIFF_PATH}&quot; &quot;generic&quot;
                 &quot;&quot;&quot;
                 sh &quot;/scripts/analysis/21_generate-diffstat.sh \&quot;${DIFF_PATH}\&quot; \&quot;generic\&quot;&quot;
                 sh &quot;/scripts/analysis/22_generate-metrics.sh \&quot;${DIFF_PATH}\&quot; \&quot;generic\&quot;&quot;
