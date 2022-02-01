@@ -1,4 +1,8 @@
 
+# v2.3.0
+
+- Stop excluding signing related files from the diffoscope analysis of generic builds, logical extension of signing adjustment removal for GSI builds
+
 # 2.2.2
 
 - Fix issue where empty list of changed files erroneously creates a empty entry
