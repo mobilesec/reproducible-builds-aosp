@@ -25,9 +25,10 @@ In all cases, make sure you perform the following shared setup:
 
 Setup for direct master script invocation is already finished. You can now invoke one of the following master scripts performing the AOSP build and SOAP analysis process:
 
-- `run_device_fixed.sh`: Build a AOSP (Android 7+) device target and compare against the matching Google factory image. Parameters are hardcoded in the script, change as needed.
-- `run_device-legacy_fixed.sh`: Build a AOSP (Android 5-6) device target and compare against the matching Google factory image. Parameters are hardcoded in the script, change as needed.
-- `run_generic_latest.sh`: Build a AOSP generic system images (GSI) and compare against the GSI build from Google. The `BUILD_NUMBER` parameter is the latest valid build from the Android CI dashboard, all other other parameters are hardcoded.
+- `run_device_fixed.sh`: Build a AOSP (Android 7+) device target and compare against the matching Google factory image. Parameters are provided as arguments.
+- `run_device-legacy_fixed.sh`: Build a AOSP (Android 5-6) device target and compare against the matching Google factory image. Parameters are provided as arguments.
+- `run-generic_fixed.sh`: Build a AOSP generic system images (GSI) and compare against the GSI build from Google. Parameters are provided as arguments.
+- `run_generic_latest.sh`: Build a AOSP generic system images (GSI) and compare against the GSI build from Google. The `BUILD_NUMBER` parameter is the latest valid build from the Android CI dashboard, all other other parameters are hardcoded, change as needed.
 
 ### Jenkins Server
 

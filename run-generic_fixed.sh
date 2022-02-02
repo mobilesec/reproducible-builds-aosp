@@ -18,43 +18,36 @@ set -o errexit -o nounset -o pipefail -o xtrace
 
 composeCommandsBuild() {
     cat <<EOF | tr '\n' '; '
-"./scripts/build-device/10_fetch-extract-factory-images.sh" "$AOSP_REF" "$BUILD_ID" "$DEVICE_CODENAME" "$DEVICE_CODENAME"
-"./scripts/build-device/11_clone-src-device.sh" "$AOSP_REF"
-"./scripts/build-device/12_fetch-extract-vendor.sh" "$BUILD_ID" "$DEVICE_CODENAME"
-"./scripts/build-device/13_build-device.sh" "$AOSP_REF" "$RB_BUILD_TARGET" "$GOOGLE_BUILD_TARGET"
+"./scripts/build-generic/10_fetch-ci-artifacts.sh" "$BUILD_NUMBER" "$BUILD_TARGET"
+"./scripts/build-generic/11_clone-src-via-manifest.sh" "$BUILD_NUMBER" "$BUILD_TARGET"
+"./scripts/build-generic/12_build-generic.sh" "$BUILD_NUMBER" "$BUILD_TARGET"
 "./scripts/analysis/18_build-tools.sh"
 EOF
 }
 
 composeCommandsAnalysis() {
     cat <<EOF | tr '\n' '; '
-"./scripts/analysis/19_preprocess-imgs.sh" "$AOSP_REF" "$GOOGLE_BUILD_TARGET" "$RB_BUILD_TARGET" "$RB_BUILD_ENV"
+"./scripts/analysis/19_preprocess-imgs.sh" "$BUILD_NUMBER" "$BUILD_TARGET" "$BUILD_TARGET" "$RB_BUILD_ENV"
 "./scripts/analysis/20_diffoscope-files.sh" \
-    "${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
-    "${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}" \
-    "$DIFF_PATH" "device"
-"./scripts/analysis/21_generate-diffstat.sh" "$DIFF_PATH" "device"
-"./scripts/analysis/22_generate-metrics.sh" "$DIFF_PATH" "device"
+    "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
+    "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}" \
+    "$DIFF_PATH" "generic"
+"./scripts/analysis/21_generate-diffstat.sh" "$DIFF_PATH" "generic"
+"./scripts/analysis/22_generate-metrics.sh" "$DIFF_PATH" "generic"
 "./scripts/analysis/23_generate-visualization.sh" "$DIFF_PATH"
 EOF
 }
 
 main() {
     # Argument sanity check
-    if [[ "$#" -ne 5 ]]; then
-        echo "Usage: $0 <AOSP_REF> <BUILD_ID> <DEVICE_CODENAME> <RB_BUILD_TARGET> <GOOGLE_BUILD_TARGET>"
-        echo "AOSP_REF: Branch or Tag in AOSP, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds , e.g. android-12.0.0_r4"
-        echo "BUILD_ID: version of AOSP, corresponds to a tag, refer to https://source.android.com/setup/start/build-numbers#source-code-tags-and-builds , e.g. SD1A.210817.015.A4"
-        echo "DEVICE_CODENAME: Internal code name for device, see https://source.android.com/setup/build/running#booting-into-fastboot-mode for details, e.g. raven"
-        echo "RB_BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details, e.g. raven-user"
-        echo "GOOGLE_BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details, e.g. aosp_raven-user"
+    if [[ "$#" -ne 2 ]]; then
+        echo "Usage: $0 <BUILD_NUMBER> <BUILD_TARGET>"
+        echo "BUILD_NUMBER: GoogleCI internal incremental build number that identifies each build, see https://android.googlesource.com/platform/build/+/master/Changes.md#BUILD_NUMBER , e.g. 7963114"
+        echo "BUILD_TARGET: Tuple of <BUILD>-<BUILDTYPE>, see https://source.android.com/setup/build/building#choose-a-target for details, e.g. aosp_x86_64-userdebug"
         exit 1
     fi
-    local -r AOSP_REF="$1"
-    local -r BUILD_ID="$2"
-    local -r DEVICE_CODENAME="$3"
-    local -r GOOGLE_BUILD_TARGET="$4"
-    local -r RB_BUILD_TARGET="$5"
+    local -r BUILD_NUMBER="$1"
+    local -r BUILD_TARGET="$2"
     # Reproducible base directory
     if [[ -z "${RB_AOSP_BASE+x}" ]]; then
         # Use default location
@@ -66,7 +59,7 @@ main() {
     local -r RB_BUILD_ENV="Ubuntu18.04"
     local -r RB_BUILD_ENV_DOCKER="docker-${RB_BUILD_ENV}"
 
-    local -r DIFF_DIR="${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
+    local -r DIFF_DIR="${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
     local -r DIFF_PATH="${RB_AOSP_BASE}/diff/${DIFF_DIR}"
 
     local -r CONTAINER_NAME_BUILD="${DIFF_DIR}--build"
@@ -89,8 +82,7 @@ main() {
         --name "$CONTAINER_NAME_ANALYSIS" \
         --user=$(id -un) \
         --env "RB_AOSP_BASE=${RB_AOSP_BASE}" \
-        --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}" \
-        --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET},target=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}" \
         --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
         --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${RB_AOSP_BASE}/diff" \
         --mount "type=bind,source=/boot,target=/boot" \
