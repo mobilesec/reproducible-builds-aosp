@@ -18,8 +18,9 @@ SOAP uses Docker to ensure a consistent environment for the build and analysis o
 In all cases, make sure you perform the following shared setup:
 
 1. Your host environment requires a working Docker installation, refer to the [official install instructions](https://docs.docker.com/engine/install/) for guidance.
-2. Acquire a copy of [this repository](https://github.com/mobilesec/reproducible-builds-aosp)
-3. Build the docker images by invoking all `build-docker-image.sh` shell scripts found in the `docker` directory in this repository. (However, the working directory needs to be the root of the repository).
+2. Ensure that you have at least a basic git configuration in your home directory (`~/.gitconfig`), this is required to check out the AOSP source code.
+3. Acquire a copy of [this repository](https://github.com/mobilesec/reproducible-builds-aosp).
+4. Build the docker images by invoking all `build-docker-image.sh` shell scripts found in the `docker` directory in this repository. (However, the working directory needs to be the root of the repository).
 
 ### Master Script Invocation
 
@@ -62,12 +63,14 @@ Setup is now finished. You can now invoke one of the following master scripts pe
 
 ## Reports
 
-Once the build and subsequent analysis finishes, one can find the uncovered differences in `$RB_AOSP_BASE/diff` in a folder named according to your build parameters. Optionally one can set the environment variable `RB_AOSP_BASE` ahead of the master script invocation to tell SOAP the base location where all (temporary and non-temporary) files should be placed under. If not specified, it defaults to `${HOME}/aosp`. Refer to [Hardware requirements](https://source.android.com/setup/build/requirements\#hardware-requirements) for disk space demand.
+Once the build and subsequent analysis finishes, one can find the uncovered differences in `${RB_AOSP_BASE}/diff` in a folder named according to your build parameters. Optionally one can set the environment variable `RB_AOSP_BASE` ahead of the master script invocation to tell SOAP the base location where all (temporary and non-temporary) files should be placed under. If not specified, it defaults to `${HOME}/aosp`. Refer to [Hardware requirements](https://source.android.com/setup/build/requirements#hardware-requirements) for disk space demand.
 
-When navigating the SOAP reports with a browser, start at `$RB_AOSP_BASE/diff/reports-overview.html`. The links contain the AOSP source tag (or Google build id), build target and build environment for both the reference AOSP build and ours. For each of these we provide the following reports for all analyzed build artifacts:
+When navigating the SOAP reports with a browser, start at `${RB_AOSP_BASE}/diff/reports-overview.html`. The links contain the AOSP source tag (or Google build id), build target and build environment for both the reference AOSP build and ours, specifically in the format ``. For each of these we provide the following reports:
 
-- ***Detailed Reports*** Show unified diffs between builds, while
-- ***Diff Change Visualizations*** provides a simple treemap visualization highlighting the distribution of changes within an artifact.
+- A **detailed HTML report** showing difference listings for all artifacts that exhibit variations.
+- **CSV reports** summarizing the number of change lines **for all artifacts** via the tool diffstat. In a post-processing step, these CSV reports are cleaned from expected accountable changes that we deliberately let slip through into the difference reports, which we refer to as **diff score**.
+- The individual CSV reports of each artifact are further aggregated into a single **change summary report**. Besides accumulated change lines, the individual CSV reports are also used as the basis to calculate a **weight score** that describes the relative amount of changes with regard to the overall artifact size.
+- The final quantitative metrics are also visualized in a **hierarchical treemap** for improved navigation through detailed difference reports.
 
 ## Common Issues
 
