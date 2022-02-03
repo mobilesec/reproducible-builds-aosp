@@ -64,6 +64,15 @@ pipeline {
     }
 
     stages {
+        stage(&apos;Setup&apos;) {
+            agent any
+            steps {
+                sh &quot;mkdir -p \&quot;${RB_AOSP_BASE}\&quot;&quot;
+                sh &quot;mkdir -p \&quot;${RB_AOSP_BASE}/src\&quot;&quot;
+                sh &quot;mkdir -p \&quot;${RB_AOSP_BASE}/build\&quot;&quot;
+                sh &quot;mkdir -p \&quot;${RB_AOSP_BASE}/diff\&quot;&quot;
+            }
+        }
         stage(&apos;Build&apos;) {
             agent {
                 docker {

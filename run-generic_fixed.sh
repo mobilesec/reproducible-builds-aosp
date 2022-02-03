@@ -66,6 +66,10 @@ main() {
     local -r CONTAINER_NAME_BUILD="${DIFF_DIR}--build"
     local -r CONTAINER_NAME_ANALYSIS="${DIFF_DIR}--analysis"
 
+    # Ensure these subdirectories exist since they are Dokcer bind mount points
+    mkdir -p "${RB_AOSP_BASE}/src"
+    mkdir -p "${RB_AOSP_BASE}/build"
+    mkdir -p "${RB_AOSP_BASE}/diff"
     # Perform AOSP build in docker container
     docker run --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
         --name "$CONTAINER_NAME_BUILD" \
