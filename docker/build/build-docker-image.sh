@@ -16,6 +16,12 @@
 
 set -o errexit -o nounset -o pipefail -o xtrace
 
+# Guard against usage with root
+if [[ "$EUID" -eq 0 ]]; then
+    echo "Execute build script with regular user, container is built and run via non-root user!"
+    exit 1
+fi
+
 cp "$HOME/.gitconfig" "gitconfig"
 
 docker build \

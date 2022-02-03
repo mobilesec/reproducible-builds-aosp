@@ -34,10 +34,10 @@ composeCommandsAnalysis() {
 "./scripts/analysis/20_diffoscope-files.sh" \
     "${CONTAINER_RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
     "${CONTAINER_RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}" \
-    "$DIFF_PATH" "device"
-"./scripts/analysis/21_generate-diffstat.sh" "$DIFF_PATH" "device"
-"./scripts/analysis/22_generate-metrics.sh" "$DIFF_PATH" "device"
-"./scripts/analysis/23_generate-visualization.sh" "$DIFF_PATH"
+    "$CONTAINER_DIFF_PATH" "device"
+"./scripts/analysis/21_generate-diffstat.sh" "$CONTAINER_DIFF_PATH" "device"
+"./scripts/analysis/22_generate-metrics.sh" "$CONTAINER_DIFF_PATH" "device"
+"./scripts/analysis/23_generate-visualization.sh" "$CONTAINER_DIFF_PATH"
 EOF
 }
 
@@ -70,31 +70,40 @@ main() {
     local -r RB_BUILD_ENV="Ubuntu14.04"
     local -r RB_BUILD_ENV_DOCKER="docker-${RB_BUILD_ENV}"
 
-    local -r DIFF_DIR="${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
-    local -r DIFF_PATH="${RB_AOSP_BASE}/diff/${DIFF_DIR}"
+    local -r SOAP_ID="${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
 
     local -r CONTAINER_RB_AOSP_BASE="${HOME}/aosp"
-    local -r CONTAINER_NAME_BUILD="${DIFF_DIR}--build"
-    local -r CONTAINER_NAME_ANALYSIS="${DIFF_DIR}--analysis"
+    local -r CONTAINER_BUILD_IMAGE="mobilesec/rb-aosp-build-legacy:latest"
+    local -r CONTAINER_BUILD_NAME="${SOAP_ID}--build"
+    local -r CONTAINER_ANALYSIS_IMAGE="mobilesec/rb-aosp-analysis:latest"
+    local -r CONTAINER_ANALYSIS_NAME="${SOAP_ID}--analysis"
+    local -r CONTAINER_DIFF_PATH="${CONTAINER_RB_AOSP_BASE}/diff/${SOAP_ID}"
 
-    # Ensure these subdirectories exist since they are Dokcer bind mount points
+    # Setup: Guard against usage of different user and ensure subdirectories exist since they are Docker bind mount points
+    local -r CONTAINER_BUILD_IMAGE_HOME="$( docker inspect --format "{{ index (index .Config.Env) 1 }}" "$CONTAINER_BUILD_IMAGE" | cut '--delimiter==' --fields=2 )"
+    local -r CONTAINER_ANALYSIS_IMAGE_HOME="$( docker inspect --format "{{ index (index .Config.Env) 1 }}" "$CONTAINER_ANALYSIS_IMAGE" | cut '--delimiter==' --fields=2 )"
+    if [[ "$CONTAINER_BUILD_IMAGE_HOME" != "$HOME" ]] || [[ "$CONTAINER_ANALYSIS_IMAGE_HOME" != "$HOME" ]]; then
+        echo "At least one container was built with a different user, use the same user for docker image builds and runs!"
+        exit 2
+    fi
     mkdir -p "${RB_AOSP_BASE}/src"
     mkdir -p "${RB_AOSP_BASE}/build"
     mkdir -p "${RB_AOSP_BASE}/diff"
-    # Perform legacy AOSP build in docker container
+
+    # Build: Perform legacy AOSP build in docker container
     docker run --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
-        --name "$CONTAINER_NAME_BUILD" \
+        --name "$CONTAINER_BUILD_NAME" \
         --user=$(id -un) \
         --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${CONTAINER_RB_AOSP_BASE}/src" \
         --mount "type=bind,source=${RB_AOSP_BASE}/build,target=${CONTAINER_RB_AOSP_BASE}/build" \
         --mount "type=bind,source=/boot,target=/boot" \
         --mount "type=bind,source=/lib/modules,target=/lib/modules" \
-        "mobilesec/rb-aosp-build-legacy:latest" "/bin/bash" -l -c "$(composeCommandsBuild)"
-    docker rm "$CONTAINER_NAME_BUILD"
+        "$CONTAINER_BUILD_IMAGE" "/bin/bash" -l -c "$(composeCommandsBuild)"
+    docker rm "$CONTAINER_BUILD_NAME"
 
-    # Run SOAP analysis via new container based on dedicated image
+    # Analysis: Run SOAP analysis via new container based on dedicated image
     docker run --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
-        --name "$CONTAINER_NAME_ANALYSIS" \
+        --name "$CONTAINER_ANALYSIS_NAME" \
         --user=$(id -un) \
         --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET},target=${CONTAINER_RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}" \
         --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET},target=${CONTAINER_RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}" \
@@ -102,8 +111,8 @@ main() {
         --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${CONTAINER_RB_AOSP_BASE}/diff" \
         --mount "type=bind,source=/boot,target=/boot" \
         --mount "type=bind,source=/lib/modules,target=/lib/modules" \
-        "mobilesec/rb-aosp-analysis:latest" "/bin/bash" -l -c "$(composeCommandsAnalysis)"
-    docker rm "$CONTAINER_NAME_ANALYSIS"
+        "$CONTAINER_ANALYSIS_IMAGE" "/bin/bash" -l -c "$(composeCommandsAnalysis)"
+    docker rm "$CONTAINER_ANALYSIS_NAME"
 
     # Generate report overview on the host
     "./scripts/analysis/24_generate-report-overview.sh" "${RB_AOSP_BASE}/diff"

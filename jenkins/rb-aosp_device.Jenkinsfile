@@ -14,26 +14,38 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 pipeline {
-    agent none
-
+    agent any
     environment {
         RB_AOSP_BASE="/home/dev/aosp"
 
         GOOGLE_BUILD_ENV="Google"
         RB_BUILD_ENV="Ubuntu18.04"
         RB_BUILD_ENV_DOCKER="docker-${RB_BUILD_ENV}"
+        SOAP_ID="${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
 
-        DIFF_DIR="${AOSP_REF}_${GOOGLE_BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${AOSP_REF}_${RB_BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
-        DIFF_PATH="${RB_AOSP_BASE}/diff/${DIFF_DIR}"
-
-        CONTAINER_NAME_BUILD="${DIFF_DIR}--build"
-        CONTAINER_NAME_ANALYSIS="${DIFF_DIR}--analysis"
+        CONTAINER_RB_AOSP_BASE="${env.HOME}/aosp"
+        CONTAINER_BUILD_IMAGE="mobilesec/rb-aosp-build:latest"
+        CONTAINER_BUILD_NAME="${SOAP_ID}--build"
+        CONTAINER_ANALYSIS_IMAGE="mobilesec/rb-aosp-analysis:latest"
+        CONTAINER_ANALYSIS_NAME="${SOAP_ID}--analysis"
+        CONTAINER_DIFF_PATH="${CONTAINER_RB_AOSP_BASE}/diff/${SOAP_ID}"
     }
 
     stages {
         stage('Setup') {
-            agent any
             steps {
+                script {
+                    def containerBuildImageHome = sh (
+                        script: """docker inspect --format '{{ index (index .Config.Env) 1 }}' "$CONTAINER_BUILD_IMAGE" | cut '--delimiter==' --fields=2""",
+                        returnStdout: true
+                    ).trim()
+                    assert containerBuildImageHome == env.HOME
+                    def containerAnalysisImageHome = sh (
+                        script: """docker inspect --format '{{ index (index .Config.Env) 1 }}' "$CONTAINER_ANALYSIS_IMAGE" | cut '--delimiter==' --fields=2""",
+                        returnStdout: true
+                    ).trim()
+                    assert containerAnalysisImageHome == env.HOME
+                }
                 sh "mkdir -p \"${RB_AOSP_BASE}\""
                 sh "mkdir -p \"${RB_AOSP_BASE}/src\""
                 sh "mkdir -p \"${RB_AOSP_BASE}/build\""
@@ -43,11 +55,11 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'mobilesec/rb-aosp-build:latest'
+                    image "$CONTAINER_BUILD_IMAGE"
                     args """ --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
-                        --name "$CONTAINER_NAME_BUILD" \
-                        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
-                        --mount "type=bind,source=${RB_AOSP_BASE}/build,target=${RB_AOSP_BASE}/build" \
+                        --name "$CONTAINER_BUILD_NAME" \
+                        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${CONTAINER_RB_AOSP_BASE}/src" \
+                        --mount "type=bind,source=${RB_AOSP_BASE}/build,target=${CONTAINER_RB_AOSP_BASE}/build" \
                         --mount "type=bind,source=/boot,target=/boot" \
                         --mount "type=bind,source=/lib/modules,target=/lib/modules"
                     """
@@ -64,13 +76,13 @@ pipeline {
         stage('Analysis') {
             agent {
                 docker {
-                    image 'mobilesec/rb-aosp-analysis:latest'
+                    image "$CONTAINER_ANALYSIS_IMAGE"
                     args """ --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
-                        --name "$CONTAINER_NAME_ANALYSIS" \
-                        --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}" \
-                        --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET},target=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}" \
-                        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
-                        --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${RB_AOSP_BASE}/diff" \
+                        --name "$CONTAINER_ANALYSIS_NAME" \
+                        --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET},target=${CONTAINER_RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}" \
+                        --mount "type=bind,source=${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET},target=${CONTAINER_RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}" \
+                        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${CONTAINER_RB_AOSP_BASE}/src" \
+                        --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${CONTAINER_RB_AOSP_BASE}/diff" \
                         --mount "type=bind,source=/boot,target=/boot" \
                         --mount "type=bind,source=/lib/modules,target=/lib/modules"
                     """
@@ -80,13 +92,13 @@ pipeline {
                 sh "/scripts/analysis/19_preprocess-imgs.sh \"${AOSP_REF}\" \"${GOOGLE_BUILD_TARGET}\" \"${RB_BUILD_TARGET}\" \"${RB_BUILD_ENV}\""
                 sh """
                     "/scripts/analysis/20_diffoscope-files.sh" \
-                        "${RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
-                        "${RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}" \
-                        "${DIFF_PATH}" "device"
+                        "${CONTAINER_RB_AOSP_BASE}/build/${AOSP_REF}/${GOOGLE_BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
+                        "${CONTAINER_RB_AOSP_BASE}/build/${AOSP_REF}/${RB_BUILD_TARGET}/${RB_BUILD_ENV}" \
+                        "${CONTAINER_DIFF_PATH}" "device"
                 """
-                sh "/scripts/analysis/21_generate-diffstat.sh \"${DIFF_PATH}\" \"device\""
-                sh "/scripts/analysis/22_generate-metrics.sh \"${DIFF_PATH}\" \"device\""
-                sh "/scripts/analysis/23_generate-visualization.sh \"${DIFF_PATH}\""
+                sh "/scripts/analysis/21_generate-diffstat.sh \"${CONTAINER_DIFF_PATH}\" \"device\""
+                sh "/scripts/analysis/22_generate-metrics.sh \"${CONTAINER_DIFF_PATH}\" \"device\""
+                sh "/scripts/analysis/23_generate-visualization.sh \"${CONTAINER_DIFF_PATH}\""
             }
         }
     }
