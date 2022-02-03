@@ -25,12 +25,14 @@ RUN apt-get update \
     && rm -rf "/var/lib/apt/lists/*"
 
 # user setup, inspired from AOSP Dockerfile (see https://android.googlesource.com/platform/build/+/master/tools/docker/Dockerfile ) 
-RUN groupadd --gid $groupid $username \
-    && useradd --create-home --uid $userid --gid $groupid $username \
-    && echo $username > /root/docker-runtime-username \
-    && sudo -u $username mkdir /home/$username/aosp
-COPY gitconfig /home/$username/.gitconfig
-ENV HOME=/home/$username
-ENV USER=$username
+# Create user
+RUN groupadd --gid "$groupid" "$username" \
+    && useradd --create-home --uid "$userid" --gid "$groupid" "$username"
+COPY "gitconfig" "/home/${username}/.gitconfig"
+# Set permissions for user
+RUN chown -R "${username}:${username}" "/scripts" "/html-template" "/.version" "/home/${username}/.gitconfig" \
+    && sudo "--user=${username}" mkdir "/home/${username}/aosp"
+ENV HOME="/home/${username}"
+ENV USER="$username"
 
 CMD /bin/bash -l
