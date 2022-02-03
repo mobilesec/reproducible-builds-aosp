@@ -29,8 +29,8 @@ composeCommandsAnalysis() {
     cat <<EOF | tr '\n' '; '
 "./scripts/analysis/19_preprocess-imgs.sh" "$BUILD_NUMBER" "$BUILD_TARGET" "$BUILD_TARGET" "$RB_BUILD_ENV"
 "./scripts/analysis/20_diffoscope-files.sh" \
-    "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
-    "${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}" \
+    "${CONTAINER_RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
+    "${CONTAINER_RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${RB_BUILD_ENV}" \
     "$DIFF_PATH" "generic"
 "./scripts/analysis/21_generate-diffstat.sh" "$DIFF_PATH" "generic"
 "./scripts/analysis/22_generate-metrics.sh" "$DIFF_PATH" "generic"
@@ -62,6 +62,7 @@ main() {
     local -r DIFF_DIR="${BUILD_NUMBER}_${BUILD_TARGET}_${GOOGLE_BUILD_ENV}__${BUILD_NUMBER}_${BUILD_TARGET}_${RB_BUILD_ENV_DOCKER}"
     local -r DIFF_PATH="${RB_AOSP_BASE}/diff/${DIFF_DIR}"
 
+    local -r CONTAINER_RB_AOSP_BASE="${HOME}/aosp"
     local -r CONTAINER_NAME_BUILD="${DIFF_DIR}--build"
     local -r CONTAINER_NAME_ANALYSIS="${DIFF_DIR}--analysis"
 
@@ -69,9 +70,8 @@ main() {
     docker run --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
         --name "$CONTAINER_NAME_BUILD" \
         --user=$(id -un) \
-        --env "RB_AOSP_BASE=${RB_AOSP_BASE}" \
-        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
-        --mount "type=bind,source=${RB_AOSP_BASE}/build,target=${RB_AOSP_BASE}/build" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${CONTAINER_RB_AOSP_BASE}/src" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/build,target=${CONTAINER_RB_AOSP_BASE}/build" \
         --mount "type=bind,source=/boot,target=/boot" \
         --mount "type=bind,source=/lib/modules,target=/lib/modules" \
         "mobilesec/rb-aosp-build:latest" "/bin/bash" -l -c "$(composeCommandsBuild)"
@@ -81,10 +81,9 @@ main() {
     docker run --device "/dev/fuse" --cap-add "SYS_ADMIN" --security-opt "apparmor:unconfined" \
         --name "$CONTAINER_NAME_ANALYSIS" \
         --user=$(id -un) \
-        --env "RB_AOSP_BASE=${RB_AOSP_BASE}" \
-        --mount "type=bind,source=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET},target=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}" \
-        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${RB_AOSP_BASE}/src" \
-        --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${RB_AOSP_BASE}/diff" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET},target=${CONTAINER_RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${CONTAINER_RB_AOSP_BASE}/src" \
+        --mount "type=bind,source=${RB_AOSP_BASE}/diff,target=${CONTAINER_RB_AOSP_BASE}/diff" \
         --mount "type=bind,source=/boot,target=/boot" \
         --mount "type=bind,source=/lib/modules,target=/lib/modules" \
         "mobilesec/rb-aosp-analysis:latest" "/bin/bash" -l -c "$(composeCommandsAnalysis)"
