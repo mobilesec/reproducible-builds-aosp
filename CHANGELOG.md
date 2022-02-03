@@ -1,4 +1,18 @@
 
+# v2.4.0
+
+- Major refactor of master scripts with several improvements
+  - Change master shell scripts to be parameterized and update README accordingly
+  - Add defensive guard clause that verifies docker build user is the same as docker run user (by checking that `$HOME` inside the docker images match the host `$HOME`)
+  - Add defensive guard clause that ensures docker images are built with non-root users
+  - Fix bug where the host base directory was used for the diff directory in the container
+  - Refactor master scripts for better clarity and consistency
+  - Ensure the subdirectories below base directory exist since they are Dokcer bind mount points
+- Permission fixes for Docker, all files copied in are now chowned to the specified user, defensive quoting for Dockerfiles
+- Fix path for sourcing of common utility script
+- Set the container internal base directory (`CONTAINER_RB_AOSP_BASE`) to the fixed `${HOME}/aosp` path, the one which the Dockerfiles prepared during build with proper permissions (host base directory can still be changed as required via environment variable)
+- Further improvements to the README, add dependency on git configuration and update the report description with metrics introduced with SOAP v2
+
 # v2.3.0
 
 - Stop excluding signing related files from the diffoscope analysis of generic builds, logical extension of signing adjustment removal for GSI builds
