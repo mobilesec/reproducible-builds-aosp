@@ -1,4 +1,9 @@
 
+# v2.4.1
+
+- Sourcing of common utility scripts now works without a fixed working directory again, fixes issues with Jenkins.
+- Remove outdated auxiliary file in favor of solely maintaining the Jenkinsfiles as single source of truth
+
 # v2.4.0
 
 - Major refactor of master scripts with several improvements
