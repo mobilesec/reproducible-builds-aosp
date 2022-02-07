@@ -33,7 +33,8 @@ main() {
         mkdir -p "${RB_AOSP_BASE}"
     fi
 
-    source "./scripts/common/utils.sh"
+    local -r SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+    source "${SCRIPT_DIR}/../../scripts/common/utils.sh"
 
     # Navigate to src dir and init build
     local -r SRC_DIR="${RB_AOSP_BASE}/src"
