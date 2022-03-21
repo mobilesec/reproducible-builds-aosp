@@ -182,10 +182,6 @@ _EOF_
         else
             cp "$DIFFSTAT_RAW_CSV_FILE" "$DIFFSTAT_CSV_FILE"
         fi
-
-        # All diff file versions take considerable space, get rid of them
-        rm "${DIFF_JSON_FILE}"
-        rm "${DIFF_JSON_FILE}.flattened.diff"
     done
 }
 
