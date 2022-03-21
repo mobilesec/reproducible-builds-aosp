@@ -40,6 +40,12 @@ main() {
     # Create and navigate to image directory
     local -r BUILD_ENV="Google"
     local -r IMAGE_DIR="${RB_AOSP_BASE}/build/${AOSP_REF}/${DEVICE_CODENAME}-user/${BUILD_ENV}"
+
+    # Allow usage of cached factory images locally
+    if [[ -d "${IMAGE_DIR}" ]]; then
+        exit 0
+    fi
+
     mkdir -p "${IMAGE_DIR}"
     cd "${IMAGE_DIR}"
     rm -rf ./* # Clean up previously fetched files

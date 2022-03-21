@@ -58,6 +58,12 @@ main() {
     # Fetch manifest from Google CI build
     local -r BUILD_ENV="Google"
     local -r IMAGE_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
+
+    # Allow usage of cached factory images locally
+    if [[ -d "${IMAGE_DIR}" ]]; then
+        exit 0
+    fi
+
     mkdir -p "${IMAGE_DIR}"
     cd "${IMAGE_DIR}"
     rm -rf ./* # Clean up previously fetched files
@@ -77,7 +83,7 @@ main() {
         | cut --delimiter=/ --fields=1-2 \
         | xargs -I '%' echo '%/' \
     )"
-    # As an exception to the above, an existing attempt may not have the required manifest file, sanitch check for this
+    # As an exception to the above, an existing attempt may not have the required manifest file, sanity check for this
     if ! grep "${ARTIFACT_PREFIX}manifest_${BUILD_NUMBER}.xml" "$ARTIFACTS_LIST_FILE"; then
         local ARTIFACT_PREFIX=""
     fi
