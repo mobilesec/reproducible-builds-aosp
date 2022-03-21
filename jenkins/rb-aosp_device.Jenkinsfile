@@ -60,6 +60,7 @@ pipeline {
                         --name "$CONTAINER_BUILD_NAME" \
                         --mount "type=bind,source=${RB_AOSP_BASE}/src,target=${CONTAINER_RB_AOSP_BASE}/src" \
                         --mount "type=bind,source=${RB_AOSP_BASE}/build,target=${CONTAINER_RB_AOSP_BASE}/build" \
+                        --mount "type=bind,source=${RB_AOSP_BASE}/driver-binaries,target=${CONTAINER_RB_AOSP_BASE}/driver-binaries" \
                         --mount "type=bind,source=/boot,target=/boot" \
                         --mount "type=bind,source=/lib/modules,target=/lib/modules"
                     """

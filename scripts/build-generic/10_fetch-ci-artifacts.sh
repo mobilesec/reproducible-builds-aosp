@@ -59,7 +59,7 @@ main() {
     local -r BUILD_ENV="Google"
     local -r IMAGE_DIR="${RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${BUILD_ENV}"
 
-    # Allow usage of cached factory images locally
+    # Allow usage of cached CI images locally
     if [[ -d "${IMAGE_DIR}" ]]; then
         exit 0
     fi
