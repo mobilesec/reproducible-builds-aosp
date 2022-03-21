@@ -87,7 +87,7 @@ pipeline {
                 }
             }
             steps {
-                sh "/scripts/analysis/19_preprocess-imgs.sh \"${BUILD_NUMBER}\" \"${BUILD_TARGET}\" \"${BUILD_TARGET}\" \"${RB_BUILD_ENV}\""
+                sh "/scripts/analysis/19_unpack-imgs.sh \"${BUILD_NUMBER}\" \"${BUILD_TARGET}\" \"${BUILD_TARGET}\" \"${RB_BUILD_ENV}\""
                 sh """
                     "/scripts/analysis/20_diffoscope-files.sh" \
                         "${CONTAINER_RB_AOSP_BASE}/build/${BUILD_NUMBER}/${BUILD_TARGET}/${GOOGLE_BUILD_ENV}" \
