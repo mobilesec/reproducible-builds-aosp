@@ -1,4 +1,13 @@
 
+# v2.5.0
+
+- No longer delete build artifacts and intermediate files from the analysis process, after some consideration we prefer the traceability over the space saving. If space is a concern, users can clean up these build artifacts manually.
+- Allow usage of cached artifacts from Google, that includes
+  - factory images for device builds,
+  - CI builds for GSI builds and
+  - driver binaries (i.e. vendor partition) for device builds. This also includes a bind mount to the container, essential for persisting these driver binaries
+- Rename the script responsible for unpacking super and boot images to avoid confusion with the pre-processing that occurs in the diffoscope script
+
 # v2.4.1
 
 - Sourcing of common utility scripts now works without a fixed working directory again, fixes issues with Jenkins.
