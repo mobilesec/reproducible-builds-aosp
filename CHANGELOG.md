@@ -1,4 +1,8 @@
 
+# v2.5.1
+
+- Fix permissions for renamed unpack script
+
 # v2.5.0
 
 - No longer delete build artifacts and intermediate files from the analysis process, after some consideration we prefer the traceability over the space saving. If space is a concern, users can clean up these build artifacts manually.
