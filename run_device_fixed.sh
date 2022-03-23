@@ -84,6 +84,7 @@ main() {
     fi
     mkdir -p "${RB_AOSP_BASE}/src"
     mkdir -p "${RB_AOSP_BASE}/build"
+    mkdir -p "${RB_AOSP_BASE}/driver-binaries"
     mkdir -p "${RB_AOSP_BASE}/diff"
 
     # Build: Perform AOSP build in docker container
