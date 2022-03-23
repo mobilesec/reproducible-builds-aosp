@@ -1,4 +1,8 @@
 
+# v2.5.2
+
+- Fix missing driver-binaries directory by ensuring it exists in the setup phase of builds
+
 # v2.5.1
 
 - Fix permissions for renamed unpack script
