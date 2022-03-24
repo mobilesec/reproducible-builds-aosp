@@ -115,10 +115,11 @@ Certain versions of the APKtool (we experienced this with `2.3.4`) do not run un
 
 ## Background and affiliation
 
-Project by the Institute of Networks and Security at the Johannes Kepler University, details can be found at [android.ins.jku.at](https://android.ins.jku.at/reproducible-builds/). SOAP Reports run by the JKU INS institute can be found [here](https://android.ins.jku.at/soap/report-overview.html). Developed by Manuel Pöll as bachelor project.
+Project by Johannes Kepler University Linz, Institute of Networks and Security. Details can be found at https://android.ins.jku.at/reproducible-builds/. SOAP reports can be found [here](https://android.ins.jku.at/soap/report-overview.html). This project has originally been developed by Manuel Pöll as his bachelor thesis project.
 
-Detailed design decisions, results, and interpretations can be found in his bachelor thesis:
-- [M. Pöll: “An Investigation into Reproducible Builds for AOSP”, Bachelor’s thesis, Johannes Kepler University Linz, Institute of Networks and Security, 2020.](https://github.com/mobilesec/reproducible-builds-aosp/raw/master/background-work/An-Investigation-Into-Reproducible-Builds-for-AOSP.pdf)
+Detailed design decisions, results, and interpretations can be found in our paper and in the bachelor thesis:
+- Manuel Pöll and Michael Roland: *"Automating the Quantitative Analysis of Reproducibility for Build Artifacts derived from the Android Open Source Project"*, in WiSec '22: 15th ACM Conference on Security and Privacy in Wireless and Mobile Networks, San Antonio, TX, USA, ACM, 2022. DOI [10.1145/3507657.3528537](https://doi.org/10.1145/3507657.3528537) (*accepted for publication*)
+- [Manuel Pöll: *"An Investigation into Reproducible Builds for AOSP"*, Bachelor's thesis, Johannes Kepler University Linz, Institute of Networks and Security, 2020](https://github.com/mobilesec/reproducible-builds-aosp/raw/master/background-work/An-Investigation-Into-Reproducible-Builds-for-AOSP.pdf).
 
 ## License
 
