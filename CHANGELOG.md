@@ -1,4 +1,9 @@
 
+# v2.5.3
+
+- Fix corner case where SOAP failed if the first build is for a legacy device
+- Update README with associated publication
+
 # v2.5.2
 
 - Fix missing driver-binaries directory by ensuring it exists in the setup phase of builds
