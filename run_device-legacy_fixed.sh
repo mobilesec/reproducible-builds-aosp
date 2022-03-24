@@ -18,7 +18,7 @@ set -o errexit -o nounset -o pipefail -o xtrace
 
 composeCommandsBuild() {
     cat <<EOF | tr '\n' '; '
-( cd "${CONTAINER_RB_AOSP_BASE}/src/.repo/repo" && git checkout "v1.13.9.4" )
+( cd "${CONTAINER_RB_AOSP_BASE}/src/.repo/repo" && git checkout "v1.13.9.4" || true )
 "./scripts/build-device/10_fetch-extract-factory-images.sh" "$AOSP_REF" "$BUILD_ID" "$DEVICE_CODENAME" "$DEVICE_CODENAME_FACTORY_IMAGE"
 "./scripts/build-device/11_clone-src-device.sh" "$AOSP_REF"
 "./scripts/build-device/12_fetch-extract-vendor.sh" "$BUILD_ID" "$DEVICE_CODENAME"

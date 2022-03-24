@@ -68,7 +68,7 @@ pipeline {
                 }
             }
             steps {
-                sh "( cd \"${CONTAINER_RB_AOSP_BASE}/src/.repo/repo\" && git checkout \"v1.13.9.4\" )"
+                sh "( cd \"${CONTAINER_RB_AOSP_BASE}/src/.repo/repo\" && git checkout \"v1.13.9.4\" || true )"
                 sh "/scripts/build-device/10_fetch-extract-factory-images.sh \"${AOSP_REF}\" \"${BUILD_ID}\" \"${DEVICE_CODENAME}\" \"${DEVICE_CODENAME_FACTORY_IMAGE}\""
                 sh "/scripts/build-device/11_clone-src-device.sh \"${AOSP_REF}\""
                 sh "/scripts/build-device/12_fetch-extract-vendor.sh \"${BUILD_ID}\" \"${DEVICE_CODENAME}\""
